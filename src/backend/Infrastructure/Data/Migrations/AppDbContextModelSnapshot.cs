@@ -43,6 +43,8 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("RefreshTokens");
                 });
 
@@ -392,6 +394,17 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserSkillProgressRecords");
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Auth.RefreshToken", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Auth.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }
