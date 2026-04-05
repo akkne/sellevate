@@ -359,6 +359,9 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.Property<bool>("IsOnboardingCompleted")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Persona")
+                        .HasColumnType("text");
+
                     b.Property<string>("SalesType")
                         .IsRequired()
                         .HasColumnType("text");
