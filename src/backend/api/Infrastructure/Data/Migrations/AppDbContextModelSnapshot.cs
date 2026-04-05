@@ -261,7 +261,13 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
                     b.Property<int>("DifficultyLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EstimatedMinutes")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("SkillId")
@@ -380,6 +386,9 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Category")
+                        .HasColumnType("text");
+
                     b.Property<string>("MarkdownContent")
                         .IsRequired()
                         .HasColumnType("text");
@@ -389,6 +398,9 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .IsRequired()
