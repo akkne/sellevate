@@ -73,6 +73,7 @@ interface ExerciseRow {
     type: ExerciseType;
     sortOrder: number;
     content: ExerciseContent;
+    customAiPrompt: string | null;
 }
 
 function getEmptyContent(type: ExerciseType): ExerciseContent {
@@ -178,8 +179,9 @@ export default function AdminLessonExercisesPage({
     const rows: ExerciseRow[] = localRows ?? exercises.map((ex) => ({
         id: ex.id,
         type: ex.type as ExerciseType,
-        sortOrder: ex.sortOrder,
+        sortOrder: ex.orderInLesson,
         content: ex.content as unknown as ExerciseContent,
+        customAiPrompt: ex.customAiPrompt ?? null,
     }));
 
     // Wrapper to set local state
@@ -198,13 +200,19 @@ export default function AdminLessonExercisesPage({
         if (row.id) {
             await updateExerciseMut.mutateAsync({
                 exerciseId: row.id,
-                body: { type: row.type, sortOrder: row.sortOrder, content: row.content as unknown as Record<string, unknown> },
+                body: {
+                    type: row.type,
+                    orderInLesson: row.sortOrder,
+                    content: row.content as unknown as Record<string, unknown>,
+                    customAiPrompt: row.customAiPrompt,
+                },
             });
         } else {
             await createMut.mutateAsync({
                 type: row.type,
-                sortOrder: row.sortOrder,
+                orderInLesson: row.sortOrder,
                 content: row.content as unknown as Record<string, unknown>,
+                customAiPrompt: row.customAiPrompt,
             });
         }
         setEditingId(null);
@@ -216,6 +224,7 @@ export default function AdminLessonExercisesPage({
             type: "multiple_choice",
             sortOrder: rows.length + 1,
             content: emptyMultipleChoice(),
+            customAiPrompt: null,
         };
         setRows([...rows, newRow]);
         setEditingId("__new__");
@@ -336,6 +345,28 @@ export default function AdminLessonExercisesPage({
                                         setRows(rows.map((r, ri) => ri === index ? { ...r, content: newContent } : r));
                                     })}
 
+                                    {/* Custom AI Prompt - shown for AI-powered types */}
+                                    {["open_question", "find_error", "rewrite_better", "ai_dialog", "rate_call", "written_answer"].includes(row.type) && (
+                                        <label className="block mt-4">
+                                            <span className={labelCls}>Custom AI Prompt (optional)</span>
+                                            <textarea
+                                                className={`${inputCls} font-mono`}
+                                                rows={3}
+                                                value={row.customAiPrompt ?? ""}
+                                                onChange={(e) => {
+                                                    setRows(rows.map((r, ri) => ri === index
+                                                        ? { ...r, customAiPrompt: e.target.value || null }
+                                                        : r
+                                                    ));
+                                                }}
+                                                placeholder="Additional evaluation criteria specific to this exercise..."
+                                            />
+                                            <span className="text-[10px] text-on-surface-variant mt-1 block">
+                                                This prompt is appended to the global type prompt for AI evaluation
+                                            </span>
+                                        </label>
+                                    )}
+
                                     <div className="flex gap-3 mt-4">
                                         <button
                                             onClick={async () => await saveExercise(row)}
@@ -350,7 +381,13 @@ export default function AdminLessonExercisesPage({
                                                     const orig = exercises.find((ex) => ex.id === row.id);
                                                     if (orig) {
                                                         setRows(rows.map((r, ri) => ri === index
-                                                            ? { id: orig.id, type: orig.type as ExerciseType, sortOrder: orig.sortOrder, content: orig.content as unknown as ExerciseContent }
+                                                            ? {
+                                                                id: orig.id,
+                                                                type: orig.type as ExerciseType,
+                                                                sortOrder: orig.orderInLesson,
+                                                                content: orig.content as unknown as ExerciseContent,
+                                                                customAiPrompt: orig.customAiPrompt ?? null,
+                                                            }
                                                             : r
                                                         ));
                                                     }
