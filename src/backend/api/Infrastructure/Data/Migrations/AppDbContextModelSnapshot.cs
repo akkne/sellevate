@@ -551,6 +551,10 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("IconicName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("OrderInTree")
                         .HasColumnType("integer");
 
@@ -560,6 +564,9 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IconicName")
+                        .IsUnique();
+
                     b.ToTable("Skills", (string)null);
                 });
 
@@ -568,6 +575,10 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("IconicName")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("OrderInSkill")
                         .HasColumnType("integer");
@@ -580,6 +591,9 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IconicName")
+                        .IsUnique();
 
                     b.HasIndex("SkillId", "OrderInSkill");
 
