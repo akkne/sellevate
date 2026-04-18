@@ -266,6 +266,42 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.ToTable("ExerciseTypePrompts");
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.Friends.Models.Friendship", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AddresseeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequesterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddresseeId");
+
+                    b.HasIndex("RequesterId");
+
+                    b.HasIndex("RequesterId", "AddresseeId")
+                        .IsUnique();
+
+                    b.ToTable("Friendships", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Friendships_NoSelfFriendship", "\"RequesterId\" != \"AddresseeId\"");
+                        });
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Features.Gamification.Models.UserStreak", b =>
                 {
                     b.Property<Guid>("Id")
