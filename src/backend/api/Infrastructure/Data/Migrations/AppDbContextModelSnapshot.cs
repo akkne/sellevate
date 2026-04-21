@@ -711,6 +711,240 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.ToTable("UserSkillProgressRecords");
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.Technique", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CategorySlug")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("PrimarySkillId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<string[]>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategorySlug");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("Techniques", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MetricsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TechniqueId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TechniqueId", "OrderIndex");
+
+                    b.ToTable("TechniqueCases", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCategory", b =>
+                {
+                    b.Property<string>("Slug")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Slug");
+
+                    b.ToTable("TechniqueCategories", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCoach", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarSeed")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ChallengesJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Quote")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("TechniqueId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TechniqueId")
+                        .IsUnique();
+
+                    b.ToTable("TechniqueCoaches", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueDialogTurn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AnnotationsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Side")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<Guid>("TechniqueId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TechniqueId", "OrderIndex");
+
+                    b.ToTable("TechniqueDialogTurns", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueSkill", b =>
+                {
+                    b.Property<Guid>("TechniqueId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SkillId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TechniqueId", "SkillId");
+
+                    b.HasIndex("SkillId");
+
+                    b.ToTable("TechniqueSkills", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.UserTechniqueProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastPracticedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MasteryPercent")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PracticeCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TechniqueId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "TechniqueId")
+                        .IsUnique();
+
+                    b.ToTable("UserTechniqueProgress", (string)null);
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Infrastructure.Data.OpenQuestionGlobalContext", b =>
                 {
                     b.Property<Guid>("Id")
@@ -792,9 +1026,56 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.Navigation("Skill");
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCase", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
+                        .WithMany("Cases")
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCoach", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
+                        .WithOne("Coach")
+                        .HasForeignKey("SalesTrainer.Api.Features.Techniques.Models.TechniqueCoach", "TechniqueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueDialogTurn", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
+                        .WithMany("DialogTurns")
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueSkill", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
+                        .WithMany("AdditionalSkills")
+                        .HasForeignKey("TechniqueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Features.Dialog.Models.DialogBundle", b =>
                 {
                     b.Navigation("Modes");
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.Technique", b =>
+                {
+                    b.Navigation("AdditionalSkills");
+
+                    b.Navigation("Cases");
+
+                    b.Navigation("Coach");
+
+                    b.Navigation("DialogTurns");
                 });
 #pragma warning restore 612, 618
         }
