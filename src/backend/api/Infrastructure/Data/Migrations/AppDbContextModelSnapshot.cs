@@ -721,13 +721,17 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("CategorySlug")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                    b.Property<string>("CaseJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DialogJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -758,7 +762,7 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategorySlug");
+                    b.HasIndex("PrimarySkillId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
@@ -766,61 +770,6 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.HasIndex("SortOrder");
 
                     b.ToTable("Techniques", (string)null);
-                });
-
-            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCase", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("MetricsJson")
-                        .HasColumnType("jsonb");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("TechniqueId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TechniqueId", "OrderIndex");
-
-                    b.ToTable("TechniqueCases", (string)null);
-                });
-
-            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCategory", b =>
-                {
-                    b.Property<string>("Slug")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Slug");
-
-                    b.ToTable("TechniqueCategories", (string)null);
                 });
 
             modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCoach", b =>
@@ -860,37 +809,6 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("TechniqueCoaches", (string)null);
-                });
-
-            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueDialogTurn", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AnnotationsJson")
-                        .HasColumnType("jsonb");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Side")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
-
-                    b.Property<Guid>("TechniqueId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TechniqueId", "OrderIndex");
-
-                    b.ToTable("TechniqueDialogTurns", (string)null);
                 });
 
             modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueSkill", b =>
@@ -1026,29 +944,11 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.Navigation("Skill");
                 });
 
-            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCase", b =>
-                {
-                    b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
-                        .WithMany("Cases")
-                        .HasForeignKey("TechniqueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueCoach", b =>
                 {
                     b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
                         .WithOne("Coach")
                         .HasForeignKey("SalesTrainer.Api.Features.Techniques.Models.TechniqueCoach", "TechniqueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.TechniqueDialogTurn", b =>
-                {
-                    b.HasOne("SalesTrainer.Api.Features.Techniques.Models.Technique", null)
-                        .WithMany("DialogTurns")
-                        .HasForeignKey("TechniqueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -1071,11 +971,7 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                 {
                     b.Navigation("AdditionalSkills");
 
-                    b.Navigation("Cases");
-
                     b.Navigation("Coach");
-
-                    b.Navigation("DialogTurns");
                 });
 #pragma warning restore 612, 618
         }
