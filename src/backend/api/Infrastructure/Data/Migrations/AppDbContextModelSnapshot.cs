@@ -165,7 +165,7 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.HasIndex("Date")
                         .IsUnique();
 
-                    b.ToTable("DailyQuotes");
+                    b.ToTable("DailyQuotes", (string)null);
                 });
 
             modelBuilder.Entity("SalesTrainer.Api.Features.Dialog.Models.DialogBundle", b =>
@@ -271,6 +271,187 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("DialogModes", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussReply", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("character varying(20000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpvoteCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("ThreadId", "CreatedAt");
+
+                    b.ToTable("DiscussReplies", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussTag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCurated")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsCurated");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("DiscussTags", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussThread", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AcceptedReplyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("character varying(20000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsHot")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ReplyCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UpvoteCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsPinned");
+
+                    b.HasIndex("LastActivityAt");
+
+                    b.HasIndex("UpvoteCount");
+
+                    b.ToTable("DiscussThreads", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussThreadTag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ThreadId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TagId");
+
+                    b.HasIndex("ThreadId", "TagId")
+                        .IsUnique();
+
+                    b.ToTable("DiscussThreadTags", (string)null);
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussVote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TargetType")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetType", "TargetId");
+
+                    b.HasIndex("UserId", "TargetType", "TargetId")
+                        .IsUnique();
+
+                    b.ToTable("DiscussVotes", (string)null);
                 });
 
             modelBuilder.Entity("SalesTrainer.Api.Features.Exercises.Models.ExerciseTypePrompt", b =>
@@ -971,6 +1152,60 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.Navigation("Bundle");
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussReply", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Auth.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SalesTrainer.Api.Features.Discuss.Models.DiscussThread", "Thread")
+                        .WithMany("Replies")
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Thread");
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussThread", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Auth.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussThreadTag", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Discuss.Models.DiscussTag", "Tag")
+                        .WithMany("ThreadTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SalesTrainer.Api.Features.Discuss.Models.DiscussThread", "Thread")
+                        .WithMany("ThreadTags")
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+
+                    b.Navigation("Thread");
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussVote", b =>
+                {
+                    b.HasOne("SalesTrainer.Api.Features.Auth.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Features.Lessons.Models.Exercise", b =>
                 {
                     b.HasOne("SalesTrainer.Api.Features.Lessons.Models.Lesson", "Lesson")
@@ -1025,6 +1260,18 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
             modelBuilder.Entity("SalesTrainer.Api.Features.Dialog.Models.DialogBundle", b =>
                 {
                     b.Navigation("Modes");
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussTag", b =>
+                {
+                    b.Navigation("ThreadTags");
+                });
+
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussThread", b =>
+                {
+                    b.Navigation("Replies");
+
+                    b.Navigation("ThreadTags");
                 });
 
             modelBuilder.Entity("SalesTrainer.Api.Features.Techniques.Models.Technique", b =>
