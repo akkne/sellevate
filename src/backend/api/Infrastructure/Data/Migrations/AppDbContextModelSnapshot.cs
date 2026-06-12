@@ -310,6 +310,44 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.ToTable("DialogModes", (string)null);
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussPhoto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ObjectKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("OwnerType")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerType", "OwnerId", "OrderIndex");
+
+                    b.ToTable("DiscussPhotos", (string)null);
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Features.Discuss.Models.DiscussReply", b =>
                 {
                     b.Property<Guid>("Id")
