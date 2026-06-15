@@ -79,6 +79,36 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.ToTable("UserAchievements");
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.Auth.Models.EmailVerificationCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.ToTable("EmailVerificationCodes", (string)null);
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Features.Auth.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -137,6 +167,11 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
 
                     b.Property<string>("GoogleId")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
