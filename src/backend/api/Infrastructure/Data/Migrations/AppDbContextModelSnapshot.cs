@@ -1120,6 +1120,38 @@ namespace SalesTrainer.Api.Infrastructure.Data.Migrations
                     b.ToTable("Skills", (string)null);
                 });
 
+            modelBuilder.Entity("SalesTrainer.Api.Features.SkillTree.Models.SkillStage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Accent")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("SkillStages");
+                });
+
             modelBuilder.Entity("SalesTrainer.Api.Features.SkillTree.Models.Topic", b =>
                 {
                     b.Property<Guid>("Id")
