@@ -31,6 +31,9 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ContactId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ContactName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -59,6 +62,8 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ContactId");
 
                     b.HasIndex("CompanyId", "OccurredAt")
                         .IsDescending(false, true)
@@ -99,6 +104,52 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.CompanyContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_CompanyContacts_CompanyId_CreatedAt");
+
+                    b.ToTable("CompanyContacts", (string)null);
                 });
 
             modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.PracticeCall", b =>
@@ -143,6 +194,24 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Sellevate.Company.Features.Companies.Models.CompanyContact", "Contact")
+                        .WithMany("CallLogEntries")
+                        .HasForeignKey("ContactId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Contact");
+                });
+
+            modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.CompanyContact", b =>
+                {
+                    b.HasOne("Sellevate.Company.Features.Companies.Models.Company", "Company")
+                        .WithMany("Contacts")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Company");
                 });
 
@@ -161,7 +230,14 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                 {
                     b.Navigation("CallLogEntries");
 
+                    b.Navigation("Contacts");
+
                     b.Navigation("PracticeCalls");
+                });
+
+            modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.CompanyContact", b =>
+                {
+                    b.Navigation("CallLogEntries");
                 });
 #pragma warning restore 612, 618
         }

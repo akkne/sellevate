@@ -44,7 +44,7 @@ function createWrapper() {
 
 const LOG = {
     id: "l1", companyId: "c1", contactName: "Иван", subject: "Тема", outcome: "Итог",
-    occurredAt: "2026-07-01T00:00:00Z", createdAt: "", updatedAt: "",
+    occurredAt: "2026-07-01T00:00:00Z", createdAt: "", updatedAt: "", contactId: null,
 };
 
 describe("useCompanyLogs", () => {
@@ -75,7 +75,7 @@ describe("useAddCallLog", () => {
         const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
         const { result } = renderHook(() => useAddCallLog("c1"), { wrapper });
-        result.current.mutate({ contactName: "Иван", subject: "Тема", outcome: "Итог", occurredAt: "2026-07-01T00:00:00Z" });
+        result.current.mutate({ contactName: "Иван", subject: "Тема", outcome: "Итог", occurredAt: "2026-07-01T00:00:00Z", contactId: null });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(mockPost).toHaveBeenCalledWith("/companies/c1/logs", expect.objectContaining({ contactName: "Иван" }));
@@ -89,7 +89,7 @@ describe("useAddCallLog", () => {
         const { wrapper } = createWrapper();
 
         const { result } = renderHook(() => useAddCallLog("c1"), { wrapper });
-        result.current.mutate({ contactName: "Иван", subject: "", outcome: "", occurredAt: "2026-07-01T00:00:00Z" });
+        result.current.mutate({ contactName: "Иван", subject: "", outcome: "", occurredAt: "2026-07-01T00:00:00Z", contactId: null });
 
         await waitFor(() => expect(result.current.isError).toBe(true));
         expect(toastError).toHaveBeenCalledWith(expect.stringContaining("boom"));
@@ -105,7 +105,7 @@ describe("useUpdateCallLog", () => {
         const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
         const { result } = renderHook(() => useUpdateCallLog("c1"), { wrapper });
-        result.current.mutate({ logId: "l1", contactName: "Иван", subject: "Тема", outcome: "Итог", occurredAt: "2026-07-01T00:00:00Z" });
+        result.current.mutate({ logId: "l1", contactName: "Иван", subject: "Тема", outcome: "Итог", occurredAt: "2026-07-01T00:00:00Z", contactId: null });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(mockPut).toHaveBeenCalledWith("/companies/c1/logs/l1", expect.objectContaining({ contactName: "Иван" }));
