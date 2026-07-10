@@ -88,10 +88,20 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(8000)")
                         .HasDefaultValue("");
 
+                    b.Property<DateTime?>("FollowUpNotifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("NextActionAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NextActionNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -107,6 +117,9 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NextActionAt")
+                        .HasFilter("\"NextActionAt\" IS NOT NULL");
 
                     b.HasIndex("UserId");
 
