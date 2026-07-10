@@ -178,6 +178,52 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                     b.ToTable("CompanyContacts", (string)null);
                 });
 
+            modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.CompanyPersona", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("Medium");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Personality")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_CompanyPersonas_CompanyId_CreatedAt");
+
+                    b.ToTable("CompanyPersonas", (string)null);
+                });
+
             modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.PracticeCall", b =>
                 {
                     b.Property<Guid>("Id")
@@ -241,6 +287,17 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.CompanyPersona", b =>
+                {
+                    b.HasOne("Sellevate.Company.Features.Companies.Models.Company", "Company")
+                        .WithMany("Personas")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("Sellevate.Company.Features.Companies.Models.PracticeCall", b =>
                 {
                     b.HasOne("Sellevate.Company.Features.Companies.Models.Company", "Company")
@@ -257,6 +314,8 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                     b.Navigation("CallLogEntries");
 
                     b.Navigation("Contacts");
+
+                    b.Navigation("Personas");
 
                     b.Navigation("PracticeCalls");
                 });
