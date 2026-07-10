@@ -78,6 +78,12 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BriefingContent")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("BriefingGeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
