@@ -6,5 +6,6 @@ public sealed record CompanyDetailDto(
     string Description,
     int CallLogCount,
     int PracticeCallCount,
+    int ContactCount,
     DateTime CreatedAt,
     DateTime UpdatedAt);

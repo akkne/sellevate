@@ -11,4 +11,5 @@ public sealed class Company
 
     public ICollection<CallLogEntry> CallLogEntries { get; set; } = new List<CallLogEntry>();
     public ICollection<PracticeCall> PracticeCalls { get; set; } = new List<PracticeCall>();
+    public ICollection<CompanyContact> Contacts { get; set; } = new List<CompanyContact>();
 }
