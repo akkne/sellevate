@@ -115,6 +115,9 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                     b.Property<string>("ReadinessJson")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("ReadinessNoFeedbackUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
