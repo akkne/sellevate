@@ -109,6 +109,12 @@ namespace Sellevate.Company.Infrastructure.Data.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<DateTime?>("ReadinessGeneratedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReadinessJson")
+                        .HasColumnType("text");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
