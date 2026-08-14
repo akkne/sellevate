@@ -193,6 +193,38 @@ namespace Sellevate.Identity.Infrastructure.Data.Migrations
                     b.ToTable("DefaultAvatars", (string)null);
                 });
 
+            modelBuilder.Entity("Sellevate.Identity.Features.Membership.Models.Membership", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeactivatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InvitedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("UserId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("Memberships", (string)null);
+                });
+
             modelBuilder.Entity("Sellevate.Identity.Features.Onboarding.Models.UserProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -237,6 +269,15 @@ namespace Sellevate.Identity.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Sellevate.Identity.Features.Membership.Models.Membership", b =>
+                {
+                    b.HasOne("Sellevate.Identity.Features.Auth.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
