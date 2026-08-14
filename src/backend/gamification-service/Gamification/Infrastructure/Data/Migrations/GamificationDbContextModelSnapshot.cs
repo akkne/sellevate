@@ -34,6 +34,9 @@ namespace Sellevate.Gamification.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PartitionKey")
                         .IsRequired()
                         .HasMaxLength(200)
