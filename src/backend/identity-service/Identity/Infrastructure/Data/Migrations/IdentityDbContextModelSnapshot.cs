@@ -88,6 +88,44 @@ namespace Sellevate.Identity.Infrastructure.Data.Migrations
                     b.ToTable("EmailVerificationCodes", (string)null);
                 });
 
+            modelBuilder.Entity("Sellevate.Identity.Features.Auth.Models.OrganizationAuthConfiguration", b =>
+                {
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.PrimitiveCollection<string[]>("AllowedEmailDomains")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsJustInTimeProvisioningEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsMultiFactorAuthenticationRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProviderSettings")
+                        .HasColumnType("jsonb");
+
+                    b.Property<TimeSpan?>("SessionLifetime")
+                        .HasColumnType("interval");
+
+                    b.HasKey("OrganizationId");
+
+                    b.HasIndex("AllowedEmailDomains");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("AllowedEmailDomains"), "gin");
+
+                    b.ToTable("OrganizationAuthConfigurations", (string)null);
+                });
+
             modelBuilder.Entity("Sellevate.Identity.Features.Auth.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
