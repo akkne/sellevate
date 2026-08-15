@@ -47,6 +47,9 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                     b.Property<bool>("IsHidden")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SkillId")
                         .HasColumnType("uuid");
 
@@ -66,6 +69,8 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                     b.HasIndex("SkillId");
 
                     b.HasIndex("SortOrder");
+
+                    b.HasIndex("OrganizationId", "SortOrder");
 
                     b.ToTable("DialogBundles", (string)null);
                 });
@@ -103,6 +108,9 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
@@ -125,7 +133,13 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                     b.HasIndex("BundleId");
 
                     b.HasIndex("BundleId", "Key")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_DialogModes_BundleId_Key_Global")
+                        .HasFilter("\"OrganizationId\" IS NULL");
+
+                    b.HasIndex("OrganizationId", "BundleId", "Key")
+                        .IsUnique()
+                        .HasFilter("\"OrganizationId\" IS NOT NULL");
 
                     b.ToTable("DialogModes", (string)null);
                 });
