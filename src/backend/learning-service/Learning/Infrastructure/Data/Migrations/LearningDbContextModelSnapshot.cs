@@ -133,6 +133,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<int>("OrderInLesson")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("SerializedContent")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -146,7 +149,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LessonId", "OrderInLesson");
+                    b.HasIndex("LessonId");
+
+                    b.HasIndex("OrganizationId", "LessonId", "OrderInLesson");
 
                     b.ToTable("Exercises", (string)null);
                 });
@@ -160,6 +165,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<int>("OrderInTopic")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -169,7 +177,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TopicId", "OrderInTopic");
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("OrganizationId", "TopicId", "OrderInTopic");
 
                     b.ToTable("Lessons", (string)null);
                 });
@@ -189,6 +199,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Score")
                         .HasColumnType("integer");
 
@@ -203,6 +216,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "UserId", "ExerciseId");
 
                     b.ToTable("UserExerciseAttempts");
                 });
@@ -222,6 +237,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<Guid>("LessonId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -230,6 +248,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "UserId", "LessonId");
 
                     b.ToTable("UserLessonProgressRecords");
                 });
@@ -247,6 +267,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SkillId")
                         .HasColumnType("uuid");
 
@@ -261,6 +284,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "SkillId", "SortOrder");
 
                     b.ToTable("ReferenceMaterials");
                 });
@@ -281,6 +306,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<int>("OrderInTree")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Stage")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -294,9 +322,14 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IconicName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Skills_IconicName_Global")
+                        .HasFilter("\"OrganizationId\" IS NULL");
+
+                    b.HasIndex("OrganizationId", "IconicName")
                         .IsUnique();
 
-                    b.HasIndex("Stage");
+                    b.HasIndex("OrganizationId", "Stage");
 
                     b.ToTable("Skills", (string)null);
                 });
@@ -346,6 +379,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<int>("OrderInSkill")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("SkillId")
                         .HasColumnType("uuid");
 
@@ -356,9 +392,16 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("IconicName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Topics_IconicName_Global")
+                        .HasFilter("\"OrganizationId\" IS NULL");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("OrganizationId", "IconicName")
                         .IsUnique();
 
-                    b.HasIndex("SkillId", "OrderInSkill");
+                    b.HasIndex("OrganizationId", "SkillId", "OrderInSkill");
 
                     b.ToTable("Topics", (string)null);
                 });
@@ -371,6 +414,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.Property<int>("CompletedLessonCount")
                         .HasColumnType("integer");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("SkillId")
                         .HasColumnType("uuid");
@@ -386,6 +432,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "UserId", "SkillId");
 
                     b.ToTable("UserSkillProgressRecords");
                 });
@@ -417,6 +465,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("PrimarySkillId")
                         .HasColumnType("uuid");
 
@@ -441,12 +492,17 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PrimarySkillId");
-
                     b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Techniques_Slug_Global")
+                        .HasFilter("\"OrganizationId\" IS NULL");
+
+                    b.HasIndex("OrganizationId", "PrimarySkillId");
+
+                    b.HasIndex("OrganizationId", "Slug")
                         .IsUnique();
 
-                    b.HasIndex("SortOrder");
+                    b.HasIndex("OrganizationId", "SortOrder");
 
                     b.ToTable("Techniques", (string)null);
                 });
@@ -523,6 +579,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<int>("MasteryPercent")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("PracticeCount")
                         .HasColumnType("integer");
 
@@ -534,9 +593,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OrganizationId", "UserId");
 
-                    b.HasIndex("UserId", "TechniqueId")
+                    b.HasIndex("OrganizationId", "UserId", "TechniqueId")
                         .IsUnique();
 
                     b.ToTable("UserTechniqueProgress", (string)null);
