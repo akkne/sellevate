@@ -162,11 +162,24 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("OrderInTopic")
                         .HasColumnType("integer");
 
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentLessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -177,11 +190,84 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ParentLessonId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Lessons_Slug_Global")
+                        .HasFilter("\"OrganizationId\" IS NULL");
+
                     b.HasIndex("TopicId");
+
+                    b.HasIndex("OrganizationId", "Slug")
+                        .IsUnique();
 
                     b.HasIndex("OrganizationId", "TopicId", "OrderInTopic");
 
                     b.ToTable("Lessons", (string)null);
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Lessons.Models.LessonVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BaseVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsBreaking")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("draft");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BaseVersionId");
+
+                    b.HasIndex("LessonId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_LessonVersions_LessonId_Draft")
+                        .HasFilter("\"Status\" = 'draft'");
+
+                    b.HasIndex("LessonId", "VersionNumber")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "LessonId", "VersionNumber");
+
+                    b.ToTable("LessonVersions", (string)null);
                 });
 
             modelBuilder.Entity("Sellevate.Learning.Features.Lessons.Models.UserExerciseAttempt", b =>
@@ -641,13 +727,36 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("Sellevate.Learning.Features.Lessons.Models.Lesson", b =>
                 {
+                    b.HasOne("Sellevate.Learning.Features.Lessons.Models.Lesson", "ParentLesson")
+                        .WithMany()
+                        .HasForeignKey("ParentLessonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Sellevate.Learning.Features.SkillTree.Models.Topic", "Topic")
                         .WithMany()
                         .HasForeignKey("TopicId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("ParentLesson");
+
                     b.Navigation("Topic");
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Lessons.Models.LessonVersion", b =>
+                {
+                    b.HasOne("Sellevate.Learning.Features.Lessons.Models.LessonVersion", null)
+                        .WithMany()
+                        .HasForeignKey("BaseVersionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sellevate.Learning.Features.Lessons.Models.Lesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
                 });
 
             modelBuilder.Entity("Sellevate.Learning.Features.SkillTree.Models.Topic", b =>
