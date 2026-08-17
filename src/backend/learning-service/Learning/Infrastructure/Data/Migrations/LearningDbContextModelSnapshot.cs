@@ -467,14 +467,26 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BaseContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Category")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("MarkdownContent")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentMaterialId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("SkillId")
@@ -491,6 +503,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentMaterialId");
 
                     b.HasIndex("OrganizationId", "SkillId", "SortOrder");
 
@@ -651,6 +665,10 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BaseContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasColumnType("text");
@@ -667,12 +685,20 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<int>("Difficulty")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsArchived")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
                     b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ParentTechniqueId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("PrimarySkillId")
@@ -698,6 +724,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentTechniqueId");
 
                     b.HasIndex("Slug")
                         .IsUnique()
@@ -902,6 +930,14 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Navigation("ProgramVersion");
                 });
 
+            modelBuilder.Entity("Sellevate.Learning.Features.Reference.Models.ReferenceMaterial", b =>
+                {
+                    b.HasOne("Sellevate.Learning.Features.Reference.Models.ReferenceMaterial", null)
+                        .WithMany()
+                        .HasForeignKey("ParentMaterialId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Sellevate.Learning.Features.SkillTree.Models.Topic", b =>
                 {
                     b.HasOne("Sellevate.Learning.Features.SkillTree.Models.Skill", "Skill")
@@ -911,6 +947,14 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Techniques.Models.Technique", b =>
+                {
+                    b.HasOne("Sellevate.Learning.Features.Techniques.Models.Technique", null)
+                        .WithMany()
+                        .HasForeignKey("ParentTechniqueId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Sellevate.Learning.Features.Techniques.Models.TechniqueCoach", b =>

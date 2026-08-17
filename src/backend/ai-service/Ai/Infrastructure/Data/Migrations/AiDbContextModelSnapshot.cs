@@ -81,6 +81,10 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BaseContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<Guid>("BundleId")
                         .HasColumnType("uuid");
 
@@ -111,6 +115,9 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ParentModeId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
@@ -131,6 +138,8 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BundleId");
+
+                    b.HasIndex("ParentModeId");
 
                     b.HasIndex("BundleId", "Key")
                         .IsUnique()
@@ -178,6 +187,11 @@ namespace Sellevate.Ai.Infrastructure.Data.Migrations
                         .HasForeignKey("BundleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Sellevate.Ai.Features.Dialog.Models.DialogMode", null)
+                        .WithMany()
+                        .HasForeignKey("ParentModeId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Bundle");
                 });
