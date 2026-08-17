@@ -350,6 +350,117 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.ToTable("UserLessonProgressRecords");
                 });
 
+            modelBuilder.Entity("Sellevate.Learning.Features.Programs.Models.ProgramEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PreviousProgramVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProgramVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("SwitchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProgramVersionId");
+
+                    b.HasIndex("OrganizationId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ProgramEnrollments", (string)null);
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Programs.Models.ProgramItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LessonVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProgramVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SkillId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonVersionId");
+
+                    b.HasIndex("ProgramVersionId", "LessonId")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "ProgramVersionId", "OrderIndex");
+
+                    b.ToTable("ProgramItems", (string)null);
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Programs.Models.ProgramVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("draft");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProgramVersions_OrganizationId_Draft")
+                        .HasFilter("\"Status\" = 'draft'");
+
+                    b.HasIndex("OrganizationId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("ProgramVersions", (string)null);
+                });
+
             modelBuilder.Entity("Sellevate.Learning.Features.Reference.Models.ReferenceMaterial", b =>
                 {
                     b.Property<Guid>("Id")
@@ -769,6 +880,28 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Navigation("Lesson");
                 });
 
+            modelBuilder.Entity("Sellevate.Learning.Features.Programs.Models.ProgramEnrollment", b =>
+                {
+                    b.HasOne("Sellevate.Learning.Features.Programs.Models.ProgramVersion", "ProgramVersion")
+                        .WithMany()
+                        .HasForeignKey("ProgramVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProgramVersion");
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Programs.Models.ProgramItem", b =>
+                {
+                    b.HasOne("Sellevate.Learning.Features.Programs.Models.ProgramVersion", "ProgramVersion")
+                        .WithMany("Items")
+                        .HasForeignKey("ProgramVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProgramVersion");
+                });
+
             modelBuilder.Entity("Sellevate.Learning.Features.SkillTree.Models.Topic", b =>
                 {
                     b.HasOne("Sellevate.Learning.Features.SkillTree.Models.Skill", "Skill")
@@ -796,6 +929,11 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasForeignKey("TechniqueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Programs.Models.ProgramVersion", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Sellevate.Learning.Features.Techniques.Models.Technique", b =>
