@@ -183,6 +183,47 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.ToTable("AssignmentProgressRecords", (string)null);
                 });
 
+            modelBuilder.Entity("Sellevate.Learning.Features.Assignments.Models.UserDialogScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DialogModeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DialogModeKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "UserId", "SessionId")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "UserId", "DialogModeKey", "EvaluatedAt");
+
+                    b.ToTable("UserDialogScores", (string)null);
+                });
+
             modelBuilder.Entity("Sellevate.Learning.Features.Content.Models.OrganizationProfileReplica", b =>
                 {
                     b.Property<Guid>("OrganizationId")
