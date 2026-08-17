@@ -285,6 +285,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("boolean");
 
+                    b.Property<Guid?>("LessonVersionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -302,6 +305,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "LessonVersionId", "ExerciseId");
 
                     b.HasIndex("OrganizationId", "UserId", "ExerciseId");
 
@@ -323,6 +328,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<Guid>("LessonId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("LessonVersionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -334,6 +342,8 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "LessonVersionId");
 
                     b.HasIndex("OrganizationId", "UserId", "LessonId");
 
