@@ -314,6 +314,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("GeneratedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Insufficiency")
+                        .HasColumnType("jsonb");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
@@ -342,6 +345,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
 
                     b.Property<DateTime?>("StructuredAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("StructuredMaterialLength")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
