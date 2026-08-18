@@ -104,8 +104,14 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("RepeatOfAssignmentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("RepeatSchedule")
                         .HasColumnType("jsonb");
+
+                    b.Property<int?>("RepeatWaveIndex")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SourceRef")
                         .HasMaxLength(200)
@@ -134,6 +140,10 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrganizationId", "CreatedAt");
+
+                    b.HasIndex("RepeatOfAssignmentId", "RepeatWaveIndex")
+                        .IsUnique()
+                        .HasFilter("\"RepeatOfAssignmentId\" IS NOT NULL");
 
                     b.HasIndex("OrganizationId", "Status", "Deadline");
 
@@ -1076,6 +1086,14 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("UserReplicas", (string)null);
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.Assignments.Models.Assignment", b =>
+                {
+                    b.HasOne("Sellevate.Learning.Features.Assignments.Models.Assignment", null)
+                        .WithMany()
+                        .HasForeignKey("RepeatOfAssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Sellevate.Learning.Features.Assignments.Models.AssignmentProgress", b =>
