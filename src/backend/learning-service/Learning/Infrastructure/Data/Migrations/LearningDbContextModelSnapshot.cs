@@ -311,6 +311,10 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<string>("GapSourceRef")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<DateTime?>("GeneratedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -360,6 +364,9 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrganizationId", "CreatedAt");
+
+                    b.HasIndex("OrganizationId", "GapSourceRef")
+                        .HasFilter("\"GapSourceRef\" IS NOT NULL");
 
                     b.HasIndex("OrganizationId", "ProducedLessonId");
 
@@ -1054,6 +1061,47 @@ namespace Sellevate.Learning.Infrastructure.Data.Migrations
                     b.HasIndex("OrganizationId", "UserId", "SkillId");
 
                     b.ToTable("UserSkillProgressRecords");
+                });
+
+            modelBuilder.Entity("Sellevate.Learning.Features.TeamInsights.Models.TeamSkillGapDismissal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AccuracyPercentAtDismissal")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AttemptCountAtDismissal")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("DismissedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DismissedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StageKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId", "StageKey")
+                        .IsUnique();
+
+                    b.ToTable("TeamSkillGapDismissals", (string)null);
                 });
 
             modelBuilder.Entity("Sellevate.Learning.Features.Techniques.Models.Technique", b =>
