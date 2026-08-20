@@ -55,6 +55,7 @@ namespace Sellevate.Organization.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Phone")
+                        .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 
