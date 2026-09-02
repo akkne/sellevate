@@ -435,7 +435,7 @@ All types return `score` on a **0–100** scale. `isCorrect` rules differ:
 |------|---------|-------------|
 | `choose_option`, `fill_blank`, `reorder` | Binary: 100 or 0 | score == 100 |
 | `match_pairs`, `categorize` | Partial: `(correct / total) × 100` | all items correct |
-| `spot_mistake` | 50 pts for the right line + 0–50 from AI on the explanation | score ≥ 75 |
+| `spot_mistake` | The right line alone scores 70 (the session's own pass mark); a written explanation is optional and, when given, is graded by AI as a bonus that can raise the score up to 100 but never pulls it back below 70 | `selectedLineIndex` matches the mistake line |
 | `rewrite`, `free_text`, `evaluate_call` | AI: `score = rating × 10` | `passed \|\| rating ≥ 8` |
 | `ai_dialogue` | AI, but score 30 / fail if user turns < `max_turns / 2` | `passed \|\| rating ≥ 8` |
 | `theory_card` | Not graded — always 100 | always `true` (completion only) |

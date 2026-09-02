@@ -29,9 +29,9 @@ spoof them. See `src/backend/gateway/Gateway/IdentityForwarding.cs` and
 |---|---|---|
 | `X-User-Id` | JWT `sub` (falls back to the `NameIdentifier` claim) | present on any authenticated request |
 | `X-User-Role` | JWT `role` claim | present when the token carries a role |
-| `X-Organization-Id` | JWT `org_id` claim | present once `identity-service` issues `org_id` (Phase 40.6); absent on tokens without it |
+| `X-Organization-Id` | JWT `org_id` claim | present when the token carries `org_id`; absent on tokens without it |
 
-`org_role` (Phase 40.6) is **not** forwarded as a gateway header — unlike `X-User-Id`/
+`org_role` is **not** forwarded as a gateway header — unlike `X-User-Id`/
 `X-User-Role`/`X-Organization-Id`, every service already validates the JWT itself
 (`AddJwtBearer`, shared signing key), so all four policies (`RequirePlatformAdmin`,
 `RequireSuperAdmin`, `RequireOrgAdmin`, `RequireOrgSuperAdmin`) read the `org_role`/`role` claims
@@ -45,7 +45,7 @@ caller is a validated identity that lacks organization context, not an unauthent
 string, or route — enforced by `scripts/tenancy-boundary-lint.py` (CI: `tenancy-boundary`
 workflow). See [docs/TENANCY/TENANCY.md](TENANCY/TENANCY.md) section 1.3.
 
-**Exception since 2026-08-16 (the owner's role split):** a caller whose validated `role` claim is
+**Exception:** a caller whose validated `role` claim is
 `Admin` or `SuperAdmin` — Sellevate's own staff — passes a `[TenantScoped]` route **without** the
 header, and their reads span every organization. They normally hold no membership, so requiring the
 header would lock the platform admin panel out of its own screens. The privilege comes from the
@@ -72,9 +72,9 @@ writes are unchanged and still require an explicit organization. See TENANCY.md 
 
 `AuthTokenResponseDto`: `{accessToken, userId, displayName, isOnboardingCompleted, role, orgId, orgRole}`
 
-> **`POST /auth/register` is back (Phase 40.37),** after 40.7 had deleted it — see
-> [TENANCY/TENANCY.md](TENANCY/TENANCY.md) section 4.1a. It creates an account with **no
-> membership** and never creates one, so registering buys an identity and no access to anybody's
+> **`POST /auth/register`** creates an account with **no
+> membership** and never creates one — see [TENANCY/TENANCY.md](TENANCY/TENANCY.md) section 4.1a.
+> Registering buys an identity and no access to anybody's
 > data: with no active membership the JWT carries no `org_id`, and the client shows the
 > "waiting for an invitation" screen instead of the app. Joining an organization is still
 > exclusively `POST /auth/invites/{token}/accept`.
@@ -92,7 +92,7 @@ writes are unchanged and still require an explicit organization. See TENANCY.md 
 > now has a screen to land on, and refusing it here while `/auth/login` admitted it was an
 > inconsistency the platform-staff carve-out existed to paper over.
 
-> **Suspended organizations (Phase 40.9).** `/auth/login`, `/auth/google`, `/auth/refresh` and
+> **Suspended organizations.** `/auth/login`, `/auth/google`, `/auth/refresh` and
 > `/auth/invites/{token}/accept` all answer `403` (`"Organization suspended"`) when the caller's
 > active membership belongs to a suspended organization. The check lives at the single point every
 > one of those routes converges on — token issuance — so a route added later cannot miss it, and a
@@ -101,16 +101,13 @@ writes are unchanged and still require an explicit organization. See TENANCY.md 
 > organization identity-service has not heard of yet reads as **active**, never as suspended — the
 > registry projection is eventually consistent and a lagging consumer must not lock a customer out.
 
-> **A failed dependency is a 5xx on every auth route (2026-08-26).** Identity-service classifies
+> **A failed dependency is a 5xx on every auth route.** Identity-service classifies
 > only exception types it defines below 500; anything else — an unreachable database above all — is
 > a `500` with no `detail`. This is a contract the client can rely on: a 4xx from `/auth/*` means the
 > request was genuinely refused, so a login screen may show it to the user, while a 5xx means the
-> service is down and the request is worth retrying. It did not hold before: `/auth/login/start`
-> answered `400`, `/auth/register` answered `409` and `/auth/google` answered `401` when Postgres was
-> simply unreachable, because each caught the `InvalidOperationException` Entity Framework raises for
-> a transient failure. See `docs/DECISIONS.md` (2026-08-26).
+> service is down and the request is worth retrying.
 
-**Three-step login (Phase 40.8).** The login method is a per-organization setting
+**Three-step login.** The login method is a per-organization setting
 (`organization_auth_config`, owned by identity-service), so the client asks first and sends a
 credential second:
 
@@ -133,12 +130,12 @@ address belongs to a customer. The organization is resolved from an **active mem
 `"oidc"`/`"saml"` are declared but **not implemented**. An organization configured for one has
 password login refused — `POST /auth/login` returns `401` even for the correct password — rather
 than silently downgraded. Only a customer who configures SSO makes their own domain's answer
-differ; see [DECISIONS.md](DECISIONS.md) (2026-08-15, 40.8).
+differ; see [DECISIONS.md](DECISIONS.md).
 
-`orgId`/`orgRole` (Phase 40.6) are `null` unless the user has an active `membership` row —
+`orgId`/`orgRole` are `null` unless the user has an active `membership` row —
 absent membership is never implicit organization access. `GET /auth/me` mirrors the same
 two fields (`orgId`, `orgRole`) alongside `id`/`email`/`displayName`/`role`/`isOnboardingCompleted`,
-and adds **`orgName`** (Phase 40.20).
+and adds **`orgName`**.
 
 `orgName` is the display name of the caller's own organization and is deliberately **not** a token
 claim: it is read from identity's local registry projection on every call, so a rename takes effect
@@ -149,7 +146,7 @@ the panel shows a neutral label rather than blocking. It exists because nothing 
 the name of their own organization: the claim carries only the id, and `GET /organizations/{id}` is
 platform-staff only.
 
-**Email verification flow.** Since 40.7 the invite replaces this flow for anyone arriving by
+**Email verification flow.** The invite replaces this flow for anyone arriving by
 invite: possession of the token already proves control of the address, so an accepted invite
 creates the user with `IsEmailVerified = true` and no code is ever sent. The code endpoints stay
 for accounts that predate invites. `/auth/verify-email` takes a code and returns tokens.
@@ -162,11 +159,13 @@ is not yet verified. Google sign-in is auto-verified. See [EMAIL_VERIFICATION.md
 
 ---
 
-## Platform superadmin `[SuperAdmin]` `[NOT tenant-scoped]` (Phase 40.9 — unchanged by the 2026-08-16 role split: impersonation and inviting an organization's administrators are both superadmin-exclusive)
+## Platform superadmin `[SuperAdmin]` `[NOT tenant-scoped]`
+
+Impersonation and inviting an organization's administrators are both superadmin-exclusive.
 
 > Served by **identity-service** under `/admin/platform/*` (gateway route `identity-admin-platform`).
 > Organization CRUD lives in organization-service; what lands here is everything that needs
-> identity-db — minting a token and creating an invite. See [DECISIONS.md](DECISIONS.md) (2026-08-15).
+> identity-db — minting a token and creating an invite. See [DECISIONS.md](DECISIONS.md).
 
 | Method | Path | Body | Response |
 |---|---|---|---|
