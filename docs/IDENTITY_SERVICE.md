@@ -1,7 +1,7 @@
 # Identity Service (microservices Phase 2)
 
 Implemented on branch `service/identity`. First **stateful** service extracted from the
-monolith per [MICROSERVICES_ROADMAP.md](MICROSERVICES_ROADMAP.md) Phase 2. It is the
+monolith; see [MICROSERVICES.md](MICROSERVICES.md) for the current service catalogue. It is the
 identity root of the platform and the **sole JWT issuer**; every other service trusts
 JWTs validated at the gateway and keeps a local `UserReplica` fed by the `user.*` events
 this service produces.

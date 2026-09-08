@@ -1,8 +1,7 @@
-# TESTING — Microservices Platform Foundations (Phase 0)
+# TESTING — Microservices Platform Foundations
 
-Covers the shared `building-blocks` library and the YARP gateway scaffolded in
-Phase 0 of the [microservices migration](../MICROSERVICES_ROADMAP.md). The monolith
-still serves all traffic, so these are the only new automated tests for Phase 0.
+Covers the shared `building-blocks` library and the YARP gateway (see
+[MICROSERVICES.md](../MICROSERVICES.md)).
 
 ## How to run
 

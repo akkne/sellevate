@@ -39,7 +39,7 @@
 #   - Both steps are idempotent; the Mongo script refuses to run if the collection already contains
 #     sessions belonging to a different organization than the one passed in.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/MICROSERVICES_PRODUCTION_MIGRATION.md → "Раскатка тенантов" and docs/DONT_FORGET.md.
+#     docs/DONT_FORGET.md.
 #
 # USAGE
 #     ./scripts/tenancy-ai-organization-rollout.sh                  # plan only

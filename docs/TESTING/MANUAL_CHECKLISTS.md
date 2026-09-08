@@ -4,6 +4,24 @@ Consolidated manual testing checklists for major features.
 
 ---
 
+## Finding real API failures in the browser
+
+The Chrome network log can keep stale entries across client-side navigations, which produces
+phantom failures. The reliable probe is the page's own Performance API, read after the page
+settles:
+
+```js
+performance.getEntriesByType('resource')
+  .filter(e => e.name.includes('api.sellevate.site') && e.responseStatus >= 400)
+  .map(e => e.name.replace('https://api.sellevate.site', '') + ' -> ' + e.responseStatus)
+```
+
+Run that in the page console after each navigation. `responseStatus` is the real status the
+browser saw, including for cross-origin responses — use it instead of trusting the extension's
+network panel when sweeping a set of routes for silent failures.
+
+---
+
 ## AI Dialog Testing
 
 ### Prerequisites
@@ -216,3 +234,65 @@ Consolidated manual testing checklists for major features.
 - [ ] `POST` with unknown `categorySlug` → 400
 - [ ] `PUT` replaces nested dialog/cases/coach atomically
 - [ ] `DELETE` cascades to dialog/cases/coach/skills rows
+
+---
+
+## Notification Preferences Testing
+
+`GET`/`PUT /notifications/preferences` — see [NOTIFICATION_SERVICE.md](../NOTIFICATION_SERVICE.md).
+
+- [ ] `/settings` shows the "Practice reminders" and "Product updates" switches, both saved
+      through the API (not `localStorage`)
+- [ ] Toggling a switch persists it: reload `/settings` and the state survives
+- [ ] Log in from a different browser/device: the switches match — this is what a browser-only
+      store could never do
+- [ ] A legacy `localStorage` value (`notif.practiceReminders` / `notif.productUpdates`) is
+      uploaded once on first visit after login, only while the server preference is still
+      `isDefault`; a value already saved on the server is never overwritten by a stale local key
+- [ ] Turning "Product updates" off changes no mail — no product-update mailer exists yet; this
+      is the documented state, not a bug
+
+---
+
+## Exercise Reorder Testing
+
+`PUT /admin/lessons/{lessonId}/exercises/reorder` — see [API_CONTRACTS.md](../API_CONTRACTS.md).
+
+- [ ] Open `/admin/lessons/<lessonId>/exercises` (or the skill/topic-nested admin path, or the
+      org content-override editor `/org/content/lessons/<lessonId>`) on a lesson with three or
+      more exercises
+- [ ] Press ▲/▼ on a row — it moves, one `PUT .../exercises/reorder` request goes out, and the
+      new order survives a reload
+- [ ] Force the reorder request to fail (stub it to 500 in DevTools) and press ▲ again — a toast
+      appears and the list snaps back to its previous order; because the request is atomic,
+      nothing moved on the server, so the rollback matches reality
+- [ ] Repeat on all three editors (both `/admin/**` exercise screens and the org editor) — all
+      three send the same single request per reorder
+
+---
+
+## Onboarding Skill Selection Testing
+
+Onboarding's `PUT /skills/enrolled` write is best-effort — see the "Lesson progression /
+unlocking" and onboarding sections of [LEARNING_SERVICE.md](../LEARNING_SERVICE.md).
+
+1. Before finishing onboarding, block the enrollment request in DevTools:
+   `const f = window.fetch; window.fetch = (u, o) => String(u).includes("/skills/enrolled") ? Promise.resolve(new Response("{}", {status: 500})) : f(u, o);`
+2. Finish onboarding. It lands on `/tree` (does **not** hold the user on the onboarding screen)
+   and shows one amber line explaining the skill selection did not save, with a link to the
+   profile.
+3. Reload `/tree` — the line is still there (it survives via `localStorage`, not just component
+   state).
+4. Enroll any skill from the profile and return to `/tree` — the line is gone for good.
+5. Dismissing the line with the × also clears it permanently.
+
+---
+
+## Admin Navigation Testing
+
+Gamification (XP, streaks, leagues) is removed from the product UI, but the `/admin/leagues` and
+`/admin/gamification` routes still exist and are deliberately unlinked from the admin sidebar
+(see [FEATURES.md](../FEATURES.md) and the "no gamification" product rule).
+
+- [ ] `/admin` sidebar has no "Leagues" and no "Gamification" entry
+- [ ] Typing `/admin/leagues` directly still loads the screen — routes are unlinked, not deleted

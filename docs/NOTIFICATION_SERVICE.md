@@ -1,6 +1,6 @@
 # NOTIFICATION_SERVICE.md — Notifications Service extraction
 
-> Phase 4 of the [microservices migration](MICROSERVICES_ROADMAP.md). Extracts the
+> Part of the [microservices architecture](MICROSERVICES.md). Covers the
 > in-app notification slice out of the monolith (`src/backend/api`) into an
 > independently deployable, **Redis-only** `notification-service`. The monolith slice
 > is left in place as reference; the gateway flips `/notifications/*` to the new
@@ -49,7 +49,7 @@ src/backend/notification-service/
 | Redis string `org:{orgId}:notifications:chat-email:read:{userId}:{conversationId}` | Chat read watermark | Suppresses a pending unread-chat email once the recipient has actually read the conversation; namespaced per organization since 40.13 — a conversation belongs to one organization, matching social-service's chat isolation in this same block. |
 | Redis sorted set `notifications:chat-email:pending` | Delayed unread-chat email queue | **Stays un-prefixed on purpose.** One due-time-ordered work list shaped like an outbox; the organization travels inside each queued item instead (`PendingChatEmail`), the same way it rides in a Kafka envelope. Items queued before 40.13 carry no organization and are dropped with a warning rather than dispatched under a guessed tenant. |
 | Redis hash `notifications:user:{userId}` | Cross-org user directory replica | **Deliberately not namespaced** — projects Identity's cross-organization user directory (TENANCY.md §4.2), the same call learning/ai/gamification/social made for their `UserReplicas` tables. |
-| Redis hash `notifications:preferences:{userId}` | The two `/settings` switches (practice reminders, product updates) | **Deliberately not namespaced**, same reason as the user replica above: a preference is a statement about one person's own inbox, and an identity here is cross-organization — an org-prefixed key would make a salesperson in two organizations switch reminders off twice. **No TTL**, unlike the inbox: an expiring preference would quietly switch product updates back on. Fields `practiceReminders`, `productUpdates`, `updatedAt`; a missing or unreadable `updatedAt` reads as "never set" (`isDefault`). Deleted on `user.deleted`. Added by Q-4. |
+| Redis hash `notifications:preferences:{userId}` | The two `/settings` switches (practice reminders, product updates) | **Deliberately not namespaced**, same reason as the user replica above: a preference is a statement about one person's own inbox, and an identity here is cross-organization — an org-prefixed key would make a salesperson in two organizations switch reminders off twice. **No TTL**, unlike the inbox: an expiring preference would quietly switch product updates back on. Fields `practiceReminders`, `productUpdates`, `updatedAt`; a missing or unreadable `updatedAt` reads as "never set" (`isDefault`). Deleted on `user.deleted`. |
 | Redis (shared) | Kafka idempotency store | `idem:notification-service:{eventId}` via the shared `RedisIdempotencyStore`. |
 
 No Postgres, no Mongo, no EF migrations, no `DatabaseBootstrapper`.
@@ -184,10 +184,10 @@ the frontend bell/panel is unaffected by the flip.
 
 `/notifications/preferences` is the one route here that is **not** `[TenantScoped]`, and its Redis
 key is the one notification key besides the user replica that carries no `org:` prefix — see
-"Data ownership" above and Q-4 in [NIGHT_AUDIT_QUESTIONS.md](NIGHT_AUDIT_QUESTIONS.md). Nothing in
-this service reads the switches yet: there is no practice-reminder or product-update dispatcher to
-gate (the only mailer is the delayed unread-chat one). Whatever mailer is built next is expected to
-read them — that they were *unreadable* is why they moved out of the browser.
+"Data ownership" above. Nothing in this service reads the switches yet: there is no
+practice-reminder or product-update dispatcher to gate (the only mailer is the delayed
+unread-chat one). Whatever mailer is built next is expected to read them — that they were
+*unreadable* is why they moved out of the browser.
 
 ## Running locally
 

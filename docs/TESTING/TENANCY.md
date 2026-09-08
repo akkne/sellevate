@@ -239,8 +239,7 @@ organization), then checks, in order:
 24/24 assertions green; both databases are dropped on exit (`trap … EXIT`).
 
 > The migration has been executed **only** against those throwaway databases. Running it on a copy
-> of production and then on production is a human step — see `docs/DONT_FORGET.md` and
-> [MICROSERVICES_PRODUCTION_MIGRATION.md §7](../MICROSERVICES_PRODUCTION_MIGRATION.md).
+> of production and then on production is a human step — see `docs/DONT_FORGET.md`.
 
 ### Checking a real server after the backfill
 
@@ -1815,14 +1814,14 @@ psql -v ON_ERROR_STOP=1 -d learning -f docs/TENANCY/sql/40.26_deadline_digest_ve
 Чеклисты есть не у всех блоков (40.15, 40.17, 40.18, 40.20, 40.21 и весь этап F —
 40.27–40.33 — своих разделов не получили). Этот раздел закрывает их тем, что важно на приёмке:
 **видит ли организация A хоть что-нибудь, принадлежащее организации B**. Всё остальное — предмет
-блочных чеклистов выше и `docs/TENANCY/PHASE_40_SUMMARY.md`.
+блочных чеклистов выше и `docs/TENANCY/RUNBOOK.md`.
 
 Ничего из этого не покрыто автотестом. Интеграционные тесты изоляции существуют, но требуют
 настоящих Postgres и Mongo и **ни разу не прогонялись** — см. «40.14 → Шаг 4».
 
 ### Шаг 0 — подготовка: две организации, четыре человека
 
-Раскатать по `docs/TENANCY/PHASE_40_SUMMARY.md` §2, затем создать через суперадминку платформы:
+Раскатать по `docs/TENANCY/RUNBOOK.md` («Часть II. Раскатка на сервере — по шагам»), затем создать через суперадминку платформы:
 
 | | Организация A | Организация B |
 |---|---|---|

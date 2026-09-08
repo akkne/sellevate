@@ -35,7 +35,7 @@
 #   - The backfill SQL is idempotent, contains no DELETE / DROP / TRUNCATE, and refuses to re-point
 #     a database that was already backfilled at a different organization.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/MICROSERVICES_PRODUCTION_MIGRATION.md → "Раскатка тенантов" and docs/DONT_FORGET.md.
+#     docs/DONT_FORGET.md.
 #
 # USAGE
 #     ./scripts/tenancy-company-organization-rollout.sh                  # plan only

@@ -1,6 +1,6 @@
 # GAMIFICATION_SERVICE.md — Gamification Service extraction
 
-> Phase 7 of the [microservices migration](MICROSERVICES_ROADMAP.md). Extracts the
+> Part of the [microservices architecture](MICROSERVICES.md). Covers the
 > progress & recognition core (progress points, activity consistency, milestones, team
 > progress) out of the monolith (`src/backend/api`) into an independently deployable,
 > **event-driven** `gamification-service`. The monolith slices are left in place as

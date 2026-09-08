@@ -304,11 +304,11 @@ Secrets (JWT, Google, OpenAI, Deepgram, Yandex, SuperAdmin) come from the root
 > authenticates via `X-Auth-Token`), otherwise every LLM call comes back `401 API key is
 > missing` — see [DECISIONS.md](DECISIONS.md).
 
-## Kafka & the API gateway (microservices migration)
+## Kafka & the API gateway
 
-Phase 0 of the [microservices migration](MICROSERVICES_ROADMAP.md) added a Kafka
-broker and a YARP gateway to the local stack. Both are part of the infra profile;
-the gateway runs on the host like the other apps.
+The local stack includes a Kafka broker and a YARP gateway (see
+[MICROSERVICES.md](MICROSERVICES.md)). Both are part of the infra profile; the
+gateway runs on the host like the other apps.
 
 | Service | Host address | Notes |
 |---|---|---|

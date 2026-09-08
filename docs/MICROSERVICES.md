@@ -1,382 +1,420 @@
-# MICROSERVICES.md — Target Architecture
+# MICROSERVICES.md — Service Architecture
 
-> Target-state design for breaking the SalesTrainer/Sellevate .NET monolith
-> (`src/backend/api`) into clean, independently deployable microservices.
-> The migration plan and atomic tasks live in **[MICROSERVICES_ROADMAP.md](MICROSERVICES_ROADMAP.md)**.
-> This file is the **destination**; the roadmap is the **route**.
+Sellevate's backend is nine ASP.NET Core 9 services behind a single YARP API
+gateway: one bounded context per service, one database per service, no shared
+database and no cross-service foreign keys. Backend-to-backend communication is
+async over Apache Kafka by default; the frontend only ever talks to the gateway
+over REST. A shared `BuildingBlocks` library gives every service the same event
+envelope, Kafka publisher/consumer base, outbox, tenancy middleware, and health
+checks, so the services stay structurally consistent without a shared runtime.
 
----
-
-## 1. Goals & principles
-
-1. **Clean service boundaries** — each service owns one bounded context, its own
-   data store, and its own deploy lifecycle. No shared database, no cross-service
-   foreign keys.
-2. **Database-per-service** — every service has its own Postgres DB / Mongo DB /
-   Redis instance. The single monolithic `AppDbContext` (~40 entities) is split
-   along ownership lines.
-3. **Async-first between backends** — backend-to-backend communication goes over
-   **Apache Kafka** (events, eventual consistency). Synchronous service-to-service
-   REST is the exception, used only for read queries that cannot be event-replicated.
-4. **REST for the frontend** — anything the Next.js frontend reads/writes is a
-   synchronous REST endpoint, exposed through a single **API Gateway (YARP)**.
-5. **Redis-only where consistency does not matter** — transient, high-write,
-   loss-tolerant data (notifications inbox, presence/analytics counters) lives in
-   Redis with no relational guarantees.
-6. **Single source of identity** — `User` is owned by **Identity**. Every other
-   service keeps a small local **read-model replica** (`UserId`, `DisplayName`,
-   `AvatarKey`) kept in sync via `user.*` Kafka events. Services never reach into
-   Identity's DB.
-
-### Tech decisions (locked)
-
-| Decision | Choice | Rationale |
-|---|---|---|
-| Data isolation | **Database-per-service** | True microservice isolation; strongest resume signal |
-| Service stack | **All ASP.NET Core 9 (C#)** | Reuse existing vertical slices; consistent ops |
-| Backend↔backend | **Apache Kafka** | Eventual consistency, decoupling, event-driven resume narrative |
-| Frontend↔backend | **REST/JSON over API Gateway** | Browser-friendly, streaming-capable |
-| API Gateway | **YARP** (Microsoft reverse proxy, standalone service) | Code-visible routing + central JWT validation |
-| Simple stores | **Redis** for Notifications & Analytics | No consistency/atomicity needed there |
-| AuthN | **JWT** issued by Identity, validated at the Gateway | Single issuer, stateless verification |
+Multi-tenancy: `Organization` is the tenant (see
+[TENANCY/TENANCY.md](TENANCY/TENANCY.md)). `Company` is a per-tenant CRM entity
+(a salesperson's prospect) owned by `company-service` — not to be confused with
+`Organization`.
 
 ---
 
-## 2. Service catalogue (8 services + Gateway)
+## 1. Service catalogue
 
-```
-                         ┌──────────────────────────┐
-   Next.js frontend ───► │   API Gateway (YARP)     │  JWT validation, routing
-                         └──────────┬───────────────┘
-            ┌──────────────┬────────┼────────┬──────────────┬───────────────┐
-            ▼              ▼        ▼         ▼              ▼               ▼
-       ┌─────────┐  ┌───────────┐ ┌──────┐ ┌────────────┐ ┌────────┐ ┌──────────────┐
-       │Identity │  │ Learning  │ │ AI   │ │Gamification│ │ Social │ │Notifications │
-       │(Postgres)│ │(Postgres) │ │(Mongo│ │ (Postgres) │ │(PG+Mongo)│ │  (Redis)    │
-       └─────────┘  └───────────┘ │+APIs)│ └────────────┘ └────────┘ └──────────────┘
-                                   └──────┘            ┌──────────────┐
-                                                       │  Analytics   │
-                                                       │   (Redis)    │
-                                                       └──────────────┘
-                            ▲                ▲
-                            └──── Apache Kafka (event bus) ────┘
-```
+| Service | Port (host:container) | Bounded context | Store |
+|---|---|---|---|
+| `gateway` | 5000:8080 | Single entry point: JWT validation, routing, identity-header forwarding | — |
+| `identity-service` | 5002:8080 | Who the user is: auth, profile, onboarding, avatars. Sole JWT issuer | Postgres `identity` |
+| `ai-service` | 5003:8080 | Everything that talks to an LLM/speech API: dialog roleplay, TTS, STT, AI grading | Postgres `ai` + Mongo `dialog_sessions`/`chat_messages` |
+| `notification-service` | 5004:8080 | In-app notification inbox | Redis only |
+| `analytics-service` | 5005:8080 | Product metrics, funnels, presence | Redis (`analytics-redis`) + Prometheus |
+| `social-service` | 5006:8080 | User-to-user interaction: friends, Discuss forum, chat | Postgres `social` + Mongo `chat_conversations` |
+| `gamification-service` | 5007:8080 | Progress points, activity streaks, achievements, leagues | Postgres `gamification` |
+| `learning-service` | 5008:8080 | Content and the learner's progress through it: skills, lessons, exercises, assignments | Postgres `learning` |
+| `company-service` | 5009:8080 | The salesperson's account book: companies, call log, practice calls, contacts | Postgres `company` |
+| `organization-service` | 5010:8080 | The tenant registry: organizations, demo requests | Postgres `organization` |
 
-### 2.0 Repository layout
+All ports are bound to `127.0.0.1` only. Inside the Docker network every service
+listens on `:8080` and is addressed by container name (`http://identity:8080`,
+etc.); only the gateway is reachable from outside.
 
-Every service lives in **its own folder under `src/backend/`**, and **each service
-carries its own tests folder next to its code** — there is no shared top-level test
-project. The legacy monolith (`src/backend/api`) and its shared `src/backend/tests`
-**stay in the repo throughout the migration and are kept as a reference even after
-retirement** — services are carved out beside it and routes are flipped at the gateway,
-never by deleting monolith code. In Phase 9 the monolith is dropped from deploy/compose
-but its source is **not** deleted (kept for behaviour-parity reference).
+Shared infra: Postgres 17 (one instance, one logical database per relational
+service — `Database=<service>` in each service's connection string), Mongo 8
+(one instance, one logical database `sallevate` split by collection), Redis 7
+(`redis` for identity/ai/notification/gamification/social/learning, a separate
+`analytics-redis` instance for analytics), Kafka (single-broker KRaft) +
+kafka-ui + kafka-exporter, MinIO (S3-compatible, for identity avatars and
+social Discuss photos), Loki + Prometheus + Grafana for logs/metrics/dashboards.
+
+### Repository layout
+
+Each service is self-contained under `src/backend/`: `<service>/<Name>` (code)
++ `<service>/<Name>.Tests` (unit + integration tests for that service only).
+Cross-service contract tests live in `building-blocks/BuildingBlocks.Tests`.
 
 ```
 src/backend/
-  api/                         ← legacy monolith (kept as reference, not deleted)
-  tests/                       ← legacy monolith tests (kept as reference)
-  building-blocks/             ← shared lib (event envelope, Kafka base, idempotency,
-                                  UserReplica, JWT helpers)
-  gateway/
-    Gateway/                   ← YARP gateway code
-    Gateway.Tests/             ← tests, next to the code
-  identity-service/
-    Identity/
-    Identity.Tests/
-  learning-service/
-    Learning/
-    Learning.Tests/
-  ai-service/
-    Ai/
-    Ai.Tests/
-  gamification-service/
-    Gamification/
-    Gamification.Tests/
-  social-service/
-    Social/
-    Social.Tests/
-  notification-service/
-    Notification/
-    Notification.Tests/
-  analytics-service/
-    Analytics/
-    Analytics.Tests/
-  company-service/
-    Company/
-    Company.Tests/
+  building-blocks/         BuildingBlocks (shared lib) + BuildingBlocks.Tests
+  gateway/                 Gateway + Gateway.Tests
+  identity-service/        Identity + Identity.Tests
+  ai-service/               Ai + Ai.Tests
+  notification-service/    Notification + Notification.Tests
+  analytics-service/       Analytics + Analytics.Tests
+  social-service/          Social + Social.Tests
+  gamification-service/    Gamification + Gamification.Tests
+  learning-service/        Learning + Learning.Tests
+  company-service/         Company + Company.Tests
+  organization-service/    Organization + Organization.Tests
 ```
 
-Rule: a service is self-contained — `<service>/<Name>` (code) + `<service>/<Name>.Tests`
-(unit + integration tests for that service only). Cross-service contract tests, if any,
-live in `building-blocks`.
+---
 
-### 2.1 Identity Service — `identity-service`
-**Bounded context:** who the user is.
-- **Absorbs:** `Auth`, `Profile`, `Onboarding`, `Avatars`.
-- **Owns (Postgres `identity-db`):** `Users`, `RefreshTokens`, `EmailVerificationCodes`,
-  `UserProfiles`, `DefaultAvatars`.
-- **External:** Google OAuth, Email (MailerSend), S3/MinIO (avatar blobs).
-- **Frontend REST:** `/auth/*`, `/profile/*`, `/onboarding/*`, `/avatars/*`.
-- **Kafka (produces):** `user.registered`, `user.updated`, `user.deleted`,
+## 2. Services
+
+### 2.1 Identity — `identity-service`
+- **Owns (Postgres `identity`):** `Users`, `RefreshTokens`, `EmailVerificationCodes`,
+  `UserProfiles`, `DefaultAvatars`, `Memberships`, `OrganizationAuthConfigurations`,
+  `OrganizationReplicas`, `Invites`.
+- **External:** Google OAuth, MailerSend (email), S3/MinIO (avatar blobs).
+- **Frontend REST:** `/auth/*`, `/profile[/*]`, `/onboarding[/*]`, `/avatars[/*]`,
+  `/invites[/*]`, `/memberships[/*]`, `/admin/platform/*`, `/admin/users[/*]`.
+- **Role:** the only JWT issuer. Every other relational service keeps a local
+  `UserReplica` read model instead of reading Identity's database directly.
+- **Kafka produces:** `user.registered`, `user.updated`, `user.deleted`,
   `user.avatar.changed`.
-- **Role:** the only JWT **issuer**. Holds the signing key. Every other service
-  trusts JWTs validated at the gateway and keeps a local user replica.
+- **Kafka consumes:** `organization.created`, `organization.updated`,
+  `organization.suspended` (keeps `OrganizationReplicas` in sync).
 
-### 2.2 Learning Service — `learning-service`
-**Bounded context:** content + the learner's progress through it.
-- **Absorbs:** `SkillTree`, `Lessons`, `Exercises` (non-AI grading + orchestration),
-  `Reference`, `Techniques`, `DailyQuotes`.
-- **Owns (Postgres `learning-db`):** `Skills`, `SkillStages`, `Topics`, `Lessons`,
+### 2.2 AI Engine — `ai-service`
+- **Owns:** Postgres `ai` (dialog bundle/mode config); Mongo `dialog_sessions` /
+  `chat_messages` (roleplay transcripts). Otherwise largely stateless compute;
+  Redis is used only as a TTS cache and for voice-usage-quota bookkeeping.
+- **External:** OpenAI-compatible LLM API, OpenAI Whisper (STT), Yandex TTS.
+- **Frontend REST (streaming):** `/dialog/*`, `/transcription/*`,
+  `/admin/dialog/*`, `/admin/dialog-sessions[/*]`, `/admin/ai-usage[/*]`,
+  `/admin/ai-quota[/*]`, `/admin/voice/*`.
+- **Sync REST (internal):** `POST /ai/evaluate`, called by Learning to grade
+  AI-graded exercise types; `StartSessionAsync`, called by Company to seed a
+  practice-call roleplay with company context.
+- **Kafka produces:** `dialog.evaluated`.
+- **Kafka consumes:** `user.registered`/`updated`/`deleted` (replica),
+  `organization.profile.updated` (content-substitution profile cache),
+  `gamification.dialog-weights.updated` (caches the admin-tuned dialog scoring
+  weights locally — this consumer opts out of tenant scoping, since scoring
+  weights are platform config, not per-organization data).
+- **Per-organization AI quota:** voice minutes (daily/monthly) and monthly LLM
+  token budget are metered per organization; an organization with no quota row
+  falls back to the platform default, never "unmetered". Configurable via
+  `PUT /admin/ai-quota`.
+
+### 2.3 Notifications — `notification-service` (Redis-only)
+- **Owns (Redis):** a capped per-recipient inbox list and an unread counter,
+  each key-prefixed `org:{organizationId}:notifications:inbox:{userId}` /
+  `...notifications:unread:{userId}`, TTL 30 days. A handful of keys are
+  deliberately un-prefixed because the identity they key on is cross-organization
+  by product design (`notifications:user:{userId}` profile cache,
+  `notifications:preferences:{userId}` reminder opt-outs) or because splitting
+  them per organization would defeat their purpose (the chat-email pending
+  queue, a single due-time-ordered work list).
+- **Frontend REST:** `/notifications[/*]` (list, unread count, mark-read).
+- **Kafka consumes:** `user.registered`/`updated`/`deleted` (profile cache for
+  outbound email), `achievement.unlocked`, `streak.milestone`,
+  `friend.request.received`, `friend.request.accepted`, `chat.message.sent`,
+  `chat.message.read`, `discuss.reply.created`, `company.followup.due`,
+  `assignment.issued`, `assignment.deadline.approaching`, `assignment.reminder`,
+  `assignment.deadline.digest`, `dialog.review.commented`,
+  `dialog.review.resolved`, `dialog.review.disputed` — writes an inbox entry
+  and, for some event types, a MailerSend email. Pure consumer + thin read API.
+
+### 2.4 Analytics — `analytics-service` (Redis + Prometheus)
+- **Owns (Redis, its own instance `analytics-redis`):** presence sorted set,
+  visit/event counters, a platform-wide operational funnel counter fed by
+  Kafka; exports to Prometheus (Grafana dashboards).
+- **Frontend REST:** `POST /tracking/{**catch-all}` (event tracking, presence
+  ping).
+- **Kafka consumes:** `user.registered`, `exercise.completed`, `xp.granted`,
+  `assignment.issued`, `assignment.progress.changed`. Loss-tolerant by design —
+  no durability guarantee needed for product-funnel counters.
+- **Note:** the assignment funnel here is a platform-wide operational counter,
+  not the per-organization manager view — that view reads progress rows
+  directly out of `learning`'s database, where they live.
+
+### 2.5 Social — `social-service`
+- **Owns (Postgres `social`):** `Friendships`, `DiscussThreads`,
+  `DiscussReplies`, `DiscussVotes`, `DiscussTags`, `DiscussThreadTags`,
+  `DiscussPhotos`. **Owns (Mongo `chat_conversations`).**
+- **External:** S3/MinIO (Discuss photos).
+- **Frontend REST:** `/friends[/*]`, `/discuss/*`, `/admin/discuss/*`, `/chat/*`.
+- **Kafka produces:** `friend.request.received`, `friend.request.accepted`,
+  `chat.message.sent`, `chat.message.read`, `discuss.reply.created`.
+- **Kafka consumes:** `user.registered`/`updated`/`deleted` (replica).
+
+### 2.6 Gamification — `gamification-service`
+Event-driven core: almost nothing here is written synchronously, it mostly
+reacts to events from Learning and AI.
+- **Owns (Postgres `gamification`):** `UserXpRecords`, `UserStreaks`,
+  `GamificationSettings`, `ExerciseTypeRewards`, `StreakMilestones`,
+  `Achievements`, `UserAchievements`, `Leagues`, `LeagueTiers`,
+  `LeagueMemberships`, `LeagueSettings`.
+- **Frontend REST:** `/gamification/*`, `/league[/*]`,
+  `/profile/achievements[/*]`, `/admin/gamification/*`, `/admin/leagues[/*]`.
+- **Kafka consumes:** `exercise.completed`, `lesson.completed`,
+  `skill.completed`, `dialog.evaluated`, `user.registered`/`updated`/`deleted`/
+  `avatar.changed` (replica) → grants progress points, updates the streak,
+  unlocks achievements. Each grant is idempotent on the triggering event's id
+  (a redelivered event cannot double-grant).
+- **Kafka produces:** `xp.granted`, `achievement.unlocked`, `streak.milestone`,
+  `gamification.dialog-weights.updated`.
+- **Background jobs:** streak reset, weekly league closure (Hangfire, own DB).
+- **Note (product):** progress points, streaks and leagues are gamification
+  mechanics that exist end to end in this service and are returned by its API
+  (including `/skill-tree`), but are **not surfaced anywhere in the product
+  UI**. Do not describe them as user-visible.
+
+### 2.7 Learning — `learning-service`
+- **Owns (Postgres `learning`):** `Skills`, `SkillStages`, `Topics`, `Lessons`,
   `Exercises`, `ExerciseTypePrompts`, `UserSkillProgressRecords`,
   `UserLessonProgressRecords`, `UserExerciseAttempts`, `ReferenceMaterials`,
-  `Techniques`, `TechniqueSkills`, `TechniqueCoaches`, `UserTechniqueProgressRecords`,
-  `DailyQuotes`.
-- **Frontend REST:** `/skills/*`, `/lessons/*`, `/exercises/*`, `/reference/*`,
-  `/techniques/*`, `/daily-quote`.
-- **Kafka (produces):** `exercise.completed`, `lesson.completed`, `skill.completed`,
-  `technique.mastery.changed`.
-- **Sync dependency:** for AI-graded exercise types, calls **AI Service** REST and
-  awaits the verdict, then persists the attempt and emits `exercise.completed`.
+  `Techniques`, `TechniqueSkills`, `TechniqueCoaches`,
+  `UserTechniqueProgressRecords`, `DailyQuotes`, assignments and dialog-review
+  tables.
+- **Frontend REST:** `/skills[/*]`, `/skill-tree`, `/program[/*]`,
+  `/lessons[/*]`, `/topics/*`, `/exercises/*`, `/reference[/*]`,
+  `/techniques[/*]`, `/daily-quote`, `/assignments/*`, `/dialog-reviews[/*]`,
+  and the corresponding `/admin/*` routes for skills, skill-stages, topics,
+  lessons, program, exercises, exercise-type-prompts, reference, techniques,
+  daily-quotes, seeder, assignments, team, content-generation, content,
+  dialog-reviews.
+- **Sync dependency:** for AI-graded exercise types, calls AI Engine
+  `POST /ai/evaluate` and awaits the verdict before persisting the attempt.
+- **Kafka produces:** `exercise.completed`, `lesson.completed`,
+  `skill.completed`, `assignment.issued`, `assignment.deadline.approaching`,
+  `assignment.reminder`, `assignment.deadline.digest`,
+  `assignment.progress.changed`, `dialog.review.commented`,
+  `dialog.review.resolved`, `dialog.review.disputed`.
+- **Kafka consumes:** `user.registered`/`updated`/`deleted`/`avatar.changed`
+  (replica), `dialog.evaluated` + `exercise.completed` (assignment-threshold
+  evaluation — the funnel state a person's assignment is in),
+  `organization.profile.updated` (content-substitution profile cache).
 
-### 2.3 AI Engine Service — `ai-service`
-**Bounded context:** everything that talks to an LLM / speech API.
-- **Absorbs:** `Dialog` (GPT roleplay), `Voice` (TTS), `Transcription` (Whisper/STT),
-  and the **AI evaluation strategies** currently inside `Exercises`.
-- **Owns (Mongo `ai-db`):** `dialog_sessions` / `chat_messages` (roleplay transcripts).
-  Largely **stateless compute** otherwise; Redis only as a TTS cache.
-- **External:** OpenAI GPT, OpenAI Whisper, Google/Yandex/ElevenLabs TTS, Deepgram STT.
-- **Frontend REST (streaming):** `/dialog/*`, `/voice/*`, `/transcription/*` —
-  `IAsyncEnumerable` streaming preserved through the gateway.
-- **Sync REST (for other services):** `POST /ai/evaluate` (called by Learning to
-  grade AI exercise types).
-- **Kafka (produces):** `dialog.evaluated` (progress-bearing score for a finished roleplay).
-- **Config replication:** consumes `gamification.dialog-weights.updated` to cache the
-  admin-tuned dialog scoring weights locally (no synchronous read of Gamification).
+### 2.8 Company — `company-service`
+- **Owns (Postgres `company`):** `Company` (Id, UserId, Name, Description,
+  Status, NextActionAt, NextActionNote, FollowUpNotifiedAt, CreatedAt,
+  UpdatedAt), `CallLogEntry`, `PracticeCall` (links to an AI `DialogSession`
+  with a goal), `CompanyContact`.
+- **Frontend REST:** `/companies[/*]`.
+- **Kafka produces (producer only):** a polling background service
+  (`FollowUpReminderBackgroundService`, one scoped pass per organization)
+  publishes `company.followup.due` for companies whose `NextActionAt` is due
+  and not yet notified. Registers only the Kafka publisher + topic
+  provisioner, not the full consumer stack, since it never consumes.
+- **Sync dependency:** starting a practice call hands `companyName` /
+  `companyDescription` / `callGoal` to AI Engine's `StartSessionAsync`, which
+  composes it into the roleplay's system prompt.
+- **No Redis or Mongo.** Every query is scoped to the caller's tenant and
+  `UserId` at the service layer.
 
-### 2.4 Gamification Service — `gamification-service`
-**Bounded context:** progress & recognition. **A core event-driven service.**
-- **Absorbs:** `Gamification` (progress points, activity consistency, milestones), `Achievements`, `League`.
-- **Owns (Postgres `gamification-db`):** `UserXpRecords`, `UserStreaks`,
-  `GamificationSettings`, `ExerciseTypeRewards`, `StreakMilestones`, `Achievements`,
-  `UserAchievements`, `Leagues`, `LeagueTiers`, `LeagueMemberships`, `LeagueSettings`.
-- **Frontend REST:** `/gamification/*`, `/achievements/*`, `/league/*`.
-- **Kafka (consumes):** `exercise.completed`, `dialog.evaluated`, `lesson.completed`,
-  `skill.completed` → grants progress points, updates activity consistency, unlocks
-  milestones, updates the weekly team progress. **This is pure eventual consistency** —
-  no atomic cross-service transaction with Learning/AI; if an event is late, progress
-  simply lands a moment later.
-- **Kafka (produces):** `xp.granted`, `achievement.unlocked`, `streak.milestone`,
-  `gamification.dialog-weights.updated`.
-- **Background jobs:** `StreakResetJob`, `WeeklyLeagueClosureJob` (Hangfire on its own DB).
+### 2.9 Organization — `organization-service`
+- **Owns (Postgres `organization`):** `Organizations`, demo-request records.
+- **Frontend REST:** `/organizations[/*]`, `/demo-requests[/*]`,
+  `/admin/demo-requests[/*]`.
+- **External:** MailerSend (demo-request lead notification).
+- **Sync dependency:** provisioning a new organization from a demo request
+  calls Identity's internal API to bootstrap the organization's first
+  administrator.
+- **Kafka produces:** `organization.created`, `organization.updated`,
+  `organization.suspended`, `organization.profile.updated`.
 
-### 2.5 Social Service — `social-service`
-**Bounded context:** user-to-user interaction.
-- **Absorbs:** `Friends`, `Discuss` (forum), `Chat`.
-- **Owns (Postgres `social-db`):** `Friendships`, Discuss tables (`DiscussThreads`,
-  `DiscussReplies`, `DiscussVotes`, `DiscussTags`, `DiscussPhotos`, …).
-  **Owns (Mongo `social-mongo`):** `chat_conversations`.
-- **External:** S3/MinIO (Discuss photos).
-- **Frontend REST:** `/friends/*`, `/discuss/*`, `/chat/*`.
-- **Kafka (produces):** `friend.request.received`, `friend.request.accepted`,
-  `chat.message.sent`.
-- **Local replica:** keeps `UserId`/`DisplayName`/`AvatarKey` via `user.*` events.
+### 2.10 API Gateway — `gateway` (YARP)
+Single public entry point. Terminates TLS, validates the JWT once, and routes
+by path prefix to the services above. Before forwarding a request it strips
+any client-supplied `X-User-Id` / `X-User-Role` / `X-Organization-Id` headers
+and re-adds them **only** from the validated JWT principal, so a caller cannot
+spoof identity by setting the header itself.
 
-### 2.6 Notifications Service — `notification-service` (Redis-only)
-**Bounded context:** the in-app inbox. **Simplest service — no relational store.**
-- **Absorbs:** `Notifications`.
-- **Owns (Redis):** per-user notification list (`notif:{userId}` → capped list) +
-  unread counter (`notif:unread:{userId}`). TTL-based 30-day expiry replaces the
-  Hangfire cleanup job. **No consistency or atomicity requirements** — a lost
-  notification is acceptable, which is exactly why Redis fits.
-- **Frontend REST:** `/notifications/*` (list, unread count, mark-read).
-- **Kafka (consumes):** `achievement.unlocked`, `streak.milestone`,
-  `friend.request.received`, `friend.request.accepted`, `chat.message.sent`
-  → writes an inbox entry. Pure consumer + thin read API.
+**Each service still re-validates the JWT and authorizes off its own claims**
+(shared signing key) — the gateway is not the sole authorization authority,
+and the forwarded headers are defense-in-depth, not the trust boundary any
+service actually relies on.
 
-### 2.7 Analytics Service — `analytics-service` (Redis + Prometheus)
-**Bounded context:** product metrics & presence. **Also Redis-only, loss-tolerant.**
-- **Absorbs:** `Metrics`, activity tracking, presence.
-- **Owns (Redis):** `presence:online` sorted set, visit/event counters; exports to
-  **Prometheus** (existing Grafana stack unchanged).
-- **Frontend REST:** `POST /tracking/events`, presence ping.
-- **Kafka (consumes):** optionally mirrors `user.registered`, `exercise.completed`,
-  `xp.granted` for product funnels. No durability guarantees needed.
-
-### 2.8 Company Service — `company-service` (Postgres, Phase 39)
-**Bounded context:** the salesperson's account book — companies they sell into, their
-call history, and practice-call sessions tied to a company.
-- **Owns (Postgres `company`):** `Company` (Id, UserId, Name, Description, Status,
-  NextActionAt, NextActionNote, FollowUpNotifiedAt, CreatedAt, UpdatedAt), `CallLogEntry`
-  (real-call log entries), `PracticeCall` (links to an AI `DialogSession` with a goal),
-  `CompanyContact` (mini-CRM contacts).
-- **Frontend REST:** `/companies/*` (companies CRUD, status, follow-up scheduling, call log,
-  practice-call records, contacts).
-- **Kafka producer only** (since Phase 39.11): a polling background service
-  (`FollowUpReminderBackgroundService`, default every 5 min, one scoped pass per organization
-  since 40.12) publishes `company.followup.due`
-  for companies whose `NextActionAt` is due and not yet notified — see §4.1. Registers only
-  the Kafka publisher + topic provisioner directly (not the full `AddSellevateEventing`
-  helper), since it never consumes and so has no need for the Redis-backed consumer
-  idempotency store that helper also wires up. **No Redis or Mongo dependency.** Every
-  query is scoped to the JWT's `UserId` at the service layer; 404 on foreign ids.
-- **Sync dependency:** starting a practice call hands a company-context payload
-  (`companyName`, `companyDescription`, `callGoal`) to the **AI Service** `StartSessionAsync`
-  call, which composes it into the roleplay's system prompt (see 2.3).
-
-### 2.9 API Gateway — `gateway` (YARP)
-- Single public entry point. Terminates TLS, validates the JWT once, forwards
-  `X-User-Id`/`X-User-Role` headers downstream (stripping client copies), and routes by
-  path prefix to the services above. **Each service still re-validates the JWT and
-  authorizes off its claims** (shared signing key) — the gateway is not the sole
-  authorization authority, and the forwarded headers are defense-in-depth, not a trust
-  boundary the services rely on. Admin routes (`/admin/*`) fan out to each owning
-  service's admin endpoints, which enforce their own `[Authorize]` admin policy.
+Admin routes (`/admin/*`) fan out by sub-path to each owning service's own
+admin endpoints (e.g. `/admin/leagues/*` → gamification, `/admin/discuss/*` →
+social, `/admin/users/*` → identity), which enforce their own `Admin`/
+`SuperAdmin` authorization policy. There is no central admin service — the
+frontend admin panel is a composition of these per-service admin APIs.
 
 ---
 
-## 3. Admin panel under microservices
+## 3. Kafka
 
-The monolith's `Admin` feature was an orchestrator over every other slice. In the
-target state there is **no central Admin service**: each service exposes its own
-`/admin/*` endpoints for the data it owns (Learning admin for skills/exercises,
-Gamification admin for progress-points configuration, etc.). The gateway enforces the `Admin`/`SuperAdmin`
-role and routes admin calls to the owning service. The frontend admin panel becomes
-a composition of those per-service admin APIs.
+### 3.1 Envelope
 
----
+Every event on Kafka is wrapped the same way (`BuildingBlocks/Eventing/EventEnvelope.cs`):
 
-## 4. Communication contracts
+```jsonc
+{
+  "eventId":        "guid",              // dedupe key for at-least-once delivery
+  "occurredAt":     "2026-...Z",          // UTC
+  "type":           "exercise.completed", // matches the topic name
+  "version":        1,                    // payload schema version
+  "organizationId": "guid | null",        // tenant; null only for platform-global events
+  "data":           { ... }               // raw JSON, deserialized by the consumer after
+                                           // it has looked at type/version
+}
+```
 
-### 4.1 Kafka topics (backend ↔ backend, async)
+`organizationId` is populated from the publishing request's tenant context for
+every tenant-scoped event. It stays `null` only for genuinely platform-global
+events — Identity's cross-org user lifecycle stream, and the gamification
+dialog-scoring-weights config replication. A consumer must know the tenant
+*before* it deserializes `data`: `KafkaConsumerBackgroundService` sets the
+tenant context from the envelope before invoking the handler, and by default a
+consumer **throws** on a missing organization. A platform-global consumer opts
+out explicitly by overriding `RequiresOrganization => false`.
 
-| Topic | Producer | Consumers | Payload (key fields) |
-|---|---|---|---|
-| `user.registered` | Identity | all (replica seed) | userId, email, displayName, avatarKey |
-| `user.updated` | Identity | all replicas | userId, displayName, avatarKey |
-| `user.deleted` | Identity | all (cascade cleanup) | userId |
-| `user.avatar.changed` | Identity | Social, Gamification | userId, avatarKey |
-| `exercise.completed` | Learning | Gamification, Analytics | userId, exerciseType, score, isCorrect |
-| `lesson.completed` | Learning | Gamification | userId, lessonId, bestScore |
-| `skill.completed` | Learning | Gamification | userId, skillId |
-| `dialog.evaluated` | AI | Gamification | userId, rawScore, criteria |
-| `xp.granted` | Gamification | Analytics, League(internal) | userId, amount, source |
-| `achievement.unlocked` | Gamification | Notifications | userId, achievementKey, title |
-| `streak.milestone` | Gamification | Notifications | userId, dayCount, bonusXp |
-| `gamification.dialog-weights.updated` | Gamification | AI | weights snapshot |
-| `friend.request.received` | Social | Notifications | recipientId, requesterName |
-| `friend.request.accepted` | Social | Notifications | recipientId, accepterName |
-| `chat.message.sent` | Social | Notifications | recipientId, senderName, preview |
-| `chat.message.read` | Social | Notifications | readerUserId, conversationId, readAt |
-| `discuss.reply.created` | Social | Notifications | recipientId, replyAuthorName, threadId, threadTitle, replyId, preview |
-| `company.followup.due` | Company | Notifications | companyId, userId, companyName, nextActionAt, note (+ `organizationId` in the envelope since 40.12) |
-| `assignment.issued` | Learning | Notifications, Analytics (40.25) | assignmentId, userId, title, goal, deadline — one event per recipient (40.23) |
-| `assignment.deadline.approaching` | Learning | Notifications | assignmentId, userId, title, deadline (40.23) |
-| `assignment.reminder` | Learning | Notifications | assignmentId, userId, title, deadline, requestedAt (40.23) |
-| `assignment.progress.changed` | Learning | Analytics | assignmentId, userId, previousStatus, status, bestScore, attemptCount |
-| `dialog.review.commented` | Learning | Notifications | noteId, userId (the manager), sessionId, quotedText, comment |
-| `dialog.review.resolved` | Learning | Notifications | noteId, userId (the manager who disputed), sessionId, outcome, disputedScore, adjustedScore, resolution |
+Convention: topic name = `<aggregate>.<event>`; partition key = `userId`, so
+one person's events are processed in order while different people's events
+parallelize across partitions.
 
-**Conventions:** topic = `<aggregate>.<event>`, partition key = `userId` (ordering
-per user), envelope = `{ eventId, occurredAt, type, version, organizationId, data }`,
-at-least-once delivery → **consumers are idempotent** (dedupe on `eventId`).
+### 3.2 Delivery, retries, dead-lettering
 
-**Tenancy in the envelope (Phase 40.3).** `organizationId` is part of the frozen
-cross-service contract, not a per-event payload field: a consumer must know the tenant
-*before* it deserializes `data`, and the outbox relay must be able to forward a stored
-event without understanding its payload. It is **nullable on the wire** — no producer
-populates it until organization membership exists end to end (blocks 40.6/40.9), and it
-stays `null` for genuinely platform-global events such as Identity's cross-org user
-lifecycle stream.
+Delivery is at-least-once, so **every consumer must be idempotent**
+(`EventMessageProcessor` dedupes on `eventId` via a Redis-backed idempotency
+store; gamification's progress-point grant additionally persists the
+triggering event id in its own database for stronger guarantees than Redis
+alone). A message that keeps failing after a bounded number of retries (3 by
+default, backoff 500 ms × attempt) is published to `<topic>.dlt` and the
+offset is committed anyway, so one poison message cannot block its partition.
+An envelope whose `version` is higher than the consumer supports is
+dead-lettered without being deserialized into the wrong shape.
 
-Nullable on the wire does **not** mean permissive on the consuming side.
-`KafkaConsumerBackgroundService` sets the tenant context from the envelope before invoking
-the handler and exposes `protected virtual bool RequiresOrganization => true`: by default a
-consumer **throws** on an envelope with no organization, and the exception travels the normal
-retry/dead-letter path. A platform-global consumer opts out explicitly by overriding it to
-`false`, which switches the message to `ITenantContext.IsSystem`. This keeps the rule from
-[TENANCY.md](TENANCY/TENANCY.md) §1.6 intact — *an unset tenant is an exception, never a
-license* — while still allowing the handful of consumers that are legitimately cross-org.
-Each consumer runs in a fresh DI scope per message, so the set-once `TenantContext` never
-carries one message's tenant into the next.
+Each service has its own Kafka consumer group, so the same event (e.g.
+`exercise.completed`) is delivered independently to every interested service —
+one topic, several independent readers.
 
-`OutboxMessage` carries a matching nullable `organizationId` column, mirrored from the
-envelope at enqueue time and **informational only** — the relay forwards `payload` verbatim
-and never filters on it. The relay stays the one legitimate system-wide reader of all rows,
-which is precisely why the tenant lives inside the serialized envelope rather than being
-derived at publish time. `PartitionKey` remains the **user id**: moving it to `org:user`
-would reshuffle every existing partition assignment and buy no ordering guarantee the
-current key does not already give.
+Topics are provisioned by each service on startup (`KafkaTopicProvisioner`,
+part of `AddSellevateEventing`) rather than relying on broker auto-create;
+partition count / replication factor are configurable
+(`Kafka:TopicPartitions` / `Kafka:TopicReplicationFactor`, default 1/1).
 
-**Topic provisioning:** topics are **not** auto-created by the broker. Every service runs
-`KafkaTopicProvisioner` (a hosted service registered first by `AddSellevateEventing`) which
-creates all topics from `Topics.All` plus their `.dlt` companions on startup via an admin
-client (idempotent — "already exists" is success). This removes the dependency on the broker's
-`auto.create.topics.enable`: with it disabled (typical for managed/hardened brokers) a consumer
-subscribing to a missing topic otherwise fails the consume loop with *"Subscribed topic not
-available: … Unknown topic or partition"* and **no events are ever delivered** (e.g. no
-notification emails). Partition count / replication factor are configurable via
-`Kafka:TopicPartitions` / `Kafka:TopicReplicationFactor` (defaults 1/1 — raise RF on a
-multi-broker production cluster); set `Kafka:ProvisionTopics=false` to opt out.
+### 3.3 Outbox
 
-### 4.2 Synchronous service-to-service REST (kept minimal)
+`identity`, `learning` and `gamification` write outgoing events through the
+transactional outbox pattern (`BuildingBlocks/Outbox`): the event row is
+committed in the same database transaction as the business write, and a
+background relay (`OutboxRelayBackgroundService`) forwards pending rows to
+Kafka afterwards. This closes the dual-write gap (business write succeeds,
+event publish is lost, or vice versa) for those three producers. `ai`,
+`social`, `company` and `organization` publish directly through
+`KafkaEventPublisher` (`Acks.All` + idempotent producer) without an outbox —
+see the backlog for the residual dual-write risk this leaves on their events.
 
-| Caller → Callee | Endpoint | Why sync (not event) |
+### 3.4 Topic catalogue
+
+| Topic | Producer | Consumers |
+|---|---|---|
+| `user.registered` | Identity | AI, Learning, Gamification, Social, Notification, Analytics |
+| `user.updated` | Identity | AI, Learning, Gamification, Social, Notification |
+| `user.deleted` | Identity | AI, Learning, Gamification, Social, Notification |
+| `user.avatar.changed` | Identity | Learning, Gamification |
+| `exercise.completed` | Learning | Gamification, Learning (assignment threshold), Analytics |
+| `lesson.completed` | Learning | Gamification |
+| `skill.completed` | Learning | Gamification |
+| `assignment.issued` | Learning | Notification, Analytics |
+| `assignment.deadline.approaching` | Learning | Notification |
+| `assignment.reminder` | Learning | Notification |
+| `assignment.deadline.digest` | Learning | Notification |
+| `assignment.progress.changed` | Learning | Analytics |
+| `dialog.review.commented` | Learning | Notification |
+| `dialog.review.resolved` | Learning | Notification |
+| `dialog.review.disputed` | Learning | Notification |
+| `dialog.evaluated` | AI | Gamification, Learning (assignment threshold) |
+| `xp.granted` | Gamification | Analytics |
+| `achievement.unlocked` | Gamification | Notification |
+| `streak.milestone` | Gamification | Notification |
+| `gamification.dialog-weights.updated` | Gamification | AI |
+| `friend.request.received` | Social | Notification |
+| `friend.request.accepted` | Social | Notification |
+| `chat.message.sent` | Social | Notification |
+| `chat.message.read` | Social | Notification |
+| `discuss.reply.created` | Social | Notification |
+| `company.followup.due` | Company | Notification |
+| `organization.created` | Organization | Identity |
+| `organization.updated` | Organization | Identity |
+| `organization.suspended` | Organization | Identity |
+| `organization.profile.updated` | Organization | AI, Learning |
+
+### 3.5 Synchronous service-to-service REST (kept minimal)
+
+| Caller → Callee | Endpoint | Why sync, not an event |
 |---|---|---|
 | Learning → AI | `POST /ai/evaluate` | The learner is waiting for the grade in real time |
+| Company → AI | `StartSessionAsync` | Starting a roleplay needs the composed system prompt back before the session opens |
+| Organization → Identity | internal provisioning call | Bootstrapping a new organization's first admin is part of the demo-request request/response |
 
-Everything else that *could* be a synchronous read is instead solved by **local
-read-model replicas fed by Kafka**, to keep services independently deployable.
-
-### 4.3 Frontend REST (through the gateway)
-
-The existing public contract in **[API_CONTRACTS.md](API_CONTRACTS.md)** is
-preserved verbatim — the gateway maps the same paths to the new services, so the
-frontend does not change during the migration.
+Everything else that could be a synchronous read is instead a local
+Kafka-fed read-model replica, so services stay independently deployable.
 
 ---
 
-## 5. Data ownership & the "shared User" problem
+## 4. Data ownership
 
-| Concern | Resolution |
+| Data | Owning service | Store |
+|---|---|---|
+| `User`, `RefreshToken`, `EmailVerificationCode`, `UserProfile`, `DefaultAvatar` | Identity | `identity` (PG) |
+| `Membership`, `OrganizationAuthConfiguration`, `OrganizationReplica`, `Invite` | Identity | `identity` (PG) |
+| `Skill`, `SkillStage`, `Topic`, `Lesson`, `Exercise`, `ExerciseTypePrompt`, `ReferenceMaterial`, `Technique`, `TechniqueSkill`, `TechniqueCoach`, `DailyQuote` | Learning | `learning` (PG) |
+| `UserSkillProgress`, `UserLessonProgress`, `UserExerciseAttempt`, `UserTechniqueProgress`, assignments, dialog reviews | Learning | `learning` (PG) |
+| `DialogBundle`, `DialogMode` (roleplay/config) | AI Engine | `ai` (PG) |
+| `dialog_sessions`, `chat_messages` (roleplay transcripts) | AI Engine | Mongo `dialog_sessions` |
+| `UserXpRecords`, `UserStreaks`, `GamificationSettings`, `ExerciseTypeReward`, `StreakMilestone`, `Achievement`, `UserAchievement`, `League`, `LeagueTier`, `LeagueMembership`, `LeagueSettings` | Gamification | `gamification` (PG) |
+| `Friendship`, `DiscussThread`, `DiscussReply`, `DiscussVote`, `DiscussTag`, `DiscussThreadTag`, `DiscussPhoto` | Social | `social` (PG) |
+| `chat_conversations` | Social | Mongo `chat_conversations` |
+| Notification inbox + unread counter | Notifications | Redis (per-organization key prefix) |
+| Presence, visit/event counters, funnel counter | Analytics | Redis (`analytics-redis`) |
+| `Company`, `CallLogEntry`, `PracticeCall`, `CompanyContact` | Company | `company` (PG) |
+| `Organization`, demo requests | Organization | `organization` (PG) |
+
+**The shared-`User`-across-services problem** is solved with a replicated
+read model, not a shared database: Identity is the sole writer of `User`;
+every other relational service (`ai`, `learning`, `gamification`, `social`)
+keeps a local `UserReplica { userId, displayName, avatarKey }` fed by the
+`user.*` events above, and never reads Identity's database directly. Redis-only
+services (`notification`, `analytics`) consume `user.*` events directly with
+no replica table, since they have nothing to join it against.
+
+---
+
+## 5. BuildingBlocks (shared library)
+
+`src/backend/building-blocks/BuildingBlocks` is referenced by every service.
+It is not a runtime dependency between services — each service compiles its
+own copy — but keeps the cross-cutting mechanics identical everywhere:
+
+| Area | What it provides |
 |---|---|
-| `User` referenced everywhere | Owned by Identity. Others store a `UserReplica { userId, displayName, avatarKey }` updated via `user.*` events. |
-| `UserXp` written by Exercises & Dialog | Moves entirely into **Gamification**, written only by Gamification in reaction to `exercise.completed` / `dialog.evaluated`. |
-| `UserStreak` multi-writer | Moves into **Gamification**, single-writer. |
-| `UserProfile` written by Onboarding & Profile | Both live in **Identity**; Onboarding becomes an internal flow, not a cross-service writer. |
-| `UserLessonProgress` written by Lessons & Exercises | Both live in **Learning**; single owner. |
-| Dialog reads Gamification scoring weights | AI caches weights from `gamification.dialog-weights.updated`; no live cross-call. |
-| League reads UserXp | League is **inside** Gamification — same DB, no cross-service read. |
+| `Eventing` | `EventEnvelope`, `Topics` (the single source of truth for topic name constants) |
+| `Messaging` | `KafkaEventPublisher`, `KafkaConsumerBackgroundService` + `EventMessageProcessor` (retry/dedupe/DLT), `KafkaTopicProvisioner`, `ConsumerResilienceSettings` |
+| `Outbox` | `OutboxMessage`, `IOutboxWriter`/`IOutboxStore`, `OutboxRelayBackgroundService` — the transactional-outbox implementation used by identity/learning/gamification |
+| `Idempotency` | `IIdempotencyStore` / `RedisIdempotencyStore` — Redis-backed event-id dedupe for consumers |
+| `Tenancy` | `ITenantContext`, tenant-scoping EF interceptors and middleware, row-level-security migration helpers, `TenantScopedAttribute` — see [TENANCY/TENANCY.md](TENANCY/TENANCY.md) |
+| `Identity` | `IdentityHeaders` (the `X-User-Id`/`X-User-Role`/`X-Organization-Id` header contract), `UserReplica` |
+| `Persistence` | `DatabaseBootstrapper` (create-database-if-missing), `DatabaseMigrator`, Postgres connection-string helpers |
+| `HealthChecks` | Uniform `/healthz` (liveness) and `/readyz` (readiness: postgres/redis/kafka/mongo probes) across every service + gateway |
+| `ContentTemplating` | Per-organization content-substitution rendering (e.g. company name into shared prompts/templates), fed by `organization.profile.updated` |
+| `Email` | MailerSend client abstraction shared by identity/notification/organization |
+| `DependencyInjection` | `AddSellevateEventing` and friends — the one-line wiring each service's `Program.cs` calls to register the pieces above |
 
 ---
 
 ## 6. Cross-cutting concerns
 
-- **Auth:** JWT issued by Identity (15-min access, 30-day refresh cookie). Validated
-  centrally at the YARP gateway; downstream services trust forwarded identity headers.
-- **Config/secrets:** per-service `.env` + appsettings, same pattern as today
-  (see [CONFIGURATION.md](CONFIGURATION.md)).
-- **Observability:** each service ships logs to Loki and metrics to Prometheus; the
-  existing Grafana stack is reused. Add per-service health endpoints + Kafka
-  consumer-lag dashboards.
-- **Migrations:** each service runs its own EF Core migrations against its own DB on
-  startup (same `db.Database.Migrate()` pattern, scoped per service).
-- **Local dev:** infra (Postgres×N or schemas, Mongo, Redis, **Kafka+Zookeeper/KRaft**,
-  Loki, Prometheus, Grafana) in Docker; services runnable individually with hot reload
-  (extends the existing `scripts/dev-*.sh` model — see [LOCAL_DEV.md](LOCAL_DEV.md)).
-
----
-
-## 7. Why this split (resume narrative)
-
-- **7 services + gateway** — substantial, mid-level-credible distributed system.
-- **Event-driven core** (Kafka) with **idempotent consumers** and **eventual
-  consistency** in Gamification — the headline talking point.
-- **Database-per-service** with a **replicated User read-model** — demonstrates the
-  classic "shared data in microservices" problem solved correctly (no shared DB).
-- **Polyglot persistence** — Postgres, Mongo, **Redis-as-primary-store** (Notifications,
-  Analytics) deliberately chosen where consistency is not required.
-- **API Gateway + central auth** — YARP routing, JWT validation, header propagation.
-- **Streaming preserved end-to-end** — AI dialog/voice over `IAsyncEnumerable`.
-- **Strangler-fig migration** — incrementally carved from a real monolith, not a
-  greenfield toy.
+- **Auth:** JWT issued by Identity (short-lived access token, longer-lived
+  refresh cookie), validated centrally at the gateway and again independently
+  by each service off the same signing key.
+- **Config/secrets:** per-service `.env` + `appsettings.json`, documented in
+  [CONFIGURATION.md](CONFIGURATION.md).
+- **Observability:** every service ships logs to Loki and metrics to
+  Prometheus; Grafana carries a Kafka consumer-lag dashboard alongside the
+  service dashboards. See [MONITORING.md](MONITORING.md).
+- **Migrations:** each relational service runs its own EF Core migrations
+  against its own database on startup.
+- **Local dev:** infra (Postgres, Mongo, Redis ×2, Kafka, MinIO, Loki,
+  Prometheus, Grafana) runs in Docker; each service runs individually on the
+  host with hot reload. See [LOCAL_DEV.md](LOCAL_DEV.md).

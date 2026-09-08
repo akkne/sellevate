@@ -1,6 +1,6 @@
 # ANALYTICS_SERVICE.md — Analytics Service extraction
 
-> Phase 1 of the [microservices migration](MICROSERVICES_ROADMAP.md). Extracts the
+> Part of the [microservices architecture](MICROSERVICES.md). Covers the
 > product-usage metrics, presence tracking, and conversion funnels out of the monolith
 > (`src/backend/api`) into an independently deployable, **Redis-only** `analytics-service`.
 > The monolith slices are left in place as reference; the gateway flips the `/tracking/*`

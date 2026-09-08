@@ -1,6 +1,6 @@
 # LEARNING_SERVICE.md — Learning Service extraction
 
-> Phase 8 of the [microservices migration](MICROSERVICES_ROADMAP.md). Extracts the
+> Part of the [microservices architecture](MICROSERVICES.md). Covers the
 > content tree and the learner's progress through it out of the monolith
 > (`src/backend/api`) into an independently deployable `learning-service`. This is the
 > last and largest service; after its routes are flipped the monolith serves only the
@@ -723,8 +723,8 @@ Lessons unlock sequentially. On the first correct/attempted submission that tran
 lesson to `completed`, `ExerciseService.UnlockNextLessonInTopicAsync` eagerly writes the
 **next** lesson's `UserLessonProgress` row as `Available` (creating it if missing).
 
-**"Completed" means *attempted*, not *passed* (Q-16, `docs/NIGHT_AUDIT_QUESTIONS.md`,
-`docs/DECISIONS.md`).** `UpdateLessonProgressAsync` computes `attemptedExercises` as "distinct
+**"Completed" means *attempted*, not *passed* (`docs/DECISIONS.md`).**
+`UpdateLessonProgressAsync` computes `attemptedExercises` as "distinct
 exercises of this lesson with any attempt row" — a skip (`POST .../submit` with
 `skipped: true`) is indistinguishable from a real answer there, so a lesson finished entirely by
 pressing «Пропустить» completes at `BestScore = 0` and unlocks the next lesson exactly as a

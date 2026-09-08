@@ -57,12 +57,19 @@ services:
       - "traefik.http.routers.backend.tls.certresolver=le"
       - "traefik.http.services.backend.loadbalancer.server.port=8080"
 
-  # T-2 (docs/AUDIT_TENANCY.md): the base compose file sets ASPNETCORE_ENVIRONMENT=Development
-  # for every .NET service so `scripts/dev-*.sh` gets hot-reload/Swagger locally. This overlay
-  # overrides it back to Production for the prod shape only, so InternalServiceAuthFilter
-  # fails closed instead of no-op'ing when INTERNAL_SERVICE_SECRET is empty, POST /demo/token
-  # 404s, and Swagger stays closed. docker compose merges same-key environment entries with
-  # last-file-wins, so this line wins over the base file's Development value.
+  # The base compose file sets ASPNETCORE_ENVIRONMENT=Development for every .NET service
+  # so `scripts/dev-*.sh` gets hot-reload/Swagger locally. This overlay overrides it back to
+  # Production for the prod shape only, so InternalServiceAuthFilter fails closed instead of
+  # no-op'ing when INTERNAL_SERVICE_SECRET is empty, POST /demo/token 404s, and Swagger stays
+  # closed. docker compose merges same-key environment entries with last-file-wins, so this
+  # line wins over the base file's Development value.
+  #
+  # Because the filter fails CLOSED once this is Production, INTERNAL_SERVICE_SECRET must
+  # actually be set in the prod .env before this overlay is deployed — otherwise every
+  # internal-only call (ai-service -> learning-service skill/practice-context lookups,
+  # identity's internal membership roster, etc.) starts returning 403, degrading silently
+  # for the two ai->learning lookups (empty skill names, unpersonalized practice) rather
+  # than raising an error anywhere visible.
   identity:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

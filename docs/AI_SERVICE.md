@@ -1,6 +1,6 @@
 # AI_SERVICE.md — AI Engine Service extraction
 
-> Phase 6 of the [microservices migration](MICROSERVICES_ROADMAP.md). Extracts all
+> Part of the [microservices architecture](MICROSERVICES.md). Covers all
 > LLM/speech compute out of the monolith (`src/backend/api`) into an independently
 > deployable `ai-service`. The monolith slices are left in place as reference; the
 > gateway flips the relevant routes to the new service (strangler fig).

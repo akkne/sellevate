@@ -29,7 +29,7 @@
 #     is also given. The SQL itself refuses if anything has joined the organization since the
 #     backfill.
 #   - Never point this at a production connection string before it has been run against a restored
-#     copy of that database. See docs/MICROSERVICES_PRODUCTION_MIGRATION.md → "Раскатка тенантов".
+#     copy of that database. See docs/DONT_FORGET.md.
 #
 # USAGE
 #     ./scripts/tenancy-default-organization-backfill.sh                        # plan only

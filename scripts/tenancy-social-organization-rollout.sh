@@ -48,7 +48,7 @@
 #   - Every step is idempotent; re-running after a partial failure finishes the job rather than
 #     re-pointing anything that already has an owner.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/MICROSERVICES_PRODUCTION_MIGRATION.md → "Раскатка тенантов" and docs/DONT_FORGET.md.
+#     docs/DONT_FORGET.md.
 #
 # USAGE
 #     ./scripts/tenancy-social-organization-rollout.sh              # plan only

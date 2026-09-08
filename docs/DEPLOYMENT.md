@@ -154,4 +154,4 @@ Build-time and runtime variables come from two places:
 
 See `.env.example` for the full template.
 
-> **Note:** in `docker-compose.yml` the backend currently runs with `ASPNETCORE_ENVIRONMENT=Development` (exposes Swagger at `/swagger`). For a real production deploy, switch it to `Production`.
+> **Note:** the base `docker-compose.yml` runs every .NET service with `ASPNETCORE_ENVIRONMENT=Development` (exposes Swagger at `/swagger`, and lets `InternalServiceAuthFilter` no-op when `INTERNAL_SERVICE_SECRET` is unset) so the local dev profile works with hot reload. `docker-compose.prod.yml` overrides this to `Production` for all ten .NET services — this is why the prod overlay must always be deployed together with the base file, never the base file alone. Because the filter fails **closed** once the environment is `Production`, `INTERNAL_SERVICE_SECRET` must be set to a real value in the prod `.env` *before* deploying the overlay — an empty secret turns every internal-only call (ai-service → learning-service skill/practice-context lookups, identity's internal membership roster) into a 403 that degrades silently rather than raising a visible error.

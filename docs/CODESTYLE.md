@@ -291,6 +291,18 @@ export const ErrorMessages = {
 ### Error Handling
 - Result pattern: `Result<T>` or specific exceptions, never `null` / `-1` as error signals
 - Guard clauses at method start: `ArgumentNullException.ThrowIfNull()`, `ArgumentException.ThrowIfNullOrWhiteSpace()`
+- Never let a `catch` block written for one failure category absorb a generic framework
+  exception (`InvalidOperationException`, `NullReferenceException`, …) that a different bug
+  can also throw. A malformed request that trips a broad `catch` meant for an external
+  provider outage gets reported to the caller and to monitoring as that outage, not as the
+  request-validation bug it actually is. Throw and catch a dedicated exception type per
+  failure category instead — see `docs/LLM_FAILURE_HANDLING.md` for the pattern this
+  codebase already uses for provider failures.
+- A DTO whose value is populated from author-written JSON (a content-editor textarea, an
+  import payload) rather than from a database column is not protected by its C# nullable
+  annotations — `System.Text.Json` does not enforce them by default. Normalize (or validate
+  on write) at the single point where that JSON is deserialized, so every consumer of the
+  DTO can trust the declared type; do not rely on the annotation alone.
 
 ### Strings and Collections
 - Avoid `string.Format()` — use string interpolation
@@ -327,6 +339,20 @@ export const ErrorMessages = {
 
 ### Error Handling
 - Global error boundary + typed errors
+- A background refetch failure must never discard content that already rendered
+  successfully. Gate a full-screen error state on TanStack Query's `isLoadingError`
+  (the request has never succeeded and there is no data) rather than the bare `isError`,
+  which is also `true` while stale-but-valid data is still showing. Where a background
+  refetch failing is worth surfacing at all, show it as an additive banner ("may be
+  stale") next to the still-rendered content, gated on `isRefetchError`, not as a
+  replacement for that content.
+- Every mutation that writes data needs a user-visible failure signal — a toast or an
+  inline message from its `onError` — not only a `clientLogger` call. A write that fails
+  silently is indistinguishable from one that succeeded, which is worse than an error the
+  user never sees: it teaches people to trust an interface that just lost their data.
+  This is especially true for anything with a confirmation step (delete, discard) — close
+  the confirmation and treat the action as done only once the mutation has actually
+  resolved successfully, not optimistically before the response comes back.
 
 ### Naming
 - File names: `kebab-case`
