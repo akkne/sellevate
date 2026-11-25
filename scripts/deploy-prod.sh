@@ -10,13 +10,17 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml"
+COMPOSE="docker compose -f compose.yaml -f docker-compose.prod.yml"
 
 echo "==> Pulling latest code"
-git pull --ff-only
+if [[ "${1:-}" == "--checked-revision" ]]; then
+  test "$(git rev-parse HEAD)" = "${2:?missing commit}"
+else
+  git pull --ff-only
+fi
 
 echo "==> Building & starting (zero-ish downtime: only changed services restart)"
-$COMPOSE up --build -d
+$COMPOSE up --build -d --wait
 
 echo "==> Reclaiming disk: dangling images"
 docker image prune -f

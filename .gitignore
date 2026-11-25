@@ -4,22 +4,22 @@ node_modules/
 .pnp.js
 
 # Next.js
-src/frontend/.next/
-src/frontend/out/
-src/frontend/.env*.local
+frontend/.next/
+frontend/out/
+frontend/.env*.local
 
 # .NET build outputs
-src/backend/bin/
-src/backend/obj/
-src/backend/api/bin/
-src/backend/api/obj/
-src/backend/tests/bin/
-src/backend/tests/obj/
+backend/bin/
+backend/obj/
+backend/api/bin/
+backend/api/obj/
+backend/tests/bin/
+backend/tests/obj/
 src/SalesTrainer.Tests/bin/
 src/SalesTrainer.Tests/obj/
-# Per-service projects (building-blocks, gateway, future services) under src/backend
-src/backend/**/bin/
-src/backend/**/obj/
+# Per-service projects (building-blocks, gateway, future services) under backend
+backend/**/bin/
+backend/**/obj/
 
 # Environment files
 .env
@@ -67,8 +67,8 @@ Thumbs.db
 *.log
 logs/
 # Except Next.js API route named "logs"
-!src/frontend/app/api/logs/
-!src/frontend/app/api/logs/**
+!frontend/app/api/logs/
+!frontend/app/api/logs/**
 .playwright-mcp/
 
 docs/АРХИТЕКТУРА_МИКРОСЕРВИСОВ.md
@@ -88,3 +88,15 @@ __pycache__/
 # Tenancy rollout (scripts/tenancy-rollout.sh) — local run state and database dumps
 .tenancy-rollout-state
 backups/
+
+tests/**/bin/
+tests/**/obj/
+**/TestResults/
+*.tsbuildinfo
+*.pem
+.env.*
+!.env.example
+!frontend/.env.local.example
+!frontend/.env.production
+scripts/contracts/bin/
+scripts/contracts/obj/

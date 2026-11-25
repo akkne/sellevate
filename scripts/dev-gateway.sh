@@ -13,5 +13,5 @@ load_root_env
 export_gateway_env
 
 echo "==> Gateway -> http://localhost:${LOCAL_GATEWAY_PORT} (identity:${LOCAL_IDENTITY_PORT} ai:${LOCAL_AI_PORT} notification:${LOCAL_NOTIFICATION_PORT} analytics:${LOCAL_ANALYTICS_PORT} social:${LOCAL_SOCIAL_PORT} gamification:${LOCAL_GAMIFICATION_PORT} learning:${LOCAL_LEARNING_PORT} company:${LOCAL_COMPANY_PORT})"
-cd "$REPO_ROOT/src/backend/gateway/Gateway"
+cd "$REPO_ROOT/backend/gateway/Gateway"
 exec "$DOTNET_BIN" run --project Sellevate.Gateway.csproj --no-launch-profile "$@"

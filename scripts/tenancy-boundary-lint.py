@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforces the multi-tenancy request boundary rule from docs/TENANCY/TENANCY.md
+"""Enforces the multi-tenancy request boundary rule from docs/operations/tenancy.md
 section 1.3: the organization is never read from the request body, query
 string, or route. Only the gateway-validated X-Organization-Id header (via
 Sellevate.BuildingBlocks.Identity.IdentityHeaders / ITenantContext) may supply
@@ -72,9 +72,9 @@ SKIP_NAME_MARKERS = (".g.cs", ".designer.cs", "globalusings", "assemblyinfo")
 # platform-staff carve-out in TENANCY.md section 1.3. Adding a path here is a security
 # decision, not a formality.
 ALLOWED_REQUEST_DTO_PATHS = frozenset({
-    "src/backend/identity-service/Identity/Features/PlatformAdmin/Models/"
+    "backend/identity-service/Identity/Features/PlatformAdmin/Models/"
     "CreateImpersonationRequestDto.cs",
-    "src/backend/identity-service/Identity/Features/PlatformAdmin/Models/"
+    "backend/identity-service/Identity/Features/PlatformAdmin/Models/"
     "BootstrapOrganizationAdminRequestDto.cs",
 })
 
@@ -92,9 +92,9 @@ ALLOWED_REQUEST_DTO_PATHS = frozenset({
 #     The PUT on the same controller carries no such segment and still writes only the caller's own
 #     organization; this exception covers the GET action only.
 ALLOWED_ROUTE_TEMPLATE_PATHS = frozenset({
-    "src/backend/identity-service/Identity/Features/Organizations/Endpoints/"
+    "backend/identity-service/Identity/Features/Organizations/Endpoints/"
     "InternalOrganizationBootstrapController.cs",
-    "src/backend/ai-service/Ai/Features/Quotas/AdminAiQuotaController.cs",
+    "backend/ai-service/Ai/Features/Quotas/AdminAiQuotaController.cs",
 })
 
 # Files whose name coincidentally ends in "Request.cs" or "Dto.cs" for a domain reason having
@@ -108,8 +108,8 @@ ALLOWED_ROUTE_TEMPLATE_PATHS = frozenset({
 #     to whoever is allowed to read it.
 # See docs/DEMO_REQUEST.md.
 ALLOWED_OUTBOUND_ONLY_FILENAME_FALSE_POSITIVES = frozenset({
-    "src/backend/organization-service/Organization/Features/DemoRequests/Models/DemoRequest.cs",
-    "src/backend/organization-service/Organization/Features/DemoRequests/Models/DemoRequestDto.cs",
+    "backend/organization-service/Organization/Features/DemoRequests/Models/DemoRequest.cs",
+    "backend/organization-service/Organization/Features/DemoRequests/Models/DemoRequestDto.cs",
 })
 
 REPOSITORY_ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -199,7 +199,7 @@ def report_stale_allow_list_entries() -> int:
 
 
 def main(argv):
-    roots = argv[1:] or ["src/backend"]
+    roots = argv[1:] or ["backend"]
     total = report_stale_allow_list_entries()
     for root in roots:
         for path in sorted(pathlib.Path(root).rglob("*.cs")):

@@ -1,0 +1,1420 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Sellevate.Organization",
+    "version": "v1"
+  },
+  "paths": {
+    "/admin/demo-requests": {
+      "get": {
+        "tags": [
+          "AdminDemoRequest"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/demo-requests/{id}/status": {
+      "patch": {
+        "tags": [
+          "AdminDemoRequest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.UpdateDemoRequestStatusRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.UpdateDemoRequestStatusRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.UpdateDemoRequestStatusRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/demo-requests/{id}/provision": {
+      "post": {
+        "tags": [
+          "AdminDemoRequest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.ProvisionDemoRequestRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.ProvisionDemoRequestRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.ProvisionDemoRequestRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestProvisioningResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestProvisioningResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestProvisioningResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/demo-requests": {
+      "post": {
+        "tags": [
+          "DemoRequest"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.CreateDemoRequestRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.CreateDemoRequestRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.CreateDemoRequestRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestAcceptedDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestAcceptedDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestAcceptedDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations": {
+      "post": {
+        "tags": [
+          "Organization"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.CreateOrganizationRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.CreateOrganizationRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.CreateOrganizationRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Organization"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationSummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationSummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/{id}": {
+      "get": {
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/{id}/suspend": {
+      "post": {
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/{id}/reactivate": {
+      "post": {
+        "tags": [
+          "Organization"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/profile": {
+      "get": {
+        "tags": [
+          "OrganizationProfile"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "OrganizationProfile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationProfileRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationProfileRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationProfileRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "OrganizationProfile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.PatchOrganizationProfileRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.PatchOrganizationProfileRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.PatchOrganizationProfileRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/profile/gaps": {
+      "get": {
+        "tags": [
+          "OrganizationProfile"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 3
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/profile/draft": {
+      "post": {
+        "tags": [
+          "OrganizationProfile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ExtractedProfileDraftDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ExtractedProfileDraftDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ExtractedProfileDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftPreviewDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftPreviewDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftPreviewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/organizations/profile/draft/apply": {
+      "post": {
+        "tags": [
+          "OrganizationProfile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ApplyOrganizationProfileDraftRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ApplyOrganizationProfileDraftRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ApplyOrganizationProfileDraftRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftAppliedDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftAppliedDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftAppliedDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Sellevate.Organization.Features.DemoRequests.Models.CreateDemoRequestRequestDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "workEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "companyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "salesTeamSize": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.SalesTeamSize"
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "consentGiven": {
+            "type": "boolean"
+          },
+          "marketingConsentGiven": {
+            "type": "boolean"
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.DemoRequestAcceptedDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.DemoRequestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "workEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "companyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "jobTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "salesTeamSize": {
+            "type": "string",
+            "nullable": true
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "consentGivenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "marketingConsentGivenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "organizationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "organizationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "organizationSlug": {
+            "type": "string",
+            "nullable": true
+          },
+          "provisioningState": {
+            "type": "string",
+            "nullable": true
+          },
+          "bootstrapInviteId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "bootstrapAdminEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "provisionedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.DemoRequestProvisioningResultDto": {
+        "type": "object",
+        "properties": {
+          "demoRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "provisioningState": {
+            "type": "string",
+            "nullable": true
+          },
+          "organization": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.ProvisionedOrganizationDto"
+          },
+          "inviteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inviteEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "inviteExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "alreadyProvisioned": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.DemoRequestStatus": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.ProvisionDemoRequestRequestDto": {
+        "type": "object",
+        "properties": {
+          "organizationName": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "adminEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.ProvisionedOrganizationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.SalesTeamSize": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Sellevate.Organization.Features.DemoRequests.Models.UpdateDemoRequestStatusRequestDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.DemoRequests.Models.DemoRequestStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.ApplyOrganizationProfileDraftRequestDto": {
+        "type": "object",
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ExtractedProfileDraftDto"
+          },
+          "acceptedFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.CreateOrganizationRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.ExtractedProfileDraftDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "icp": {
+            "type": "string",
+            "nullable": true
+          },
+          "tone": {
+            "type": "string",
+            "nullable": true
+          },
+          "objections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.ExtractedProfileObjectionDto"
+            },
+            "nullable": true
+          },
+          "scriptStages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "glossary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "bannedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.ExtractedProfileObjectionDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "bestResponse": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationObjectionDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "frequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "bestResponse": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftAppliedDto": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto"
+          },
+          "appliedFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileFieldProposalDto"
+            },
+            "nullable": true
+          },
+          "gaps": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDraftPreviewDto": {
+        "type": "object",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileFieldProposalDto"
+            },
+            "nullable": true
+          },
+          "conflictCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gapsAfterApply": {
+            "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationProfileDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "icp": {
+            "type": "string",
+            "nullable": true
+          },
+          "objections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationObjectionDto"
+            },
+            "nullable": true
+          },
+          "scriptStages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "tone": {
+            "type": "string",
+            "nullable": true
+          },
+          "glossary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "bannedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationProfileFieldProposalDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "nullable": true
+          },
+          "decision": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "suggestedValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "addedItemCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "question": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapsDto": {
+        "type": "object",
+        "properties": {
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationProfileGapDto"
+            },
+            "nullable": true
+          },
+          "totalGapCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blockingGapCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isReadyForParameterization": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.OrganizationSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.PatchOrganizationProfileRequestDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "icp": {
+            "type": "string",
+            "nullable": true
+          },
+          "objections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationObjectionDto"
+            },
+            "nullable": true
+          },
+          "scriptStages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "tone": {
+            "type": "string",
+            "nullable": true
+          },
+          "glossary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "bannedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationProfileRequestDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "icp": {
+            "type": "string",
+            "nullable": true
+          },
+          "objections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Organization.Features.Organizations.Models.OrganizationObjectionDto"
+            },
+            "nullable": true
+          },
+          "scriptStages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "tone": {
+            "type": "string",
+            "nullable": true
+          },
+          "glossary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "bannedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Organization.Features.Organizations.Models.UpdateOrganizationRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

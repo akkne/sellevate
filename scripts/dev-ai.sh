@@ -26,12 +26,14 @@ export Kafka__BootstrapServers="localhost:${LOCAL_KAFKA_PORT}"
 export LearningService__BaseUrl="http://localhost:${LOCAL_LEARNING_PORT}"
 
 export Jwt__Key="${JWT_KEY}"
-export OpenAI__ApiKey="${OPENAI_API_KEY}"
-export OpenAI__BaseUrl="${OPENAI_BASE_URL}"
-export OpenAI__ChatCompletionsPath="${OPENAI_CHAT_COMPLETIONS_PATH}"
-# Provider selects the auth header/schema: OpenAi=Bearer, F5Ai=X-Auth-Token. Must be F5Ai
-# when routing through api.f5ai.ru, otherwise the gateway rejects the Bearer header with 401.
-export OpenAI__Provider="${OPENAI_PROVIDER:-OpenAi}"
+export OpenAI__ApiKey="${OPENAI_API_KEY:-}"
+export OpenAI__BaseUrl="${OPENAI_BASE_URL:-https://api.openai.com}"
+export OpenAI__ChatCompletionsPath="${OPENAI_CHAT_COMPLETIONS_PATH:-/v1/chat/completions}"
+export OpenAI__Provider="${OPENAI_PROVIDER:-OPENAI_CODEX}"
+export OpenAI__CodexModel="${CODEX_MODEL:-gpt-6.2-astra}"
+export CodexService__BaseUrl="http://127.0.0.1:${LOCAL_CODEX_PORT:-5010}/"
+export CodexService__TimeoutSeconds="${CODEX_TIMEOUT_SECONDS:-180}"
+export InternalAuth__ServiceSecret="${INTERNAL_SERVICE_SECRET:-}"
 # --- AI tunables (override in .env; defaults are the in-code values) ---
 export OpenAI__DialogModel="${OPENAI_DIALOG_MODEL:-gpt-4o}"
 export OpenAI__OpenQuestionModel="${OPENAI_OPEN_QUESTION_MODEL:-gpt-4.1}"
@@ -48,5 +50,5 @@ export AiQuotas__DefaultBatchReservePercent="${AI_QUOTA_BATCH_RESERVE_PERCENT:-1
 export GoogleTts__ApiKey="${GOOGLE_TTS_API_KEY:-}"
 
 echo "==> AI service -> http://localhost:${LOCAL_AI_PORT} (ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT)"
-cd "$REPO_ROOT/src/backend/ai-service/Ai"
+cd "$REPO_ROOT/backend/ai-service/Ai"
 exec "$DOTNET_BIN" run --project Sellevate.Ai.csproj --no-launch-profile "$@"

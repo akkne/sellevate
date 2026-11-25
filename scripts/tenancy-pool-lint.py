@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Enforces the rule from docs/CODESTYLE.md ("Tenant-scoped DbContext registration") and
-docs/TENANCY/TENANCY.md section 1.4: never register a DbContext with AddDbContextPool.
+"""Enforces the rule from docs/code-style.md ("Tenant-scoped DbContext registration") and
+docs/operations/tenancy.md section 1.4: never register a DbContext with AddDbContextPool.
 
 EF Core's context pool reuses the same pooled instance — and everything it closed over at
 construction time, including the ITenantContext-backed global query filter — across unrelated
@@ -40,8 +40,8 @@ def lint_file(path: pathlib.Path):
             violations.append((
                 line_number,
                 "AddDbContextPool is forbidden — it would silently leak one tenant's query "
-                "filter onto another's requests (docs/TENANCY/TENANCY.md section 1.4, "
-                "docs/CODESTYLE.md). Use AddDbContext instead.",
+                "filter onto another's requests (docs/operations/tenancy.md section 1.4, "
+                "docs/code-style.md). Use AddDbContext instead.",
             ))
 
     return violations
@@ -65,7 +65,7 @@ def enumerate_source_files(root: str):
 
 
 def main(argv):
-    roots = argv[1:] or ["src/backend"]
+    roots = argv[1:] or ["backend"]
     total = 0
     for root in roots:
         for path in enumerate_source_files(root):

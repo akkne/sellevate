@@ -18,5 +18,5 @@ export Kafka__BootstrapServers="localhost:${LOCAL_KAFKA_PORT}"
 export Jwt__Key="${JWT_KEY}"
 
 echo "==> Analytics service -> http://localhost:${LOCAL_ANALYTICS_PORT} (ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT)"
-cd "$REPO_ROOT/src/backend/analytics-service/Analytics"
+cd "$REPO_ROOT/backend/analytics-service/Analytics"
 exec "$DOTNET_BIN" run --project Sellevate.Analytics.csproj --no-launch-profile "$@"

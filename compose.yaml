@@ -1,0 +1,637 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+    pull_policy: build
+    # Bound to localhost only: Traefik reaches the container over the docker network.
+    # Docker bypasses UFW, so publishing to 0.0.0.0 would expose it to the internet.
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - ./frontend/.env.production
+    depends_on:
+      - gateway
+      - loki
+
+  # NOTE: the monolith (backend/api) has been REMOVED from main (kept on the
+  # `monolith-legacy` branch for rollback/reference). All routes were extracted into
+  # the per-service backends below and the gateway fans out to them.
+
+  # Identity microservice (Phase 2 extraction). Owns its own database (identity-db on
+  # the shared Postgres instance) and is the sole JWT issuer. The gateway flips
+  # /auth/*, /demo/*, /profile/*, /onboarding/*, /avatars/* to this service.
+  identity:
+    build:
+      context: ./backend
+      dockerfile: identity-service/Identity/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=identity;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=identity;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Kafka__BootstrapServers=kafka:29092
+      - Logging__Loki__Url=http://loki:3100
+      - Jwt__Key=${JWT_KEY}
+      # Phase 40.34 — the shared secret in front of the /internal/* routes. Those routes carry
+      # no JWT and take their tenant from a header, so this is the only thing authenticating
+      # them. Absent outside Development they now refuse rather than allow.
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+      # --- Identity tunables (override in .env; defaults are the in-code values) ---
+      - Jwt__AccessTokenLifetimeMinutes=${JWT_ACCESS_TOKEN_LIFETIME_MINUTES:-15}
+      - Jwt__RefreshTokenLifetimeDays=${JWT_REFRESH_TOKEN_LIFETIME_DAYS:-30}
+      - Jwt__DemoTokenLifetimeHours=${JWT_DEMO_TOKEN_LIFETIME_HOURS:-2}
+      - EmailVerification__Enabled=${EMAIL_VERIFICATION_ENABLED:-false}
+      - EmailVerification__CodeLifetimeMinutes=${EMAIL_VERIFICATION_CODE_LIFETIME_MINUTES:-10}
+      - EmailVerification__MaximumVerificationAttempts=${EMAIL_VERIFICATION_MAX_ATTEMPTS:-5}
+      - EmailVerification__ResendCooldownSeconds=${EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS:-60}
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
+      - MailerSend__ApiToken=${MAILERSEND_API_TOKEN}
+      - MailerSend__FromEmail=${MAILERSEND_FROM_EMAIL}
+      - MailerSend__FromName=${MAILERSEND_FROM_NAME:-Sellevate}
+      - SuperAdmin__Email=${SUPERADMIN_EMAIL}
+      - SuperAdmin__Password=${SUPERADMIN_PASSWORD}
+      - SuperAdmin__DisplayName=${SUPERADMIN_DISPLAY_NAME}
+      - Storage__S3__Endpoint=http://minio:9000
+      - Storage__S3__AccessKey=${MINIO_ROOT_USER}
+      - Storage__S3__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Storage__S3__Bucket=salestrainer-avatars
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      loki:
+        condition: service_started
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    # Localhost only — object storage must not be reachable from the internet.
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Localhost only — never expose the database to the internet.
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:8
+    volumes:
+      - mongo_data:/data/db
+    # Localhost only — never expose MongoDB to the internet.
+    ports:
+      - "127.0.0.1:27017:27017"
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    # Localhost only — never expose Redis to the internet.
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  analytics-redis:
+    image: redis:7-alpine
+    volumes:
+      - analytics_redis_data:/data
+    # Localhost only — never expose Redis to the internet.
+    ports:
+      - "127.0.0.1:6380:6379"
+
+  # Single-broker Kafka (KRaft). In-network services use kafka:29092; localhost:9092
+  # is published only for host-side debugging.
+  kafka:
+    image: apache/kafka:3.8.1
+    # Localhost only — the broker must not be reachable from the internet.
+    ports:
+      - "127.0.0.1:9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    # Localhost only — reach it via SSH tunnel.
+    ports:
+      - "127.0.0.1:8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: sellevate
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      - kafka
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.8.0
+    command:
+      - '--kafka.server=kafka:29092'
+    ports:
+      - "127.0.0.1:9308:9308"
+    depends_on:
+      - kafka
+
+  codex:
+    build: ./backend/codex-service/Codex
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+      - Codex__ReasoningEffort=${CODEX_REASONING_EFFORT:-high}
+      - Codex__TimeoutSeconds=${CODEX_TIMEOUT_SECONDS:-180}
+      - Codex__Executable=${CODEX_EXECUTABLE:-codex}
+      - CODEX_API_KEY=${CODEX_API_KEY:-}
+    volumes:
+      - codex_home:/home/app/.codex
+    networks:
+      - codex_worker
+
+  ai:
+    networks:
+      - default
+      - codex_worker
+    build:
+      context: ./backend
+      dockerfile: ai-service/Ai/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=ai;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=ai;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Mongo=mongodb://mongo:27017
+      - ConnectionStrings__Redis=redis:6379
+      - Mongo__DatabaseName=sallevate
+      - Kafka__BootstrapServers=kafka:29092
+      # Phase 40.23: a practice conversation asks learning-service whether it is somebody's assignment.
+      - LearningService__BaseUrl=http://learning:8080
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      # Phase 40.34 — the shared secret in front of the /internal/* routes. Those routes carry
+      # no JWT and take their tenant from a header, so this is the only thing authenticating
+      # them. Absent outside Development they now refuse rather than allow.
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+      - Logging__Loki__Url=http://loki:3100
+      - OpenAI__ApiKey=${OPENAI_API_KEY:-}
+      - OpenAI__BaseUrl=${OPENAI_BASE_URL:-https://api.openai.com}
+      - OpenAI__ChatCompletionsPath=${OPENAI_CHAT_COMPLETIONS_PATH:-/v1/chat/completions}
+      - OpenAI__Provider=${OPENAI_PROVIDER:-OPENAI_CODEX}
+      - OpenAI__CodexModel=${CODEX_MODEL:-gpt-6.2-astra}
+      - CodexService__BaseUrl=http://codex:8080/
+      - CodexService__TimeoutSeconds=${CODEX_TIMEOUT_SECONDS:-180}
+      # --- AI tunables (override in .env; defaults are the in-code values) ---
+      - OpenAI__DialogModel=${OPENAI_DIALOG_MODEL:-gpt-4o}
+      - OpenAI__OpenQuestionModel=${OPENAI_OPEN_QUESTION_MODEL:-gpt-4.1}
+      - OpenAI__DialogTemperature=${OPENAI_DIALOG_TEMPERATURE:-0.7}
+      - OpenAI__MaximumDialogTokenCount=${OPENAI_MAX_TOKENS_DIALOG:-500}
+      - OpenAI__MaximumFeedbackTokenCount=${OPENAI_MAX_TOKENS_FEEDBACK:-1500}
+      - OpenAI__MaximumOpenQuestionTokenCount=${OPENAI_MAX_TOKENS_OPEN_QUESTION:-300}
+      - Whisper__Model=${WHISPER_MODEL:-whisper-1}
+      - Whisper__Language=${WHISPER_LANGUAGE:-ru}
+      - Voice__TtsProvider=${TTS_PROVIDER:-yandex}
+      - Voice__Enabled=${VOICE_ENABLED:-true}
+      - Voice__DailyLimitMinutes=${VOICE_DAILY_LIMIT_MINUTES:-30}
+      - Voice__MonthlyLimitMinutes=${VOICE_MONTHLY_LIMIT_MINUTES:-300}
+      - YandexTts__ApiKey=${YANDEX_TTS_API_KEY}
+      - YandexTts__Voice=${YANDEX_TTS_VOICE:-marina}
+      - YandexTts__Lang=${YANDEX_TTS_LANG:-ru-RU}
+      - YandexTts__Speed=${YANDEX_TTS_SPEED:-1.2}
+      # Phase 40.33 — platform-wide defaults every organization is metered against until it is
+      # given limits of its own through PUT /admin/ai-quota. An absent quota row means these
+      # numbers, never "unmetered".
+      - AiQuotas__DefaultVoiceDailyLimitMinutes=${AI_QUOTA_VOICE_DAILY_MINUTES:-600}
+      - AiQuotas__DefaultVoiceMonthlyLimitMinutes=${AI_QUOTA_VOICE_MONTHLY_MINUTES:-6000}
+      - AiQuotas__DefaultLlmMonthlyTokenLimit=${AI_QUOTA_LLM_MONTHLY_TOKENS:-20000000}
+      - AiQuotas__DefaultBatchReservePercent=${AI_QUOTA_BATCH_RESERVE_PERCENT:-10}
+    depends_on:
+      codex:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  analytics:
+    build:
+      context: ./backend
+      dockerfile: analytics-service/Analytics/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5005:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Redis=analytics-redis:6379
+      - Kafka__BootstrapServers=kafka:29092
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      - Logging__Loki__Url=http://loki:3100
+    depends_on:
+      analytics-redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  notification:
+    build:
+      context: ./backend
+      dockerfile: notification-service/Notification/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5004:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Redis=redis:6379
+      - Kafka__BootstrapServers=kafka:29092
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      - Logging__Loki__Url=http://loki:3100
+      # Notification e-mails go out through MailerSend — without these the sender
+      # stays at the "INJECTED_FROM_ENV" placeholder and silently no-ops every send.
+      - MailerSend__ApiToken=${MAILERSEND_API_TOKEN}
+      - MailerSend__FromEmail=${MAILERSEND_FROM_EMAIL}
+      - MailerSend__FromName=${MAILERSEND_FROM_NAME:-Sellevate}
+      # --- Notification tunables (override in .env; defaults are the in-code values) ---
+      - NotificationStorage__InboxCapacity=${NOTIFICATION_INBOX_CAPACITY:-100}
+      - NotificationStorage__RetentionDays=${NOTIFICATION_RETENTION_DAYS:-30}
+    depends_on:
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  gamification:
+    build:
+      context: ./backend
+      dockerfile: gamification-service/Gamification/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5007:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=gamification;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=gamification;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+      - Kafka__BootstrapServers=kafka:29092
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      - Logging__Loki__Url=http://loki:3100
+      # --- Gamification tunables (override in .env; default is the in-code value) ---
+      - Gamification__StreakTimezone=${GAMIFICATION_STREAK_TIMEZONE:-UTC}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  social:
+    build:
+      context: ./backend
+      dockerfile: social-service/Social/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5006:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=social;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=social;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Mongo=mongodb://mongo:27017
+      - ConnectionStrings__Redis=redis:6379
+      - Mongo__DatabaseName=sallevate
+      - Kafka__BootstrapServers=kafka:29092
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      - Logging__Loki__Url=http://loki:3100
+      - Storage__S3__Endpoint=http://minio:9000
+      - Storage__S3__AccessKey=${MINIO_ROOT_USER}
+      - Storage__S3__SecretKey=${MINIO_ROOT_PASSWORD}
+      - Storage__S3__Bucket=sellevate-social
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      loki:
+        condition: service_started
+
+  learning:
+    build:
+      context: ./backend
+      dockerfile: learning-service/Learning/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5008:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=learning;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=learning;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379
+      - Kafka__BootstrapServers=kafka:29092
+      - AiService__BaseUrl=http://ai:8080
+      # Phase 40.23: resolving an assignment's audience asks identity-service who works here.
+      - IdentityService__BaseUrl=http://identity:8080
+      # Phase 40.33: learning-service no longer holds a provider key of any kind. Its exercise
+      # dialogue and the speech for it go through ai-service, which is where per-organization spend
+      # is metered — the OpenAI__* and YandexTts__* variables that used to live here were the second
+      # door around that meter.
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      # Phase 40.34 — the shared secret in front of the /internal/* routes. Those routes carry
+      # no JWT and take their tenant from a header, so this is the only thing authenticating
+      # them. Absent outside Development they now refuse rather than allow.
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+      - Logging__Loki__Url=http://loki:3100
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  company:
+    build:
+      context: ./backend
+      dockerfile: company-service/Company/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5009:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=company;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=company;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      # Phase 40.34 — the shared secret in front of the /internal/* routes. Those routes carry
+      # no JWT and take their tenant from a header, so this is the only thing authenticating
+      # them. Absent outside Development they now refuse rather than allow.
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+      - Logging__Loki__Url=http://loki:3100
+      - Kafka__BootstrapServers=kafka:29092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      loki:
+        condition: service_started
+      # service_started (not a broker readiness check) is intentionally lenient: the topic
+      # provisioner and reminder publisher both tolerate a not-yet-ready broker at startup
+      # (logged, not fatal) and self-heal once Kafka accepts connections.
+      kafka:
+        condition: service_started
+
+  organization:
+    build:
+      context: ./backend
+      dockerfile: organization-service/Organization/Dockerfile
+    pull_policy: build
+    # Localhost only — reached through the gateway over the docker network.
+    ports:
+      - "127.0.0.1:5010:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Runtime connection. Flip APP_POSTGRES_USER/PASSWORD to the sellevate_app role to turn
+      # row-level security on; until then it falls back to the owner and behaves as before.
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=organization;Username=${APP_POSTGRES_USER:-$POSTGRES_USER};Password=${APP_POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
+      # DDL connection: always the owning role, because a role its own tables' RLS applies to
+      # cannot run migrations — it would run them "successfully" against nothing.
+      - ConnectionStrings__PostgresMigrations=Host=postgres;Port=5432;Database=organization;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - Jwt__Key=${JWT_KEY}
+      - Logging__Loki__Url=http://loki:3100
+      - Kafka__BootstrapServers=kafka:29092
+      # "Request a demo" leads are mailed to an internal sales inbox through MailerSend. All four
+      # are optional by design: with any of them unset the sender logs that it is unconfigured and
+      # the lead is still persisted, because losing a lead to a mail misconfiguration is worse than
+      # nobody being paged about it. The submitter's own address is never mailed — see
+      # docs/DEMO_REQUEST.md.
+      - MailerSend__ApiToken=${MAILERSEND_API_TOKEN}
+      - MailerSend__FromEmail=${MAILERSEND_FROM_EMAIL}
+      - MailerSend__FromName=${MAILERSEND_FROM_NAME:-Sellevate}
+      - DemoRequests__NotificationEmail=${DEMO_REQUESTS_NOTIFICATION_EMAIL}
+      # Demo-request provisioning: the one call this service makes to identity-service, to bootstrap
+      # a brand-new organization's first administrator.
+      - IdentityService__BaseUrl=http://identity:8080
+      # The shared secret identity-service's InternalServiceAuthFilter checks on the receiving end.
+      # Absent outside Development, that filter refuses rather than allows (Phase 40.34) — see
+      # docs/DONT_FORGET.md for the fact that INTERNAL_SERVICE_SECRET is not actually provisioned
+      # anywhere yet.
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      loki:
+        condition: service_started
+      # service_started (not a broker readiness check) is intentionally lenient: the topic
+      # provisioner tolerates a not-yet-ready broker at startup (logged, not fatal) and
+      # self-heals once Kafka accepts connections.
+      kafka:
+        condition: service_started
+
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: gateway/Gateway/Dockerfile
+    pull_policy: build
+    # Localhost only — published for testing the gateway path during the migration.
+    ports:
+      - "127.0.0.1:5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Jwt__Key=${JWT_KEY}
+      - Logging__Loki__Url=http://loki:3100
+      - Frontend__Url=${FRONTEND_URL:-http://localhost:3000,https://sellevate.site}
+      - ReverseProxy__Clusters__ai__Destinations__d1__Address=http://ai:8080/
+      - ReverseProxy__Clusters__analytics__Destinations__d1__Address=http://analytics:8080/
+      - ReverseProxy__Clusters__notification__Destinations__d1__Address=http://notification:8080/
+      - ReverseProxy__Clusters__identity__Destinations__d1__Address=http://identity:8080/
+      - ReverseProxy__Clusters__gamification__Destinations__d1__Address=http://gamification:8080/
+      - ReverseProxy__Clusters__social__Destinations__d1__Address=http://social:8080/
+      - ReverseProxy__Clusters__learning__Destinations__d1__Address=http://learning:8080/
+      - ReverseProxy__Clusters__company__Destinations__d1__Address=http://company:8080/
+      - ReverseProxy__Clusters__organization__Destinations__d1__Address=http://organization:8080/
+      - Kafka__BootstrapServers=kafka:29092
+    depends_on:
+      - ai
+      - analytics
+      - notification
+      - identity
+      - gamification
+      - social
+      - learning
+      - company
+      - organization
+      - kafka
+      - loki
+
+  loki:
+    image: grafana/loki:3.4.2
+    # Localhost only — logs ingest stays internal.
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./infra/loki:/etc/loki
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki.yml
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    # Localhost only — metrics stay internal.
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./infra/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - gateway
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    # Localhost only — reach Grafana via SSH tunnel, or add a Traefik route if you want it public.
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    depends_on:
+      - loki
+      - prometheus
+
+networks:
+  codex_worker:
+
+volumes:
+  codex_home:
+  postgres_data:
+  mongo_data:
+  redis_data:
+  analytics_redis_data:
+  kafka_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:
+  minio_data:

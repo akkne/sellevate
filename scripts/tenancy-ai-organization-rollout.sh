@@ -5,19 +5,19 @@
 # Phase 40.11 — roll `organization_id` out across ai-service's three stores.
 #
 # WHAT IT DOES
-#   mongo    : docs/TENANCY/mongo/40.11_dialog_sessions_organization_backfill.js
+#   mongo    : infra/tenancy/mongo/40.11_dialog_sessions_organization_backfill.js
 #              gives every pre-existing dialog session the default organization and builds the
 #              compound indexes that lead with it. This is the step that matters: Mongo has no
 #              row-level security, so until it runs those sessions match no organization's filter
 #              and users see an empty history. Run it right after the deploy.
-#   indexes  : docs/TENANCY/sql/40.11_ai_organization_indexes_concurrently.sql
+#   indexes  : infra/tenancy/sql/40.11_ai_organization_indexes_concurrently.sql
 #              rebuilds ai-db's dialog-library indexes with "OrganizationId" first using
 #              CREATE INDEX CONCURRENTLY, checks pg_index.indisvalid, and only then drops the
 #              superseded installation-wide unique index. Safe with the service up; deliberately
 #              NOT part of any EF migration or of DatabaseBootstrapper.
 #
 #   There is no Postgres backfill step, and that is not an omission: every pre-existing bundle and
-#   mode is global content, whose "OrganizationId" must stay NULL (docs/TENANCY/CONTENT_MODEL.md).
+#   mode is global content, whose "OrganizationId" must stay NULL (docs/product/generation.md).
 #   Filling it in would fork the shared practice library into one customer's private copy.
 #
 #   The SQL and JS files are the migration — read them. This script only chooses the connection,
@@ -28,7 +28,7 @@
 #     (20260815154837_AddOrganizationId); the script checks and stops if it has not.
 #   - It never runs by itself, from CI, or from any build. A human runs it.
 #   - It does not touch Redis. Pre-40.11 keys are unreachable by the new code and expire on their
-#     own TTL — see docs/DECISIONS.md, "old Redis keys expire, they are not flushed".
+#     own TTL — see docs/decisions/README.md, "old Redis keys expire, they are not flushed".
 #   - There is no --rollback. Undoing 40.11 in Postgres means reverting the EF migration, whose
 #     Down drops the columns and the RLS policies. In Mongo it means
 #     `db.dialog_sessions.updateMany({}, { $unset: { organizationId: "" } })`, which is written out
@@ -39,7 +39,7 @@
 #   - Both steps are idempotent; the Mongo script refuses to run if the collection already contains
 #     sessions belonging to a different organization than the one passed in.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/DONT_FORGET.md.
+#     docs/roadmap.md.
 #
 # USAGE
 #     ./scripts/tenancy-ai-organization-rollout.sh                  # plan only
@@ -58,8 +58,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
-MONGO_DIR="$REPO_ROOT/docs/TENANCY/mongo"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
+MONGO_DIR="$REPO_ROOT/infra/tenancy/mongo"
 
 ORGANIZATION_ID="${ORGANIZATION_ID:-00000000-0000-4000-8000-000000000001}"
 AI_DB="${AI_DB:-ai}"
@@ -86,7 +86,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 MODE="dry-run"

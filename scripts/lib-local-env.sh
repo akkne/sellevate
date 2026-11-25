@@ -26,7 +26,7 @@ LOCAL_FRONTEND_PORT="${LOCAL_FRONTEND_PORT:-3000}"
 # Port the locally-run API gateway (YARP) listens on. NOT 5000: on macOS the
 # ControlCenter AirPlay Receiver holds that port, so the gateway cannot bind it —
 # the same reason docker-compose.local.yml remaps the containerised gateway. 5001 is
-# also where src/frontend/.env.local already points, so the frontend reaches the
+# also where frontend/.env.local already points, so the frontend reaches the
 # gateway with no extra config. (5001 was the retired monolith's port; it and the
 # gateway must not be run at the same time.)
 LOCAL_GATEWAY_PORT="${LOCAL_GATEWAY_PORT:-5001}"
@@ -74,7 +74,7 @@ load_root_env() {
 
 # Export the config overrides the (retired, reference-only) monolith needs to reach
 # infra on localhost. The monolith no longer serves traffic — kept only so the
-# src/backend/api reference still builds/runs if explicitly invoked.
+# backend/api reference still builds/runs if explicitly invoked.
 export_backend_env() {
   export ASPNETCORE_ENVIRONMENT="Development"
   export ASPNETCORE_URLS="http://localhost:${LOCAL_BACKEND_PORT}"

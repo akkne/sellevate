@@ -18,5 +18,5 @@ load_root_env
 export_company_env
 
 echo "==> Company -> http://localhost:${LOCAL_COMPANY_PORT} (db: company on localhost:${LOCAL_POSTGRES_PORT})"
-cd "$REPO_ROOT/src/backend/company-service/Company"
+cd "$REPO_ROOT/backend/company-service/Company"
 exec "$DOTNET_BIN" run --project Sellevate.Company.csproj --no-launch-profile "$@"

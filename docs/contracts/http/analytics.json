@@ -1,0 +1,70 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Sellevate.Analytics",
+    "version": "v1"
+  },
+  "paths": {
+    "/tracking/events": {
+      "post": {
+        "tags": [
+          "Tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Analytics.Features.Tracking.Models.TrackEventRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Analytics.Features.Tracking.Models.TrackEventRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Analytics.Features.Tracking.Models.TrackEventRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/tracking/presence/ping": {
+      "post": {
+        "tags": [
+          "Tracking"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Sellevate.Analytics.Features.Tracking.Models.TrackEventRequestDto": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "type": "string",
+            "nullable": true
+          },
+          "page": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

@@ -17,5 +17,5 @@ load_root_env
 export_organization_env
 
 echo "==> Organization -> http://localhost:${LOCAL_ORGANIZATION_PORT} (db: organization on localhost:${LOCAL_POSTGRES_PORT})"
-cd "$REPO_ROOT/src/backend/organization-service/Organization"
+cd "$REPO_ROOT/backend/organization-service/Organization"
 exec "$DOTNET_BIN" run --project Sellevate.Organization.csproj --no-launch-profile "$@"

@@ -5,7 +5,7 @@
 # Phase 40.13 — roll `organization_id` out across gamification-db.
 #
 # WHAT IT DOES
-#   backfill : docs/TENANCY/sql/40.13_gamification_organization_backfill.sql
+#   backfill : infra/tenancy/sql/40.13_gamification_organization_backfill.sql
 #              gives every pre-existing row in all seven tenant tables the default organization.
 #              The catalogues and installation-wide configuration (Achievements, LeagueTiers,
 #              GamificationSettings, StreakMilestones, ExerciseTypeRewards), the cross-organization
@@ -13,7 +13,7 @@
 #              left alone. Run with gamification-service stopped, right after its EF migration has
 #              applied: until it runs, row-level security hides every XP record, streak, achievement,
 #              league and league period from everybody.
-#   indexes  : docs/TENANCY/sql/40.13_gamification_organization_indexes_concurrently.sql
+#   indexes  : infra/tenancy/sql/40.13_gamification_organization_indexes_concurrently.sql
 #              rebuilds the read indexes on the two tables that grow without bound (UserXpRecords
 #              and LeagueMemberships) with "OrganizationId" first, adds a plain ("LeagueId") index so
 #              the FK to Leagues stays indexed, checks pg_index.indisvalid, and only then drops the
@@ -41,7 +41,7 @@
 #   - The backfill SQL is idempotent, contains no DELETE / DROP / TRUNCATE, and refuses to re-point
 #     a database that was already backfilled at a different organization.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/DONT_FORGET.md.
+#     docs/roadmap.md.
 #
 # USAGE
 #     ./scripts/tenancy-gamification-organization-rollout.sh                  # plan only
@@ -58,7 +58,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
 
 ORGANIZATION_ID="${ORGANIZATION_ID:-00000000-0000-4000-8000-000000000001}"
 GAMIFICATION_DB="${GAMIFICATION_DB:-gamification}"
@@ -83,7 +83,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 MODE="dry-run"

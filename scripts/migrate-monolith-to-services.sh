@@ -22,7 +22,7 @@
 #       PG_MODE=docker   (run inside the container; default when one is running)
 #       PG_MODE=host     (use host psql/pg_dump against PGHOST:PGPORT)
 #   Override the container/compose file with PG_CONTAINER (default: postgres) and
-#   COMPOSE_FILE (default: <repo>/docker-compose.yml).
+#   COMPOSE_FILE (default: <repo>/compose.yaml).
 #
 # WHAT IT DOES *NOT* DO
 #   - It does NOT create schemas. The services create their own database + tables
@@ -86,7 +86,7 @@ PGPORT="${PGPORT:-5433}"
 # docker-mode connection (inside the container postgres listens on 5432)
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 FORCE=0
@@ -139,7 +139,7 @@ if [[ "$PG_MODE" == "docker" ]]; then
   container_running || die "PG_MODE=docker but container '$PG_CONTAINER' is not running (compose file: $COMPOSE_FILE)."
   # Resolve the container id ONCE, then use plain `docker exec` for every call.
   # (Using `docker compose exec` re-parses the compose file each time, which spams
-  #  "variable is not set" warnings for any unset ${VAR} in docker-compose.yml.)
+  #  "variable is not set" warnings for any unset ${VAR} in compose.yaml.)
   PG_CID="$($DC ps -q "$PG_CONTAINER" 2>/dev/null | head -n1)"
   [[ -n "$PG_CID" ]] || die "could not resolve container id for service '$PG_CONTAINER'"
   PG_CONN="-h 127.0.0.1 -p $PG_INNER_PORT -U $PGUSER"
@@ -220,7 +220,7 @@ declare -A TARGET_SEEN=()
 for entry in "${MAPPING[@]}"; do TARGET_SEEN["${entry%%:*}"]=1; done
 for db in "${!TARGET_SEEN[@]}"; do
   if ! q "postgres" "SELECT 1 FROM pg_database WHERE datname='$db'" | grep -q 1; then
-    die "target database '$db' does not exist. Start the services once so they bootstrap their schemas, then stop the app services and re-run. See docs/PRODUCTION_MIGRATION.md."
+    die "target database '$db' does not exist. Start the services once so they bootstrap their schemas, then stop the app services and re-run. See infra/tenancy/README.md."
   fi
 done
 log "All target databases present: ${!TARGET_SEEN[*]}"

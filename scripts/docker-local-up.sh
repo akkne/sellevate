@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Run the FULL stack in Docker on this machine — every service, not just infra.
 #
-# This is the deploy shape (docker-compose.yml) plus docker-compose.local.yml,
+# This is the deploy shape (compose.yaml) plus docker-compose.local.yml,
 # which retargets the two things that only make sense on a server:
 #   * gateway is published on 5001 (macOS holds :5000 for AirPlay Receiver)
 #   * the frontend image is built against the local gateway, not the production API
 #
 # The default development profile is still scripts/dev-up.sh (apps on the host,
 # hot reload). Use this one when you want to exercise the real container topology.
-# See docs/LOCAL_DEV.md.
+# See infra/README.md.
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-local-env.sh"
@@ -16,7 +16,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-local-env.sh"
 cd "$REPO_ROOT"
 
 DOCKER_LOCAL_GATEWAY_PORT="${GATEWAY_HOST_PORT:-5001}"
-COMPOSE_FILES=(-f docker-compose.yml -f docker-compose.local.yml)
+COMPOSE_FILES=(-f compose.yaml -f docker-compose.local.yml)
 
 if [[ ! -f .env ]]; then
   echo "ERROR: .env not found. Copy .env.example to .env and fill it in." >&2
@@ -36,12 +36,12 @@ fi
 # Each build is retried. The SIGILL class of failure is handled by building on the
 # Alpine SDK (see docker-compose.local.yml), but restore still goes over the network
 # on a cold cache and nuget.org times out readily on a slow link. A retry is cheap
-# because every layer up to the failing one is cached. See docs/LOCAL_DEV.md.
+# because every layer up to the failing one is cached. See infra/README.md.
 BUILD_ATTEMPTS="${BUILD_ATTEMPTS:-3}"
 
 echo "==> Building images sequentially (this takes a while on a cold cache)..."
 failed=()
-for service in identity ai analytics notification gamification social learning company gateway frontend; do
+for service in identity codex ai analytics notification gamification social learning company gateway frontend; do
   built=0
   for attempt in $(seq 1 "$BUILD_ATTEMPTS"); do
     echo "    --> $service (attempt $attempt/$BUILD_ATTEMPTS)"

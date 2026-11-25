@@ -1,0 +1,110 @@
+name: Verify
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: st
+          POSTGRES_PASSWORD: st_secret
+        ports: ['5433:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 12
+      mongo:
+        image: mongo:8
+        ports: ['27017:27017']
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: scripts/verify-backend.sh
+      - name: Сверить контракты с кодом
+        run: |
+          scripts/refresh-contracts.sh "$RUNNER_TEMP/contracts"
+          diff -ru docs/contracts "$RUNNER_TEMP/contracts"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
+
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python3 scripts/verify-docs.py
+      - name: Проверить конфигурации Compose
+        run: |
+          docker compose --env-file .env.example config --quiet
+          docker compose --env-file .env.example -f compose.yaml -f docker-compose.local.yml config --quiet
+          docker compose --env-file .env.example -f compose.yaml -f docker-compose.prod.yml config --quiet
+          docker compose --env-file .env.example -f docker-compose.infra.yml config --quiet
+      - name: Проверить сообщения коммитов
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/verify-commits.py "$BASE_SHA" "$HEAD_SHA"
+
+  verify:
+    needs: [backend, frontend, repository]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: jq -e 'all(.[]; . == "success")' <<< "$RESULTS"
+
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_PRODUCTION == 'true'
+    environment: production
+    concurrency: production-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Обновить проверенную ревизию
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" "cd sellevate && git fetch origin main && test \$(git rev-parse origin/main) = $GITHUB_SHA && git merge --ff-only $GITHUB_SHA && ./scripts/deploy-prod.sh --checked-revision $GITHUB_SHA"

@@ -4,14 +4,14 @@
 # LOCALLY on the host (no Docker rebuilds / image cache for app code), while
 # the stateful + observability services keep running in Docker.
 #
-# Services here publish the SAME host ports as docker-compose.yml, and they
+# Services here publish the SAME host ports as compose.yaml, and they
 # share the SAME named volumes, so data is identical whichever stack you use.
 #
 #   Start:  scripts/dev-up.sh            (or: docker compose -f docker-compose.infra.yml up -d)
 #   Stop:   docker compose -f docker-compose.infra.yml down
 #
 # The full Docker stack (backend + frontend in containers) still lives in
-# docker-compose.yml and is untouched.
+# compose.yaml and is untouched.
 services:
   minio:
     image: minio/minio
@@ -123,7 +123,7 @@ services:
     ports:
       - "3100:3100"
     volumes:
-      - ./infrastructure/loki:/etc/loki
+      - ./infra/loki:/etc/loki
       - loki_data:/loki
     command: -config.file=/etc/loki/loki.yml
 
@@ -134,7 +134,7 @@ services:
     volumes:
       # Local profile: backend runs on the host, so Prometheus scrapes it via
       # host.docker.internal instead of the in-network "backend" service name.
-      - ./infrastructure/prometheus/prometheus.local.yml:/etc/prometheus/prometheus.yml
+      - ./infra/prometheus/prometheus.local.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -148,8 +148,8 @@ services:
     ports:
       - "3001:3000"
     volumes:
-      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
-      - ./infrastructure/grafana/dashboards:/etc/grafana/dashboards
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards
       - grafana_data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
@@ -160,7 +160,7 @@ services:
       - loki
       - prometheus
 
-# Shared with docker-compose.yml so data carries over between the two stacks.
+# Shared with compose.yaml so data carries over between the two stacks.
 volumes:
   postgres_data:
   mongo_data:

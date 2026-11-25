@@ -10,7 +10,7 @@
 #                       configuration and the registry projection, and clears the removed
 #                       global Admin role.
 #
-#   The SQL lives in docs/TENANCY/sql/40.9_*.sql — read those files, they are the migration.
+#   The SQL lives in infra/tenancy/sql/40.9_*.sql — read those files, they are the migration.
 #   This script only chooses the connection, passes one organization id to both databases, and
 #   prints what is about to happen.
 #
@@ -29,7 +29,7 @@
 #     is also given. The SQL itself refuses if anything has joined the organization since the
 #     backfill.
 #   - Never point this at a production connection string before it has been run against a restored
-#     copy of that database. See docs/DONT_FORGET.md.
+#     copy of that database. See docs/roadmap.md.
 #
 # USAGE
 #     ./scripts/tenancy-default-organization-backfill.sh                        # plan only
@@ -49,7 +49,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
 
 # The default organization id is a fixed, recognisable UUID rather than a fresh random one: the
 # same value has to be written into two databases that have no foreign key between them, and a
@@ -80,7 +80,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 MODE="dry-run"
@@ -136,7 +136,7 @@ else
   log "Postgres access: host psql -> $PGUSER@$PGHOST:$PGPORT"
 fi
 
-# Runs one of the docs/TENANCY/sql files. The file is piped in rather than passed as -f <path>
+# Runs one of the infra/tenancy/sql files. The file is piped in rather than passed as -f <path>
 # because in docker mode it lives on the host, not inside the container.
 run_sql_file() {
   local database="$1" sql_file="$2"
@@ -203,7 +203,7 @@ case "$MODE" in
     warn "ROLLBACK is destructive: it DELETEs memberships, the auth configuration, the registry"
     warn "projection and the organization row, and DROPs the bookkeeping tables."
     echo
-    warn "The exact SQL that will run (SAFETY RULES, CLAUDE.md):"
+    warn "The exact SQL that will run (план миграции):"
     echo "----------------------------------------------------------------------"
     cat "$SQL_DIR/40.9_default_organization_rollback_identity_db.sql"
     echo "----------------------------------------------------------------------"

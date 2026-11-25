@@ -16,5 +16,5 @@ load_root_env
 export_learning_env
 
 echo "==> Learning -> http://localhost:${LOCAL_LEARNING_PORT} (db: learning on localhost:${LOCAL_POSTGRES_PORT})"
-cd "$REPO_ROOT/src/backend/learning-service/Learning"
+cd "$REPO_ROOT/backend/learning-service/Learning"
 exec "$DOTNET_BIN" run --project Sellevate.Learning.csproj --no-launch-profile "$@"
