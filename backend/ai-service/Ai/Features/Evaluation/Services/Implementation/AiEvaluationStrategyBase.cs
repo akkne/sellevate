@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -9,6 +8,7 @@ using Sellevate.Ai.Features.Evaluation.Models;
 using Sellevate.Ai.Features.Quotas.Services.Abstract;
 using Sellevate.Ai.Features.Quotas.Services.Implementation;
 using Sellevate.Ai.Infrastructure.Configuration;
+using Sellevate.Ai.Infrastructure.Http;
 
 namespace Sellevate.Ai.Features.Evaluation.Services.Implementation;
 
@@ -55,8 +55,7 @@ internal abstract class AiEvaluationStrategyBase(
         string? globalSystemPrompt,
         CancellationToken cancellationToken)
     {
-        var openAiApiKey = openAiOptions.Value.ApiKey;
-        if (!AiSecretPlaceholders.IsRealSecret(openAiApiKey))
+        if (!openAiOptions.Value.CanSendPrompts)
         {
             throw new InvalidOperationException("OpenAI API key is not configured");
         }
@@ -73,11 +72,8 @@ internal abstract class AiEvaluationStrategyBase(
             systemPromptBuilder.AppendLine(perExercisePrompt);
         }
 
-        var httpClient = httpClientFactory.CreateClient(AiProviderHttpConstants.OpenAiClientName);
-        var openAiBaseUrl = openAiOptions.Value.BaseUrl;
-        var completionsPath = openAiOptions.Value.ChatCompletionsPath;
-        var apiUrl = openAiBaseUrl.TrimEnd('/') + completionsPath;
-        var model = openAiOptions.Value.OpenQuestionModel;
+        var (httpClient, apiUrl) = PromptProviderClient.Create(httpClientFactory, openAiOptions.Value);
+        var model = openAiOptions.Value.ResolvePromptModel(openAiOptions.Value.OpenQuestionModel);
         var maxTokens = openAiOptions.Value.MaximumOpenQuestionTokenCount;
 
         var systemPromptWithFormat = systemPromptBuilder.ToString();
@@ -108,20 +104,6 @@ internal abstract class AiEvaluationStrategyBase(
             JsonSerializer.Serialize(requestPayload),
             Encoding.UTF8,
             AiMediaTypes.Json);
-
-        httpClient.DefaultRequestHeaders.Remove(AiProviderHttpConstants.AuthorizationHeaderName);
-        httpClient.DefaultRequestHeaders.Remove(AiProviderHttpConstants.F5AuthenticationTokenHeaderName);
-
-        if (openAiOptions.Value.Provider == OpenAiProvider.F5Ai)
-        {
-            httpClient.DefaultRequestHeaders.Add(
-                AiProviderHttpConstants.F5AuthenticationTokenHeaderName, openAiApiKey);
-        }
-        else
-        {
-            httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue(AiProviderHttpConstants.BearerScheme, openAiApiKey);
-        }
 
         await spendMeter.EnsureLlmAllowanceAsync($"exercise grading ({model})", cancellationToken);
 

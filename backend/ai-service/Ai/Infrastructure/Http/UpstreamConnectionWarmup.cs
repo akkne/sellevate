@@ -41,7 +41,7 @@ internal sealed class UpstreamConnectionWarmup
     {
         var targets = new List<(string, string)>();
 
-        if (IsApiKeyConfigured(_openAiOptions.Value.ApiKey))
+        if (_openAiOptions.Value.Provider != OpenAiProvider.OPENAI_CODEX && IsApiKeyConfigured(_openAiOptions.Value.ApiKey))
         {
             targets.Add((AiProviderHttpConstants.OpenAiClientName, _openAiOptions.Value.BaseUrl));
         }

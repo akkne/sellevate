@@ -52,6 +52,10 @@ services:
       additional_contexts: *nuget-cache
       args: *build-args
 
+  codex:
+    build:
+      args: *build-args
+
   ai:
     build:
       additional_contexts: *nuget-cache

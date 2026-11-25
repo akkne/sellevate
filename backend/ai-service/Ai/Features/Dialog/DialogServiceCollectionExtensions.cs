@@ -30,7 +30,11 @@ public static class DialogServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<OpenAiConfiguration>(configuration.GetSection(OpenAiConfiguration.SectionName));
+        services.AddOptions<OpenAiConfiguration>().Bind(configuration.GetSection(OpenAiConfiguration.SectionName))
+            .Validate(options => Enum.IsDefined(options.Provider), "Unknown OpenAI:Provider")
+            .Validate(options => options.Provider != OpenAiProvider.OPENAI_CODEX || !string.IsNullOrWhiteSpace(options.CodexModel),
+                "OpenAI:CodexModel is required for OPENAI_CODEX")
+            .ValidateOnStart();
         services.AddScoped<IOpenAiChatService, OpenAiChatService>();
         services.AddScoped<IDialogSessionRepository, DialogSessionRepository>();
         services.AddScoped<IDialogService, DialogService>();

@@ -64,6 +64,16 @@ public static class UpstreamHttpClientServiceCollectionExtensions
                 });
         }
 
+        services.AddHttpClient(PromptProviderClient.CodexClientName, client =>
+        {
+            client.BaseAddress = new Uri(configuration["CodexService:BaseUrl"] ?? "http://codex:8080/");
+            client.Timeout = TimeSpan.FromSeconds(configuration.GetValue("CodexService:TimeoutSeconds", 180) + 5);
+            var secret = configuration[InternalServiceAuthentication.SecretConfigurationKey];
+            if (!string.IsNullOrWhiteSpace(secret))
+            {
+                client.DefaultRequestHeaders.Add(InternalServiceAuthentication.HeaderName, secret);
+            }
+        }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddHttpClient();
         services.AddSingleton<UpstreamConnectionWarmup>();
         services.AddHostedService<UpstreamConnectionWarmupService>();

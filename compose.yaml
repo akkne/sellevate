@@ -189,7 +189,24 @@ services:
     depends_on:
       - kafka
 
+  codex:
+    build: ./backend/codex-service/Codex
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
+      - Codex__ReasoningEffort=${CODEX_REASONING_EFFORT:-high}
+      - Codex__TimeoutSeconds=${CODEX_TIMEOUT_SECONDS:-180}
+      - Codex__Executable=${CODEX_EXECUTABLE:-codex}
+      - CODEX_API_KEY=${CODEX_API_KEY:-}
+    volumes:
+      - codex_home:/home/app/.codex
+    networks:
+      - codex_worker
+
   ai:
+    networks:
+      - default
+      - codex_worker
     build:
       context: ./backend
       dockerfile: ai-service/Ai/Dockerfile
@@ -219,12 +236,13 @@ services:
       # them. Absent outside Development they now refuse rather than allow.
       - InternalAuth__ServiceSecret=${INTERNAL_SERVICE_SECRET}
       - Logging__Loki__Url=http://loki:3100
-      - OpenAI__ApiKey=${OPENAI_API_KEY}
-      - OpenAI__BaseUrl=${OPENAI_BASE_URL}
-      - OpenAI__ChatCompletionsPath=${OPENAI_CHAT_COMPLETIONS_PATH}
-      # Provider selects the auth header/schema: OpenAi=Bearer, F5Ai=X-Auth-Token. Must be F5Ai
-      # when routing through api.f5ai.ru, otherwise the gateway rejects the Bearer header with 401.
-      - OpenAI__Provider=${OPENAI_PROVIDER:-OpenAi}
+      - OpenAI__ApiKey=${OPENAI_API_KEY:-}
+      - OpenAI__BaseUrl=${OPENAI_BASE_URL:-https://api.openai.com}
+      - OpenAI__ChatCompletionsPath=${OPENAI_CHAT_COMPLETIONS_PATH:-/v1/chat/completions}
+      - OpenAI__Provider=${OPENAI_PROVIDER:-OPENAI_CODEX}
+      - OpenAI__CodexModel=${CODEX_MODEL:-gpt-6.2-astra}
+      - CodexService__BaseUrl=http://codex:8080/
+      - CodexService__TimeoutSeconds=${CODEX_TIMEOUT_SECONDS:-180}
       # --- AI tunables (override in .env; defaults are the in-code values) ---
       - OpenAI__DialogModel=${OPENAI_DIALOG_MODEL:-gpt-4o}
       - OpenAI__OpenQuestionModel=${OPENAI_OPEN_QUESTION_MODEL:-gpt-4.1}
@@ -250,6 +268,8 @@ services:
       - AiQuotas__DefaultLlmMonthlyTokenLimit=${AI_QUOTA_LLM_MONTHLY_TOKENS:-20000000}
       - AiQuotas__DefaultBatchReservePercent=${AI_QUOTA_BATCH_RESERVE_PERCENT:-10}
     depends_on:
+      codex:
+        condition: service_started
       postgres:
         condition: service_healthy
       mongo:
@@ -601,7 +621,11 @@ services:
       - loki
       - prometheus
 
+networks:
+  codex_worker:
+
 volumes:
+  codex_home:
   postgres_data:
   mongo_data:
   redis_data:

@@ -187,10 +187,10 @@ public class VoiceReservationGateTests
 public class OpenAiProviderConfigTests
 {
     [Test]
-    public void Provider_DefaultsToOpenAi()
+    public void Provider_DefaultsToCodex()
     {
         var config = new OpenAiConfiguration { ApiKey = "key" };
-        config.Provider.Should().Be(OpenAiProvider.OpenAi);
+        config.Provider.Should().Be(OpenAiProvider.OPENAI_CODEX);
     }
 
     [Test]

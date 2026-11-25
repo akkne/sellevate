@@ -1,0 +1,141 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Sellevate.Codex",
+    "version": "v1"
+  },
+  "paths": {
+    "/internal/completions": {
+      "post": {
+        "tags": [
+          "Completions"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Sellevate.Codex.Features.Completions.CompletionFormat": {
+        "type": "object",
+        "properties": {
+          "json_schema": {
+            "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.NamedSchema"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Codex.Features.Completions.CompletionMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Codex.Features.Completions.CompletionRequest": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionMessage"
+            },
+            "nullable": true
+          },
+          "max_tokens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "response_format": {
+            "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionFormat"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Codex.Features.Completions.CompletionResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionMessage"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.TokenUsage"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Codex.Features.Completions.NamedSchema": {
+        "type": "object",
+        "properties": {
+          "schema": { }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Codex.Features.Completions.TokenUsage": {
+        "type": "object",
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completion_tokens": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

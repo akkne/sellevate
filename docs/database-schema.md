@@ -12,6 +12,8 @@
 | organization | 3 | [EF Core](../backend/organization-service/Organization/Infrastructure/Data) | [DDL](contracts/database/organization.sql) |
 | social | 8 | [EF Core](../backend/social-service/Social/Infrastructure/Data) | [DDL](contracts/database/social.sql) |
 
+Codex выполняет каждый запрос во временном каталоге. Токены организации учитывает AI в своей существующей таблице использования.
+
 ## Связи в карточке компании
 
 ```mermaid

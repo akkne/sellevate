@@ -1,9 +1,9 @@
+using Sellevate.Ai.Common.Constants;
+
 namespace Sellevate.Ai.Infrastructure.Configuration;
 
 /// <summary>
-/// Identifies which OpenAI-compatible provider is in use so that
-/// provider-specific headers and response-format schemas are selected
-/// without magic-string URL sniffing.
+/// Selects the text transport. The HTTP adapters also select their authentication and schema format here.
 /// </summary>
 public enum OpenAiProvider
 {
@@ -12,6 +12,8 @@ public enum OpenAiProvider
 
     /// <summary>F5 AI gateway — uses X-Auth-Token and a flat json_schema object.</summary>
     F5Ai,
+
+    OPENAI_CODEX,
 }
 
 /// <summary>
@@ -28,15 +30,16 @@ public sealed class OpenAiConfiguration
 {
     public const string SectionName = "OpenAI";
 
-    public required string ApiKey { get; init; }
+    public string ApiKey { get; init; } = string.Empty;
     public string BaseUrl { get; init; } = "https://api.openai.com";
     public string ChatCompletionsPath { get; init; } = "/v1/chat/completions";
 
-    /// <summary>
-    /// Explicit provider selection. Defaults to <see cref="OpenAiProvider.OpenAi"/>.
-    /// Set to <c>F5Ai</c> when routing through the F5 AI gateway.
-    /// </summary>
-    public OpenAiProvider Provider { get; init; } = OpenAiProvider.OpenAi;
+    public OpenAiProvider Provider { get; init; } = OpenAiProvider.OPENAI_CODEX;
+    public string CodexModel { get; init; } = "gpt-6.2-astra";
+
+    public bool CanSendPrompts => Provider == OpenAiProvider.OPENAI_CODEX || AiSecretPlaceholders.IsRealSecret(ApiKey);
+
+    public string ResolvePromptModel(string apiModel) => Provider == OpenAiProvider.OPENAI_CODEX ? CodexModel : apiModel;
 
     public string OpenQuestionModel { get; init; } = "gpt-4.1";
 

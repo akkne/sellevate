@@ -1,0 +1,12 @@
+nameOverride: codex
+
+image:
+  repository: ghcr.io/sellevate/codex-service
+  tag: latest
+
+envFromConfigMap: codex-config
+envFromSecret: codex-secrets
+
+service:
+  type: ClusterIP
+  port: 8080

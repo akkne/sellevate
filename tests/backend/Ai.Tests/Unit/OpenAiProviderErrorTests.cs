@@ -35,7 +35,7 @@ public class OpenAiProviderErrorTests
         var httpClientFactory = Substitute.For<IHttpClientFactory>();
         httpClientFactory.CreateClient("OpenAI").Returns(_ => new HttpClient(new StubHandler(statusCode, body)));
 
-        var options = Options.Create(new OpenAiConfiguration { ApiKey = "test-key" });
+        var options = Options.Create(new OpenAiConfiguration { ApiKey = "test-key", Provider = OpenAiProvider.OpenAi });
         return new OpenAiChatService(
             httpClientFactory,
             options,

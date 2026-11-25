@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +11,7 @@ using Sellevate.Ai.Features.Dialog.Services.Abstract;
 using Sellevate.Ai.Features.Quotas.Services.Abstract;
 using Sellevate.Ai.Features.Quotas.Services.Implementation;
 using Sellevate.Ai.Infrastructure.Configuration;
+using Sellevate.Ai.Infrastructure.Http;
 
 namespace Sellevate.Ai.Features.Dialog.Services.Implementation;
 
@@ -186,7 +186,7 @@ endCall: false ЗАПРЕЩЕНО.
         _logger = logger;
     }
 
-    public bool IsConfigured => AiSecretPlaceholders.IsRealSecret(_openAiOptions.Value.ApiKey);
+    public bool IsConfigured => _openAiOptions.Value.CanSendPrompts;
 
     public async Task<ChatMessageResult> SendChatMessageAsync(
         string systemPrompt,
@@ -235,12 +235,12 @@ endCall: false ЗАПРЕЩЕНО.
             throw new InvalidOperationException("OpenAI API is not configured");
         }
 
-        var chatModel = _openAiOptions.Value.DialogModel;
+        var chatModel = _openAiOptions.Value.ResolvePromptModel(_openAiOptions.Value.DialogModel);
         var maxTokens = _openAiOptions.Value.MaximumDialogTokenCount;
 
         await _spendMeter.EnsureLlmAllowanceAsync($"streaming chat ({chatModel})", cancellationToken);
 
-        var (httpClient, apiUrl) = CreateConfiguredClient();
+        var (httpClient, apiUrl) = PromptProviderClient.Create(_httpClientFactory, _openAiOptions.Value);
 
         var messages = BuildMessages(systemPrompt + StructuredReplyInstruction, conversationHistory);
         var requestBody = new Dictionary<string, object>
@@ -428,34 +428,6 @@ endCall: false ЗАПРЕЩЕНО.
         return response.Trim();
     }
 
-    /// <summary>
-    /// Resolves the named client and attaches the key in whichever header the configured provider
-    /// expects. Both candidate headers are removed first: the factory hands back a pooled client, so a
-    /// header left over from a previous provider selection would travel with the next request.
-    /// </summary>
-    private (HttpClient Client, string ApiUrl) CreateConfiguredClient()
-    {
-        var configuration = _openAiOptions.Value;
-        var apiUrl = configuration.BaseUrl.TrimEnd('/') + configuration.ChatCompletionsPath;
-
-        var client = _httpClientFactory.CreateClient(AiProviderHttpConstants.OpenAiClientName);
-        client.DefaultRequestHeaders.Remove(AiProviderHttpConstants.AuthorizationHeaderName);
-        client.DefaultRequestHeaders.Remove(AiProviderHttpConstants.F5AuthenticationTokenHeaderName);
-
-        if (configuration.Provider == OpenAiProvider.F5Ai)
-        {
-            client.DefaultRequestHeaders.Add(
-                AiProviderHttpConstants.F5AuthenticationTokenHeaderName, configuration.ApiKey);
-        }
-        else
-        {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                AiProviderHttpConstants.BearerScheme, configuration.ApiKey);
-        }
-
-        return (client, apiUrl);
-    }
-
     private static List<object> BuildMessages(string systemPrompt, List<DialogMessage> history)
     {
         var messages = new List<object>
@@ -580,9 +552,10 @@ endCall: false ЗАПРЕЩЕНО.
             throw new InvalidOperationException("OpenAI API is not configured");
         }
 
+        model = _openAiOptions.Value.ResolvePromptModel(model);
         await _spendMeter.EnsureLlmAllowanceAsync($"chat completion ({model})", cancellationToken);
 
-        var (httpClient, apiUrl) = CreateConfiguredClient();
+        var (httpClient, apiUrl) = PromptProviderClient.Create(_httpClientFactory, _openAiOptions.Value);
 
         var requestBody = new Dictionary<string, object>
         {

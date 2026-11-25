@@ -41,7 +41,7 @@ BUILD_ATTEMPTS="${BUILD_ATTEMPTS:-3}"
 
 echo "==> Building images sequentially (this takes a while on a cold cache)..."
 failed=()
-for service in identity ai analytics notification gamification social learning company gateway frontend; do
+for service in identity codex ai analytics notification gamification social learning company gateway frontend; do
   built=0
   for attempt in $(seq 1 "$BUILD_ATTEMPTS"); do
     echo "    --> $service (attempt $attempt/$BUILD_ATTEMPTS)"
