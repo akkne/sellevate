@@ -30,6 +30,7 @@ public sealed class KafkaEventPublisher : IEventPublisher, IDeadLetterPublisher,
     private readonly IProducer<string, string> _producer;
     private readonly ILogger<KafkaEventPublisher> _logger;
     private readonly TimeSpan _publishTimeout;
+    private int _disposed;
 
     /// <summary>
     /// Builds the shared producer. <c>MessageTimeoutMs</c> is pinned to
@@ -191,7 +192,18 @@ public sealed class KafkaEventPublisher : IEventPublisher, IDeadLetterPublisher,
     /// </summary>
     public void Dispose()
     {
-        _producer.Flush(ShutdownFlushTimeout);
-        _producer.Dispose();
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _producer.Flush(ShutdownFlushTimeout);
+        }
+        finally
+        {
+            _producer.Dispose();
+        }
     }
 }

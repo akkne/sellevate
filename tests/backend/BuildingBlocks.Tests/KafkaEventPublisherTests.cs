@@ -32,6 +32,13 @@ public class KafkaEventPublisherTests
             NullLogger<KafkaEventPublisher>.Instance);
 
     [Test]
+    public void Disposing_the_shared_publisher_twice_is_safe()
+    {
+        using var publisher = CreatePublisherPointedAtNothing();
+        publisher.Dispose();
+    }
+
+    [Test]
     public async Task Publishing_with_an_unreachable_broker_does_not_delay_the_caller()
     {
         using var publisher = CreatePublisherPointedAtNothing();

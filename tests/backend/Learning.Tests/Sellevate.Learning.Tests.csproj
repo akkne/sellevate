@@ -19,6 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="../../../infra/tenancy/sql/40.10_learning_organization_indexes_concurrently.sql"
+          Link="40.10_learning_organization_indexes_concurrently.sql" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="..\..\..\backend\learning-service\Learning\Sellevate.Learning.csproj" />
   </ItemGroup>
 </Project>

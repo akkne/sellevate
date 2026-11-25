@@ -37,6 +37,7 @@ public sealed class TestWebApplicationFactory(string connectionString) : WebAppl
     private static Dictionary<string, string?> BuildSettings(string connectionString) => new()
     {
         ["ConnectionStrings:Postgres"] = connectionString,
+        ["Kafka:ProvisionTopics"] = "false",
         ["Kafka:BootstrapServers"] = "localhost:9092",
         ["Jwt:Key"] = JwtTestHelper.JwtKey,
         ["Jwt:Issuer"] = JwtTestHelper.JwtIssuer,
@@ -68,10 +69,9 @@ public sealed class TestWebApplicationFactory(string connectionString) : WebAppl
     /// Phase 40.9: <see cref="OrganizationReplicaConsumer"/> resolves the Redis-backed idempotency
     /// store the moment the host starts, and there is no Redis in the test environment, so it is
     /// removed here. Removed by exact implementation type rather than with
-    /// <c>RemoveAll&lt;IHostedService&gt;()</c> so the outbox relay and the topic provisioner keep
-    /// running exactly as before. The tests seed <c>OrganizationReplicas</c> directly through
-    /// <see cref="TestOrganizationSeeder"/> — exactly what the consumer would have written — and the
-    /// projection it performs is covered separately by <c>OrganizationReplicaProjectorTests</c>.
+    /// <c>RemoveAll&lt;IHostedService&gt;()</c> so the outbox relay keeps running. The tests seed
+    /// <c>OrganizationReplicas</c> directly through <see cref="TestOrganizationSeeder"/>. The consumer projection
+    /// is covered by <c>OrganizationReplicaProjectorTests</c>.
     /// </summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

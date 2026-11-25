@@ -1,11 +1,8 @@
 -- Sellevate — Phase 40.10, step 3 of 3: rebuild learning-db's indexes with "OrganizationId" first.
 --
--- NOT executed by any automated process (build, migration, CI, or agent run), and deliberately NOT
--- part of EF migration 20260815152225_AddOrganizationId or of DatabaseBootstrapper. The roadmap
--- calls this out explicitly: a transactional index build takes an ACCESS EXCLUSIVE lock on the
--- table, learning-service runs Database.Migrate() during startup, and a long build there stalls
--- the readiness probe and races the replicas. So it lives here, gets run by a human against a live
--- database, and can be run with the service up.
+-- After EF migrations, operators run this script against live databases during a maintenance
+-- window. Integration tests use the same script on a disposable database. Concurrent builds
+-- keep learning-service available and avoid blocking startup while replicas run Database.Migrate().
 --
 -- Invocation:
 --   psql -v ON_ERROR_STOP=1 -d learning -f 40.10_learning_organization_indexes_concurrently.sql

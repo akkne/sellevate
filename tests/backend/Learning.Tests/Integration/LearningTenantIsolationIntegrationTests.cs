@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -125,6 +126,7 @@ public class LearningTenantIsolationIntegrationTests
                 TO {LocalLearningPostgresTestSettings.ApplicationRoleName};
             """);
 
+        await ApplyTenantIndexesAsync();
         await SeedAsync(testDatabaseConnection);
     }
 
@@ -608,6 +610,28 @@ public class LearningTenantIsolationIntegrationTests
         await command.ExecuteNonQueryAsync();
     }
 
+    private static async Task ApplyTenantIndexesAsync()
+    {
+        var settings = new NpgsqlConnectionStringBuilder(LocalLearningPostgresTestSettings.AdminConnectionString(
+            LocalLearningPostgresTestSettings.TestDatabaseName));
+        var startInfo = new ProcessStartInfo("psql")
+        {
+            UseShellExecute = false,
+            RedirectStandardError = true,
+            ArgumentList =
+            {
+                "-X", "--no-password", "--host", settings.Host!, "--port", settings.Port.ToString(),
+                "--username", settings.Username!, "--dbname", LocalLearningPostgresTestSettings.TestDatabaseName,
+                "--file", Path.Combine(AppContext.BaseDirectory, "40.10_learning_organization_indexes_concurrently.sql"),
+            },
+        };
+        startInfo.Environment["PGPASSWORD"] = settings.Password;
+        using var process = Process.Start(startInfo)!;
+        var errors = await process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        Assert.That(process.ExitCode, Is.Zero, errors);
+    }
+
     /// <summary>
     /// Seeded through the admin connection, which bypasses RLS — the same reason migrations keep
     /// working under the owning role in production. Writing the fixture through the application
@@ -626,10 +650,10 @@ public class LearningTenantIsolationIntegrationTests
                 ('{OrganizationATopicId}','{OrganizationAId}','{OrganizationASkillId}', 'price', 1, 'Price (A)'),
                 ('{OrganizationBTopicId}','{OrganizationBId}','{OrganizationBSkillId}', 'price', 1, 'Price (B)');
 
-            INSERT INTO "Lessons" ("Id", "OrganizationId", "TopicId", "OrderInTopic", "Title") VALUES
-                ('{GlobalLessonId}',       NULL,               '{GlobalTopicId}',        1, 'Lesson (global)'),
-                ('{OrganizationALessonId}','{OrganizationAId}','{OrganizationATopicId}', 1, 'Lesson (A)'),
-                ('{OrganizationBLessonId}','{OrganizationBId}','{OrganizationBTopicId}', 1, 'Lesson (B)');
+            INSERT INTO "Lessons" ("Id", "OrganizationId", "TopicId", "OrderInTopic", "Title", "Slug") VALUES
+                ('{GlobalLessonId}',       NULL,               '{GlobalTopicId}',        1, 'Lesson (global)', 'price'),
+                ('{OrganizationALessonId}','{OrganizationAId}','{OrganizationATopicId}', 1, 'Lesson (A)', 'price'),
+                ('{OrganizationBLessonId}','{OrganizationBId}','{OrganizationBTopicId}', 1, 'Lesson (B)', 'price');
 
             INSERT INTO "Exercises" ("Id", "OrganizationId", "LessonId", "Type", "OrderInLesson", "SerializedContent", "CreatedAt", "UpdatedAt") VALUES
                 ('{GlobalExerciseId}',       NULL,               '{GlobalLessonId}',        'choose_option', 1, '{EmptyJsonObject}', now(), now()),

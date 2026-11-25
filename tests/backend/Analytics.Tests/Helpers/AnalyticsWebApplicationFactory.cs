@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using Sellevate.Analytics.Common.Constants;
+using Sellevate.Analytics.Features.Funnels.Eventing;
 using Sellevate.Analytics.Features.Presence.Services.Abstract;
 using StackExchange.Redis;
 
@@ -29,6 +30,7 @@ public sealed class AnalyticsWebApplicationFactory : WebApplicationFactory<Progr
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 [$"ConnectionStrings:{ConfigurationKeys.RedisConnectionName}"] = "localhost:6379,abortConnect=false",
+                ["Kafka:ProvisionTopics"] = "false",
                 ["Kafka:BootstrapServers"] = "localhost:9092",
                 ["Kafka:ConsumerGroupId"] = "analytics-tests",
                 [ConfigurationKeys.JwtKey] = JwtTestHelper.JwtKey,
@@ -48,6 +50,8 @@ public sealed class AnalyticsWebApplicationFactory : WebApplicationFactory<Progr
 
         builder.ConfigureServices(services =>
         {
+            services.Remove(services.Single(descriptor => descriptor.ImplementationType == typeof(FunnelEventsConsumer)));
+
             var stubRedis = Substitute.For<IConnectionMultiplexer>();
             var stubDb = Substitute.For<IDatabase>();
             stubRedis.GetDatabase(Arg.Any<int>(), Arg.Any<object?>()).Returns(stubDb);
