@@ -258,7 +258,7 @@ endCall: false ЗАПРЕЩЕНО.
             Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, AiMediaTypes.Json)
         };
 
-        _logger.LogInformation("Streaming OpenAI completion with model {Model}", chatModel);
+        _logger.LogInformation("Streaming completion via {Provider} with model {Model}", _openAiOptions.Value.Provider, chatModel);
 
         using var response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (!response.IsSuccessStatusCode)
@@ -571,7 +571,7 @@ endCall: false ЗАПРЕЩЕНО.
 
         var httpContent = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, AiMediaTypes.Json);
 
-        _logger.LogInformation("Calling OpenAI API with model {Model}", model);
+        _logger.LogInformation("Requesting completion via {Provider} with model {Model}", _openAiOptions.Value.Provider, model);
 
         var response = await httpClient.PostAsync(apiUrl, httpContent, cancellationToken);
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -580,8 +580,6 @@ endCall: false ЗАПРЕЩЕНО.
         {
             throw TranslateProviderError(response.StatusCode, responseContent, $"chat completion ({model})");
         }
-
-        _logger.LogDebug("OpenAI API response: {Response}", responseContent);
 
         var completion = ExtractCompletion(responseContent, _logger);
 

@@ -115,11 +115,11 @@ internal abstract class AiEvaluationStrategyBase(
         {
             if ((int)response.StatusCode >= LowestServerErrorStatusCode)
             {
-                logger.LogError("OpenAI evaluation API failed: {StatusCode} - {Body}", response.StatusCode, ProviderResponseRedactor.RedactAndTruncate(responseBody));
+                logger.LogError("Evaluation provider failed: {StatusCode} - {Body}", response.StatusCode, ProviderResponseRedactor.RedactAndTruncate(responseBody));
             }
             else
             {
-                logger.LogWarning("OpenAI evaluation API rejected the request: {StatusCode} - {Body}", response.StatusCode, ProviderResponseRedactor.RedactAndTruncate(responseBody));
+                logger.LogWarning("Evaluation provider rejected the request: {StatusCode} - {Body}", response.StatusCode, ProviderResponseRedactor.RedactAndTruncate(responseBody));
             }
 
             throw new HttpRequestException("AI provider error");
@@ -141,7 +141,7 @@ internal abstract class AiEvaluationStrategyBase(
                 if (errorDocument.RootElement.ValueKind == JsonValueKind.Object &&
                     errorDocument.RootElement.TryGetProperty("error", out _))
                 {
-                    logger.LogWarning("OpenAI evaluation returned an error body: {Body}", ProviderResponseRedactor.RedactAndTruncate(responseBody));
+                    logger.LogWarning("Evaluation provider returned an error body: {Body}", ProviderResponseRedactor.RedactAndTruncate(responseBody));
                     throw new HttpRequestException("AI provider error");
                 }
             }
