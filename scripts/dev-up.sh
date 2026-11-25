@@ -3,7 +3,7 @@
 #   1. infra in Docker (docker-compose.infra.yml)
 #   2. frontend (Next.js) on the host
 #
-# The monolith (src/backend/api) has been removed from main (kept on the
+# The monolith (backend/api) has been removed from main (kept on the
 # `monolith-legacy` branch). The frontend talks to the API gateway, which routes
 # to the per-service backends.
 #

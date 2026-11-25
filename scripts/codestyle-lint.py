@@ -73,7 +73,7 @@ def enumerate_source_files(root: str):
 
 
 def main(argv):
-    roots = argv[1:] or ["src/backend/identity-service"]
+    roots = argv[1:] or ["backend/identity-service"]
     total = 0
     for root in roots:
         for path in enumerate_source_files(root):

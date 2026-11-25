@@ -15,5 +15,5 @@ load_root_env
 export_gamification_env
 
 echo "==> Gamification -> http://localhost:${LOCAL_GAMIFICATION_PORT} (db: gamification on localhost:${LOCAL_POSTGRES_PORT})"
-cd "$REPO_ROOT/src/backend/gamification-service/Gamification"
+cd "$REPO_ROOT/backend/gamification-service/Gamification"
 exec "$DOTNET_BIN" run --project Sellevate.Gamification.csproj --no-launch-profile "$@"

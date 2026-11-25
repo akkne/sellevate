@@ -48,5 +48,5 @@ export AiQuotas__DefaultBatchReservePercent="${AI_QUOTA_BATCH_RESERVE_PERCENT:-1
 export GoogleTts__ApiKey="${GOOGLE_TTS_API_KEY:-}"
 
 echo "==> AI service -> http://localhost:${LOCAL_AI_PORT} (ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT)"
-cd "$REPO_ROOT/src/backend/ai-service/Ai"
+cd "$REPO_ROOT/backend/ai-service/Ai"
 exec "$DOTNET_BIN" run --project Sellevate.Ai.csproj --no-launch-profile "$@"

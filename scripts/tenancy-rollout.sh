@@ -5,7 +5,7 @@
 # Phase 40 — one driver for the whole multi-tenancy rollout, in the order that works.
 #
 # WHAT IT DOES
-#   Runs the thirteen-step sequence from docs/TENANCY/RUNBOOK.md part II as numbered steps:
+#   Runs the thirteen-step sequence from infra/tenancy/README.md part II as numbered steps:
 #   preflight checks, a backup, then service starts and data backfills interleaved in the one
 #   order that satisfies every constraint the phase discovered — most importantly ai-service
 #   before learning-service.
@@ -40,7 +40,7 @@
 #   Environment (all optional):
 #     ORGANIZATION_ID   default 00000000-0000-4000-8000-000000000001 — must be the same value in
 #                       every step, which is why this script passes one value to all of them
-#     COMPOSE_FILES     default: docker-compose.yml plus docker-compose.prod.yml when it exists.
+#     COMPOSE_FILES     default: compose.yaml plus docker-compose.prod.yml when it exists.
 #                       Must match the files the running stack was created with.
 #     MONGO_URI         default mongodb://127.0.0.1:27017 — note this is the PRODUCTION port; the
 #                       per-service scripts default to 27018, which is the local dev infra
@@ -52,7 +52,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
 
 ORGANIZATION_ID="${ORGANIZATION_ID:-00000000-0000-4000-8000-000000000001}"
 MONGO_URI="${MONGO_URI:-mongodb://127.0.0.1:27017}"
@@ -115,7 +115,7 @@ if [[ -z "$POSTGRES_USER" || -z "$POSTGRES_PASSWORD" ]]; then
 fi
 
 if [[ -z "${COMPOSE_FILES:-}" ]]; then
-  COMPOSE_FILES="-f $REPO_ROOT/docker-compose.yml"
+  COMPOSE_FILES="-f $REPO_ROOT/compose.yaml"
   [[ -f "$REPO_ROOT/docker-compose.prod.yml" ]] && COMPOSE_FILES="$COMPOSE_FILES -f $REPO_ROOT/docker-compose.prod.yml"
 fi
 
@@ -501,6 +501,6 @@ cat <<'REMAINING'
     - create real organizations and invite people (step 13, API calls)
     - switch the runtime to sellevate_app and turn RLS on (step 12, a separate event: seven
       background jobs go silent that day)
-    - the two-organization acceptance run in docs/TESTING/TENANCY.md, which is the only check that
+    - the two-organization acceptance run in docs/testing/tenancy.md, which is the only check that
       proves isolation on live data
 REMAINING

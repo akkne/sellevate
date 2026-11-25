@@ -15,5 +15,5 @@ load_root_env
 export_social_env
 
 echo "==> Social -> http://localhost:${LOCAL_SOCIAL_PORT} (db: social on localhost:${LOCAL_POSTGRES_PORT})"
-cd "$REPO_ROOT/src/backend/social-service/Social"
+cd "$REPO_ROOT/backend/social-service/Social"
 exec "$DOTNET_BIN" run --project Sellevate.Social.csproj --no-launch-profile "$@"

@@ -41,7 +41,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
 
 VERIFY_IDENTITY_DB="${VERIFY_IDENTITY_DB:-tenancy_verify_identity}"
 VERIFY_ORGANIZATION_DB="${VERIFY_ORGANIZATION_DB:-tenancy_verify_organization}"
@@ -66,7 +66,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 log()  { printf '\033[0;36m[verify]\033[0m %s\n' "$*"; }
@@ -154,10 +154,10 @@ IDENTITY_SCHEMA_SQL="$(mktemp)"
 ORGANIZATION_SCHEMA_SQL="$(mktemp)"
 trap 'rm -f "$IDENTITY_SCHEMA_SQL" "$ORGANIZATION_SCHEMA_SQL"; drop_verification_databases' EXIT
 
-(cd "$REPO_ROOT/src/backend/identity-service/Identity" \
+(cd "$REPO_ROOT/backend/identity-service/Identity" \
   && dotnet ef migrations script --idempotent --no-build --output "$IDENTITY_SCHEMA_SQL" >/dev/null) \
   || die "could not generate the identity-service migration script"
-(cd "$REPO_ROOT/src/backend/organization-service/Organization" \
+(cd "$REPO_ROOT/backend/organization-service/Organization" \
   && dotnet ef migrations script --idempotent --no-build --output "$ORGANIZATION_SCHEMA_SQL" >/dev/null) \
   || die "could not generate the organization-service migration script"
 

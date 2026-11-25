@@ -5,12 +5,12 @@
 # Phase 40.10 — roll `organization_id` out across learning-db.
 #
 # WHAT IT DOES
-#   backfill : docs/TENANCY/sql/40.10_learning_organization_backfill.sql
+#   backfill : infra/tenancy/sql/40.10_learning_organization_backfill.sql
 #              gives every pre-existing progress row the default organization, leaves the global
 #              content library alone. Run with learning-service stopped, right after its EF
 #              migration has applied — until it runs, row-level security hides all existing
 #              progress from everybody.
-#   indexes  : docs/TENANCY/sql/40.10_learning_organization_indexes_concurrently.sql
+#   indexes  : infra/tenancy/sql/40.10_learning_organization_indexes_concurrently.sql
 #              rebuilds the indexes with "OrganizationId" first, using CREATE INDEX CONCURRENTLY,
 #              checks pg_index.indisvalid, and only then drops the superseded ones. Safe to run
 #              with the service up; deliberately NOT part of any EF migration or of
@@ -33,7 +33,7 @@
 #   - The backfill SQL is idempotent, contains no DELETE / DROP / TRUNCATE, and refuses to re-point
 #     a database that was already backfilled at a different organization.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/DONT_FORGET.md.
+#     docs/roadmap.md.
 #
 # USAGE
 #     ./scripts/tenancy-learning-organization-rollout.sh                  # plan only
@@ -50,7 +50,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
 
 ORGANIZATION_ID="${ORGANIZATION_ID:-00000000-0000-4000-8000-000000000001}"
 LEARNING_DB="${LEARNING_DB:-learning}"
@@ -75,7 +75,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 MODE="dry-run"

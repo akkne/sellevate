@@ -14,5 +14,5 @@ load_root_env
 export_identity_env
 
 echo "==> Identity -> http://localhost:${LOCAL_IDENTITY_PORT} (db: identity on localhost:${LOCAL_POSTGRES_PORT})"
-cd "$REPO_ROOT/src/backend/identity-service/Identity"
+cd "$REPO_ROOT/backend/identity-service/Identity"
 exec "$DOTNET_BIN" run --project Sellevate.Identity.csproj --no-launch-profile "$@"

@@ -1,0 +1,1528 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Sellevate.Gamification",
+    "version": "v1"
+  },
+  "paths": {
+    "/profile/achievements": {
+      "get": {
+        "tags": [
+          "Achievement"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Achievements.Models.AchievementDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Achievements.Models.AchievementDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Achievements.Models.AchievementDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/gamification/settings": {
+      "get": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateGamificationSettingsRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateGamificationSettingsRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateGamificationSettingsRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/gamification/exercise-rewards": {
+      "get": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/gamification/exercise-rewards/{exerciseType}": {
+      "put": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "parameters": [
+          {
+            "name": "exerciseType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateExerciseTypeRewardRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateExerciseTypeRewardRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateExerciseTypeRewardRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/gamification/streak-milestones": {
+      "get": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/gamification/streak-milestones/{id}": {
+      "put": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminGamification"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/leagues": {
+      "get": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "weekStart",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueListItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueListItemDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/weeks": {
+      "get": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/{id}": {
+      "get": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/close-current": {
+      "post": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/leagues/{id}/resync": {
+      "post": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/memberships/{membershipId}/tier": {
+      "put": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.MoveMembershipTierRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.MoveMembershipTierRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.MoveMembershipTierRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/memberships/{membershipId}/xp": {
+      "put": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdjustMembershipXpRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdjustMembershipXpRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdjustMembershipXpRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/memberships/{membershipId}": {
+      "delete": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/leagues/settings": {
+      "get": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateLeagueSettingsRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateLeagueSettingsRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateLeagueSettingsRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/tiers": {
+      "get": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.CreateLeagueTierRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.CreateLeagueTierRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.CreateLeagueTierRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/leagues/tiers/{id}": {
+      "put": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateLeagueTierRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateLeagueTierRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.UpdateLeagueTierRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminLeagues"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/gamification/progress": {
+      "get": {
+        "tags": [
+          "Gamification"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Gamification.Models.GamificationProgressDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Gamification.Models.GamificationProgressDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.Gamification.Models.GamificationProgressDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/league": {
+      "get": {
+        "tags": [
+          "League"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.League.Models.CurrentLeagueResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.League.Models.CurrentLeagueResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Gamification.Features.League.Models.CurrentLeagueResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Sellevate.Gamification.Features.Achievements.Models.AchievementDto": {
+        "type": "object",
+        "properties": {
+          "achievementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconEmoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "isUnlocked": {
+            "type": "boolean"
+          },
+          "unlockedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.AdjustMembershipXpRequestDto": {
+        "type": "object",
+        "properties": {
+          "delta": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.AdminLeagueDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tier": {
+            "type": "string",
+            "nullable": true
+          },
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Gamification.Features.Admin.Models.AdminLeagueMemberDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.AdminLeagueListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tier": {
+            "type": "string",
+            "nullable": true
+          },
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.AdminLeagueMemberDto": {
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "weeklyXpAmount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promotionOutcome": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.AdminLeagueTierDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.CreateLeagueTierRequestDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.ExerciseTypeRewardDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "exerciseType": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseXpReward": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.GamificationSettingsDto": {
+        "type": "object",
+        "properties": {
+          "dailyXpGoal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeklyXpGoal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogXpMultiplier": {
+            "type": "number",
+            "format": "double"
+          },
+          "dialogWeightConfidence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogWeightStructure": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogWeightObjection": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogWeightGoal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.LeagueSettingsDto": {
+        "type": "object",
+        "properties": {
+          "maximumLeagueParticipantCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promotionZoneSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "demotionZoneSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currentPeriodEndsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "periodLengthDays": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.MoveMembershipTierRequestDto": {
+        "type": "object",
+        "properties": {
+          "tier": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.SaveStreakMilestoneRequestDto": {
+        "type": "object",
+        "properties": {
+          "dayCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "xpReward": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.StreakMilestoneDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dayCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "xpReward": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.UpdateExerciseTypeRewardRequestDto": {
+        "type": "object",
+        "properties": {
+          "baseXpReward": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.UpdateGamificationSettingsRequestDto": {
+        "type": "object",
+        "properties": {
+          "dailyXpGoal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeklyXpGoal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogXpMultiplier": {
+            "type": "number",
+            "format": "double"
+          },
+          "dialogWeightConfidence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogWeightStructure": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogWeightObjection": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dialogWeightGoal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.UpdateLeagueSettingsRequestDto": {
+        "type": "object",
+        "properties": {
+          "maximumLeagueParticipantCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promotionZoneSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "demotionZoneSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currentPeriodEndsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "periodLengthDays": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Admin.Models.UpdateLeagueTierRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.Gamification.Models.GamificationProgressDto": {
+        "type": "object",
+        "properties": {
+          "currentStreakDayCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "longestStreakDayCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalXpAmount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dailyXpAmount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeklyXpAmount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dailyXpGoal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weeklyXpGoal": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.League.Models.CurrentLeagueResponseDto": {
+        "type": "object",
+        "properties": {
+          "leagueId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tier": {
+            "type": "string",
+            "nullable": true
+          },
+          "tierName": {
+            "type": "string",
+            "nullable": true
+          },
+          "tierColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "periodEndsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "participantsByRank": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Gamification.Features.League.Models.LeagueParticipantDto"
+            },
+            "nullable": true
+          },
+          "currentUserRank": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "previousWeekOutcome": {
+            "type": "string",
+            "nullable": true
+          },
+          "promotionZoneSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "demotionZoneSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maximumLeagueParticipantCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Gamification.Features.League.Models.LeagueParticipantDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "weeklyXpAmount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isCurrentUser": {
+            "type": "boolean"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

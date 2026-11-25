@@ -1,0 +1,202 @@
+"use client";
+
+import Link from "next/link";
+import { useLogout } from "@/features/auth/hooks/use-auth";
+import { isPlatformStaff, useAuthStore } from "@/shared/stores/auth-store";
+import { useThemeStore } from "@/shared/stores/theme-store";
+import {
+    useMigrateLegacyNotificationPreferences,
+    useNotificationPreferences,
+    useUpdateNotificationPreferences,
+} from "@/features/notifications/hooks/use-notification-preferences";
+
+// NOTE: No email-change or password-change flow exists in this frontend.
+// Those rows are rendered as read-only / display-only accordingly.
+// NOTE: Notification preferences are stored per-user on the backend
+// (GET/PUT /notifications/preferences, Q-4 in docs/NIGHT_AUDIT_QUESTIONS.md). They used to live only
+// in this browser's localStorage, which meant they did not follow the user to another device and —
+// the reason it was worth changing — nothing on the server could read them, so a future "product
+// updates" mailer would have gone out to people who had explicitly switched it off.
+
+type Theme = "light" | "dark";
+
+const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = [
+    {
+        value: "light",
+        label: "Светлая",
+        icon: (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+        ),
+    },
+    {
+        value: "dark",
+        label: "Тёмная",
+        icon: (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        ),
+    },
+];
+
+export default function SettingsPage() {
+    const logoutMutation = useLogout();
+    const { authenticatedUser } = useAuthStore();
+    const { theme, setTheme } = useThemeStore();
+
+    const { data: notificationPreferences, isLoading: areNotificationPreferencesLoading } =
+        useNotificationPreferences();
+    const updateNotificationPreferences = useUpdateNotificationPreferences();
+    useMigrateLegacyNotificationPreferences(notificationPreferences);
+
+    // Until the first read lands, the switches render at the documented defaults — the same pair the
+    // server holds — rather than at `false`, which would flash "reminders off" at everyone on every
+    // load. They are disabled while loading or saving, so a click cannot be sent against a value
+    // that is not on screen yet.
+    const isPracticeRemindersEnabled = notificationPreferences?.practiceReminders ?? true;
+    const isProductUpdatesEnabled = notificationPreferences?.productUpdates ?? false;
+    const areNotificationSwitchesDisabled =
+        areNotificationPreferencesLoading || updateNotificationPreferences.isPending;
+
+    // Both switches are sent on every change: the endpoint replaces the pair rather than patching one
+    // field, so "leave the other one alone" has to be said explicitly by resending its current value.
+    const setPracticeRemindersEnabled = (value: boolean) =>
+        updateNotificationPreferences.mutate({
+            practiceReminders: value,
+            productUpdates: isProductUpdatesEnabled,
+        });
+
+    const setProductUpdatesEnabled = (value: boolean) =>
+        updateNotificationPreferences.mutate({
+            practiceReminders: isPracticeRemindersEnabled,
+            productUpdates: value,
+        });
+
+    // The platform admin panel is open to both Sellevate staff roles (docs/decisions/README.md,
+    // 2026-08-16). The organization-scoped admin panel is a separate screen still to come
+    // (roadmap 40.20).
+    const isAdmin = isPlatformStaff(authenticatedUser?.role);
+
+    // Collapse "system" to the nearest explicit choice for the 2-segment selector.
+    // The underlying store still records "system" — we just display it as the
+    // currently-resolved value (light/dark) until the user explicitly picks one.
+    const activeSegment: Theme = theme === "dark" ? "dark" : "light";
+
+    return (
+        <div className="stg-scroll">
+            <div className="stg-inner">
+                {/* Header */}
+                <div className="stg-header">
+                    <h1 className="stg-title">Настройки</h1>
+                    <p className="stg-sub">Управление внешним видом и аккаунтом</p>
+                </div>
+
+                {/* Appearance */}
+                <div className="stg-card">
+                    <p className="stg-card-title">Внешний вид</p>
+                    <div className="stg-seg" role="group" aria-label="Тема">
+                        {THEME_OPTIONS.map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                className={`stg-seg-btn${activeSegment === opt.value ? " active" : ""}`}
+                                onClick={() => setTheme(opt.value)}
+                                aria-pressed={activeSegment === opt.value}
+                            >
+                                {opt.icon}
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Notifications */}
+                <div className="stg-card">
+                    <p className="stg-card-title">Уведомления</p>
+
+                    <div className="stg-toggle-row">
+                        <div className="stg-toggle-body">
+                            <p className="stg-toggle-label">Напоминания о практике</p>
+                            <p className="stg-toggle-sub">Ежедневное напоминание, чтобы не терять серию</p>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isPracticeRemindersEnabled}
+                            className="stg-switch"
+                            disabled={areNotificationSwitchesDisabled}
+                            onClick={() => setPracticeRemindersEnabled(!isPracticeRemindersEnabled)}
+                            aria-label="Напоминания о практике"
+                        />
+                    </div>
+
+                    <div className="stg-toggle-row">
+                        <div className="stg-toggle-body">
+                            <p className="stg-toggle-label">Обновления продукта</p>
+                            <p className="stg-toggle-sub">Новости о новых навыках и функциях</p>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isProductUpdatesEnabled}
+                            className="stg-switch"
+                            disabled={areNotificationSwitchesDisabled}
+                            onClick={() => setProductUpdatesEnabled(!isProductUpdatesEnabled)}
+                            aria-label="Обновления продукта"
+                        />
+                    </div>
+                </div>
+
+                {/* Account */}
+                <div className="stg-card">
+                    <p className="stg-card-title">Аккаунт</p>
+
+                    {/* Email — read-only: no email-change flow in the app */}
+                    <div className="stg-row">
+                        <div className="stg-row-body">
+                            <p className="stg-row-label">Email</p>
+                            <p className="stg-row-sub">
+                                {authenticatedUser?.email ?? "—"}
+                            </p>
+                        </div>
+                        {/* "Change" omitted: no email-change flow exists */}
+                    </div>
+
+                    {/* Password — omitted: no password-change flow exists in the frontend */}
+
+                    {/* Admin area — admins only */}
+                    {isAdmin && (
+                        <div className="stg-row">
+                            <div className="stg-row-body">
+                                <p className="stg-row-label">Панель администратора</p>
+                                <p className="stg-row-sub">Управление контентом и пользователями</p>
+                            </div>
+                            <Link href="/admin/skills" className="stg-row-action">
+                                Открыть
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="m9 18 6-6-6-6"/>
+                                </svg>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+
+                {/* Log out */}
+                <button
+                    type="button"
+                    className="stg-logout"
+                    onClick={() => logoutMutation.mutate()}
+                    disabled={logoutMutation.isPending}
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    {logoutMutation.isPending ? "Выходим…" : "Выйти"}
+                </button>
+            </div>
+        </div>
+    );
+}

@@ -1,0 +1,499 @@
+using Microsoft.EntityFrameworkCore;
+using Sellevate.BuildingBlocks.Tenancy;
+using Sellevate.Social.Contracts.Storage;
+using Sellevate.Social.Eventing;
+using Sellevate.Social.Features.Discuss.Constants;
+using Sellevate.Social.Features.Discuss.Models;
+using Sellevate.Social.Features.Discuss.Services.Abstract;
+using Sellevate.Social.Infrastructure.Data;
+
+namespace Sellevate.Social.Features.Discuss.Services.Implementation;
+
+/// <summary>
+/// Phase 40.13. Threads, replies, votes, thread-tags and photos are tenant data — the row carries
+/// the organization, the query filter hides other organizations' rows and the row-level-security
+/// policy enforces it. Every public method therefore opens a <see cref="TenantTransactionScope"/> as
+/// its first statement, because <c>SET LOCAL app.organization_id</c> only applies inside a
+/// transaction and an unscoped read returns zero rows — an empty forum, which looks like a quiet
+/// forum.
+///
+/// <para>
+/// Tags are the one exception to "everything here belongs to one organization": a tag is a word, not
+/// somebody's content, so <c>DiscussTag.OrganizationId</c> is nullable and <c>NULL</c> means the
+/// curated vocabulary every organization shares. Curated tags are created by Sellevate staff through
+/// the admin controller and stay global; a tag a user types while starting a thread belongs to their
+/// organization and is stamped with it in <see cref="ResolveOrCreateTagsAsync"/>. Without that
+/// stamp, one customer naming a tag after their own product would publish it to every other
+/// customer's tag picker.
+/// </para>
+/// </summary>
+internal sealed partial class DiscussService : IDiscussService
+{
+    private readonly SocialDbContext _databaseContext;
+    private readonly IObjectStorage _objectStorage;
+    private readonly ISocialEventPublisher _eventPublisher;
+    private readonly ITenantContext _tenantContext;
+    private readonly ILogger<DiscussService> _logger;
+
+    public DiscussService(
+        SocialDbContext databaseContext,
+        IObjectStorage objectStorage,
+        ISocialEventPublisher eventPublisher,
+        ITenantContext tenantContext,
+        ILogger<DiscussService> logger)
+    {
+        _databaseContext = databaseContext;
+        _objectStorage = objectStorage;
+        _eventPublisher = eventPublisher;
+        _tenantContext = tenantContext;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// The organization for the two things the write guard cannot stamp on its own: a user-authored
+    /// tag (nullable column, so <c>ITenantScoped</c> does not apply) and a photo's object key. Fails
+    /// closed with the same message every other tenancy guard in the codebase uses.
+    /// </summary>
+    private Guid RequireOrganizationId()
+        => _tenantContext.OrganizationId
+            ?? throw new InvalidOperationException("Organization context is not set.");
+
+    public async Task<PagedResultDto<DiscussThreadSummaryDto>> ListThreadsAsync(
+        DiscussThreadQuery query, Guid viewerId, CancellationToken cancellationToken = default)
+    {
+        await using var scope = await TenantTransactionScope.BeginReadAsync(_databaseContext, cancellationToken);
+
+        var page = query.Page < 1 ? 1 : query.Page;
+        var pageSize = query.PageSize is < 1 or > DiscussFeedConstants.MaximumPageSize
+            ? DiscussFeedConstants.DefaultPageSize
+            : query.PageSize;
+
+        IQueryable<DiscussThread> filtered = _databaseContext.DiscussThreads
+            .Include(thread => thread.ThreadTags)
+            .ThenInclude(threadTag => threadTag.Tag);
+
+        if (!string.IsNullOrWhiteSpace(query.Tag))
+        {
+            var tagSlug = query.Tag.Trim().ToLowerInvariant();
+            filtered = filtered.Where(thread => thread.ThreadTags.Any(threadTag => threadTag.Tag.Slug == tagSlug));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var escapedSearch = query.Search.Trim()
+                .Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+            var pattern = $"%{escapedSearch}%";
+            filtered = filtered.Where(thread =>
+                EF.Functions.ILike(thread.Title, pattern, "\\") ||
+                EF.Functions.ILike(thread.Body, pattern, "\\"));
+        }
+
+        var sort = (query.Sort ?? DiscussSortOptions.Hot).ToLowerInvariant();
+        if (sort == DiscussSortOptions.Unanswered)
+        {
+            filtered = filtered.Where(thread => thread.ReplyCount == 0);
+        }
+
+        var totalCount = await filtered.CountAsync(cancellationToken);
+
+        List<DiscussThread> pageItems;
+        if (sort == DiscussSortOptions.New)
+        {
+            pageItems = await filtered
+                .OrderByDescending(thread => thread.LastActivityAt)
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .ToListAsync(cancellationToken);
+        }
+        else if (sort == DiscussSortOptions.Unanswered)
+        {
+            pageItems = await filtered
+                .OrderByDescending(thread => thread.CreatedAt)
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            var candidates = await filtered
+                .OrderByDescending(thread => thread.IsPinned)
+                .ThenByDescending(thread => thread.UpvoteCount)
+                .ThenByDescending(thread => thread.LastActivityAt)
+                .Take(DiscussFeedConstants.HotCandidateCap)
+                .ToListAsync(cancellationToken);
+
+            var now = DateTime.UtcNow;
+            pageItems = candidates
+                .OrderByDescending(thread => thread.IsPinned)
+                .ThenByDescending(thread => HotScore(thread, now))
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .ToList();
+        }
+
+        var authorNames = await ResolveAuthorNamesAsync(pageItems.Select(thread => thread.AuthorId), cancellationToken);
+        var upvotedThreadIds = await GetUpvotedTargetIdsAsync(
+            viewerId, DiscussVoteTarget.Thread, pageItems.Select(thread => thread.Id).ToList(), cancellationToken);
+        var photosByThreadId = await LoadThreadPhotosByThreadIdAsync(pageItems.Select(thread => thread.Id).ToList(), cancellationToken);
+
+        var items = pageItems
+            .Select(thread =>
+            {
+                var threadPhotos = photosByThreadId.GetValueOrDefault(thread.Id, Array.Empty<DiscussPhoto>());
+                var firstPhotoUrl = threadPhotos.Count == 0
+                    ? null
+                    : Services.DiscussPhotoUrlBuilder.Build(threadPhotos.MinBy(photo => photo.OrderIndex)!.Id);
+                return ToSummary(thread, authorNames, upvotedThreadIds.Contains(thread.Id), threadPhotos.Count, firstPhotoUrl);
+            })
+            .ToList();
+
+        return new PagedResultDto<DiscussThreadSummaryDto>(items, page, pageSize, totalCount);
+    }
+
+    /// <summary>
+    /// Ranks a thread for the default feed. Weights and decay live in
+    /// <see cref="DiscussFeedConstants"/>, which also states the formula; the only thing decided here
+    /// is that a thread whose last activity is in the future scores as if it were brand new, so a
+    /// clock skew cannot produce a negative age.
+    /// </summary>
+    private static double HotScore(DiscussThread thread, DateTime now)
+    {
+        var hours = Math.Max(0, (now - thread.LastActivityAt).TotalHours);
+        var baseScore = thread.UpvoteCount * DiscussFeedConstants.UpvoteScoreWeight
+                        + thread.ReplyCount * DiscussFeedConstants.ReplyScoreWeight
+                        + Math.Log10(thread.ViewCount + 1);
+        var decayed = baseScore
+                      / Math.Pow(hours + DiscussFeedConstants.DecayHoursOffset, DiscussFeedConstants.DecayExponent);
+        if (thread.IsHot)
+        {
+            decayed += DiscussFeedConstants.HotFlagScoreBoost;
+        }
+
+        return decayed;
+    }
+
+    public async Task<DiscussThreadDetailDto?> GetThreadAsync(
+        Guid threadId, Guid viewerId, bool incrementView, CancellationToken cancellationToken = default)
+    {
+        await using var scope = await TenantTransactionScope.BeginWriteAsync(_databaseContext, cancellationToken);
+
+        var thread = await _databaseContext.DiscussThreads
+            .Include(candidate => candidate.ThreadTags).ThenInclude(threadTag => threadTag.Tag)
+            .Include(candidate => candidate.Replies)
+            .FirstOrDefaultAsync(candidate => candidate.Id == threadId, cancellationToken);
+
+        if (thread == null)
+        {
+            return null;
+        }
+
+        if (incrementView)
+        {
+            thread.ViewCount += 1;
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var replyIds = thread.Replies.Select(reply => reply.Id).ToList();
+        var authorIds = thread.Replies.Select(reply => reply.AuthorId).Append(thread.AuthorId);
+        var authorNames = await ResolveAuthorNamesAsync(authorIds, cancellationToken);
+
+        var threadUpvoted = await GetUpvotedTargetIdsAsync(
+            viewerId, DiscussVoteTarget.Thread, [thread.Id], cancellationToken);
+        var upvotedReplyIds = await GetUpvotedTargetIdsAsync(
+            viewerId, DiscussVoteTarget.Reply, replyIds, cancellationToken);
+
+        var (threadPhotos, replyPhotosByReplyId) = await LoadThreadAndReplyPhotosAsync(thread.Id, replyIds, cancellationToken);
+
+        var replies = thread.Replies
+            .OrderBy(reply => reply.CreatedAt)
+            .Select(reply => ToReplyDto(
+                reply,
+                authorNames,
+                upvotedReplyIds.Contains(reply.Id),
+                replyPhotosByReplyId.GetValueOrDefault(reply.Id, Array.Empty<DiscussPhotoDto>())))
+            .ToList();
+
+        await scope.CommitAsync(cancellationToken);
+
+        return ToDetail(thread, authorNames, threadUpvoted.Contains(thread.Id), replies, threadPhotos);
+    }
+
+    public async Task<DiscussThreadDetailDto> CreateThreadAsync(
+        Guid authorId, string title, string body, IReadOnlyList<string> tagLabels, CancellationToken cancellationToken = default)
+    {
+        await using var scope = await TenantTransactionScope.BeginWriteAsync(_databaseContext, cancellationToken);
+
+        var now = DateTime.UtcNow;
+        var thread = new DiscussThread
+        {
+            Id = Guid.NewGuid(),
+            AuthorId = authorId,
+            Title = title.Trim(),
+            Body = body.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+            LastActivityAt = now
+        };
+
+        var tags = await ResolveOrCreateTagsAsync(tagLabels, cancellationToken);
+        foreach (var tag in tags)
+        {
+            thread.ThreadTags.Add(new DiscussThreadTag
+            {
+                Id = Guid.NewGuid(),
+                ThreadId = thread.Id,
+                TagId = tag.Id,
+                Tag = tag
+            });
+        }
+
+        _databaseContext.DiscussThreads.Add(thread);
+        await _databaseContext.SaveChangesAsync(cancellationToken);
+        await scope.CommitAsync(cancellationToken);
+
+        var authorNames = await ResolveAuthorNamesAsync([authorId], cancellationToken);
+        return ToDetail(thread, authorNames, viewerHasUpvoted: false, replies: [], photos: Array.Empty<DiscussPhotoDto>());
+    }
+
+    /// <summary>
+    /// Resolves labels a thread author typed to existing tags, creating whatever is missing. A tag
+    /// created here is stamped with the author's organization, never left global: the write guard
+    /// cannot do it, because <c>DiscussTag.OrganizationId</c> is nullable — <c>NULL</c> means the
+    /// shared vocabulary — so the entity is not <c>ITenantScoped</c> and nothing stamps it
+    /// automatically. A blank label, or one that slugifies to nothing, is skipped rather than
+    /// rejected.
+    /// </summary>
+    private async Task<List<DiscussTag>> ResolveOrCreateTagsAsync(
+        IReadOnlyList<string> tagLabels, CancellationToken cancellationToken)
+    {
+        var bySlug = new Dictionary<string, (string Label, string Slug)>();
+        foreach (var label in tagLabels)
+        {
+            if (string.IsNullOrWhiteSpace(label))
+            {
+                continue;
+            }
+
+            var slug = Slugify(label);
+            if (slug.Length == 0)
+            {
+                continue;
+            }
+
+            bySlug[slug] = (label.Trim(), slug);
+        }
+
+        if (bySlug.Count == 0)
+        {
+            return [];
+        }
+
+        var slugs = bySlug.Keys.ToList();
+        var existing = await _databaseContext.DiscussTags.Where(tag => slugs.Contains(tag.Slug)).ToListAsync(cancellationToken);
+        var result = new List<DiscussTag>(existing);
+
+        foreach (var slug in slugs)
+        {
+            if (existing.Any(tag => tag.Slug == slug))
+            {
+                continue;
+            }
+
+            var created = new DiscussTag
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = RequireOrganizationId(),
+                Slug = slug,
+                Name = bySlug[slug].Label,
+                IsCurated = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _databaseContext.DiscussTags.Add(created);
+            result.Add(created);
+        }
+
+        return result;
+    }
+
+    public async Task<DiscussReplyDto?> AddReplyAsync(
+        Guid threadId, Guid authorId, string body, CancellationToken cancellationToken = default)
+    {
+        await using var scope = await TenantTransactionScope.BeginWriteAsync(_databaseContext, cancellationToken);
+
+        var thread = await _databaseContext.DiscussThreads.FirstOrDefaultAsync(candidate => candidate.Id == threadId, cancellationToken);
+        if (thread == null)
+        {
+            return null;
+        }
+
+        var now = DateTime.UtcNow;
+        var reply = new DiscussReply
+        {
+            Id = Guid.NewGuid(),
+            ThreadId = threadId,
+            AuthorId = authorId,
+            Body = body.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        _databaseContext.DiscussReplies.Add(reply);
+
+        thread.ReplyCount += 1;
+        thread.LastActivityAt = now;
+        thread.UpdatedAt = now;
+
+        await _databaseContext.SaveChangesAsync(cancellationToken);
+
+        var authorNames = await ResolveAuthorNamesAsync([authorId], cancellationToken);
+
+        await scope.CommitAsync(cancellationToken);
+
+        if (thread.AuthorId != authorId)
+        {
+            await _eventPublisher.PublishDiscussReplyCreatedAsync(
+                new DiscussReplyCreatedEvent(
+                    thread.AuthorId,
+                    authorId,
+                    authorNames.GetValueOrDefault(authorId, string.Empty),
+                    thread.Id,
+                    thread.Title,
+                    reply.Id,
+                    Preview(reply.Body)),
+                cancellationToken);
+        }
+
+        return ToReplyDto(reply, authorNames, viewerHasUpvoted: false, photos: Array.Empty<DiscussPhotoDto>());
+    }
+
+    public Task<VoteResultDto?> SetThreadVoteAsync(Guid threadId, Guid userId, bool upvote, CancellationToken cancellationToken = default)
+        => SetVoteAsync(DiscussVoteTarget.Thread, threadId, userId, upvote, cancellationToken);
+
+    public Task<VoteResultDto?> SetReplyVoteAsync(Guid replyId, Guid userId, bool upvote, CancellationToken cancellationToken = default)
+        => SetVoteAsync(DiscussVoteTarget.Reply, replyId, userId, upvote, cancellationToken);
+
+    /// <summary>
+    /// Adds or removes one person's upvote, then recounts. The denormalised counter on the thread or
+    /// reply is recomputed from the votes table inside the same transaction rather than incremented,
+    /// so two people voting at the same instant cannot drift it away from the authoritative count.
+    /// </summary>
+    private async Task<VoteResultDto?> SetVoteAsync(
+        DiscussVoteTarget targetType, Guid targetId, Guid userId, bool upvote, CancellationToken cancellationToken)
+    {
+        await using var scope = await TenantTransactionScope.BeginWriteAsync(_databaseContext, cancellationToken);
+
+        DiscussThread? thread = null;
+        DiscussReply? reply = null;
+        if (targetType == DiscussVoteTarget.Thread)
+        {
+            thread = await _databaseContext.DiscussThreads.FirstOrDefaultAsync(candidate => candidate.Id == targetId, cancellationToken);
+            if (thread == null)
+            {
+                return null;
+            }
+        }
+        else
+        {
+            reply = await _databaseContext.DiscussReplies.FirstOrDefaultAsync(candidate => candidate.Id == targetId, cancellationToken);
+            if (reply == null)
+            {
+                return null;
+            }
+        }
+
+        var existing = await _databaseContext.DiscussVotes.FirstOrDefaultAsync(
+            vote => vote.UserId == userId && vote.TargetType == targetType && vote.TargetId == targetId, cancellationToken);
+
+        if (upvote && existing == null)
+        {
+            _databaseContext.DiscussVotes.Add(new DiscussVote
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                TargetType = targetType,
+                TargetId = targetId,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else if (!upvote && existing != null)
+        {
+            _databaseContext.DiscussVotes.Remove(existing);
+        }
+
+        await _databaseContext.SaveChangesAsync(cancellationToken);
+
+        var count = await _databaseContext.DiscussVotes
+            .CountAsync(vote => vote.TargetType == targetType && vote.TargetId == targetId, cancellationToken);
+
+        if (thread != null)
+        {
+            thread.UpvoteCount = count;
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+        }
+        else if (reply != null)
+        {
+            reply.UpvoteCount = count;
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+        }
+
+        await scope.CommitAsync(cancellationToken);
+
+        return new VoteResultDto(count, upvote);
+    }
+
+    /// <summary>
+    /// Marks one reply as the accepted answer, or clears the mark when no reply is named. At most one
+    /// reply on a thread is accepted at a time, so any previous mark is cleared first.
+    ///
+    /// <para>
+    /// The detail it returns is read back through <c>GetThreadAsync</c>, which finds this
+    /// transaction already open and joins it rather than starting a second one — the commit here is
+    /// what persists both halves.
+    /// </para>
+    /// </summary>
+    public async Task<(DiscussOperationStatus Status, DiscussThreadDetailDto? Thread)> SetAcceptedReplyAsync(
+        Guid threadId, Guid actingUserId, bool isAdmin, Guid? replyId, CancellationToken cancellationToken = default)
+    {
+        await using var scope = await TenantTransactionScope.BeginWriteAsync(_databaseContext, cancellationToken);
+
+        var thread = await _databaseContext.DiscussThreads
+            .Include(candidate => candidate.Replies)
+            .FirstOrDefaultAsync(candidate => candidate.Id == threadId, cancellationToken);
+
+        if (thread == null)
+        {
+            return (DiscussOperationStatus.NotFound, null);
+        }
+
+        if (thread.AuthorId != actingUserId && !isAdmin)
+        {
+            return (DiscussOperationStatus.Forbidden, null);
+        }
+
+        foreach (var existing in thread.Replies.Where(reply => reply.IsAccepted))
+        {
+            existing.IsAccepted = false;
+        }
+
+        if (replyId is { } identifier && identifier != Guid.Empty)
+        {
+            var reply = thread.Replies.FirstOrDefault(candidate => candidate.Id == identifier);
+            if (reply == null)
+            {
+                return (DiscussOperationStatus.NotFound, null);
+            }
+
+            reply.IsAccepted = true;
+            thread.AcceptedReplyId = reply.Id;
+        }
+        else
+        {
+            thread.AcceptedReplyId = null;
+        }
+
+        thread.UpdatedAt = DateTime.UtcNow;
+        await _databaseContext.SaveChangesAsync(cancellationToken);
+
+        var detail = await GetThreadAsync(threadId, actingUserId, incrementView: false, cancellationToken);
+
+        await scope.CommitAsync(cancellationToken);
+
+        return (DiscussOperationStatus.Success, detail);
+    }
+}

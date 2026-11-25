@@ -1,0 +1,2909 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Sellevate.Ai",
+    "version": "v1"
+  },
+  "paths": {
+    "/admin/ai-quota": {
+      "get": {
+        "tags": [
+          "AdminAiQuota"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminAiQuota"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaWriteModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaWriteModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaWriteModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/ai-quota/{organizationId}": {
+      "get": {
+        "tags": [
+          "AdminAiQuota"
+        ],
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/ai-usage": {
+      "get": {
+        "tags": [
+          "AdminAiUsage"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiSpendReportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiSpendReportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiSpendReportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog/bundles": {
+      "get": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CreateBundleRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CreateBundleRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CreateBundleRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/dialog/bundles/{bundleId}": {
+      "get": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateBundleRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateBundleRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateBundleRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/dialog/export": {
+      "get": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogExportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogExportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogExportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog/import": {
+      "post": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogImportResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogImportResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogImportResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog/bundles/{bundleId}/modes": {
+      "get": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CreateModeRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CreateModeRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CreateModeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/dialog/modes/{modeId}": {
+      "get": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "modeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "modeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AdminDialog"
+        ],
+        "parameters": [
+          {
+            "name": "modeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/dialog/overrides/modes": {
+      "get": {
+        "tags": [
+          "AdminDialogOverrides"
+        ],
+        "parameters": [
+          {
+            "name": "staleOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog/overrides/modes/{overrideId}": {
+      "get": {
+        "tags": [
+          "AdminDialogOverrides"
+        ],
+        "parameters": [
+          {
+            "name": "overrideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideReviewDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideReviewDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideReviewDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminDialogOverrides"
+        ],
+        "parameters": [
+          {
+            "name": "overrideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogModeDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogModeDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogModeDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog/overrides/modes/{baseModeId}": {
+      "post": {
+        "tags": [
+          "AdminDialogOverrides"
+        ],
+        "parameters": [
+          {
+            "name": "baseModeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog/overrides/modes/{overrideId}/accept-base": {
+      "post": {
+        "tags": [
+          "AdminDialogOverrides"
+        ],
+        "parameters": [
+          {
+            "name": "overrideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/dialog/overrides/modes/{overrideId}/keep-override": {
+      "post": {
+        "tags": [
+          "AdminDialogOverrides"
+        ],
+        "parameters": [
+          {
+            "name": "overrideId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/admin/dialog-sessions": {
+      "get": {
+        "tags": [
+          "AdminDialogSessions"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "modeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "maxScore",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogSessionSummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogSessionSummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogSessionSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/dialog-sessions/{sessionId}": {
+      "get": {
+        "tags": [
+          "AdminDialogSessions"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogTranscriptDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogTranscriptDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogTranscriptDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/voice/usage": {
+      "get": {
+        "tags": [
+          "AdminVoiceUsage"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.AdminVoiceUsageDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.AdminVoiceUsageDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.AdminVoiceUsageDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/quota/preflight": {
+      "get": {
+        "tags": [
+          "AiQuotaPreflight"
+        ],
+        "parameters": [
+          {
+            "name": "workload",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.AiQuotaPreflightResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.AiQuotaPreflightResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.AiQuotaPreflightResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ai/companies/briefing": {
+      "post": {
+        "tags": [
+          "Briefing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GenerateBriefingRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GenerateBriefingRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GenerateBriefingRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/content/rewrite": {
+      "post": {
+        "tags": [
+          "ContentAdaptation"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/content/review": {
+      "post": {
+        "tags": [
+          "ContentAdaptation"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/content/structure": {
+      "post": {
+        "tags": [
+          "ContentGeneration"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.StructureMaterialRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.StructureMaterialRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.StructureMaterialRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/content/generate": {
+      "post": {
+        "tags": [
+          "ContentGeneration"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.GenerateExercisesRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.GenerateExercisesRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.GenerateExercisesRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/bundles": {
+      "get": {
+        "tags": [
+          "Dialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/bundles/{bundleId}/modes": {
+      "get": {
+        "tags": [
+          "Dialog"
+        ],
+        "parameters": [
+          {
+            "name": "bundleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/company-call-mode": {
+      "get": {
+        "tags": [
+          "Dialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/custom-scenario-mode": {
+      "get": {
+        "tags": [
+          "Dialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/scenario/validate": {
+      "post": {
+        "tags": [
+          "Dialog"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.ValidateScenarioRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.ValidateScenarioRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.ValidateScenarioRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/sessions": {
+      "get": {
+        "tags": [
+          "Dialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dialog"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.StartSessionRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.StartSessionRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.StartSessionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/sessions/{sessionId}": {
+      "get": {
+        "tags": [
+          "Dialog"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Dialog"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/sessions/{sessionId}/messages": {
+      "post": {
+        "tags": [
+          "Dialog"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.SendMessageRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.SendMessageRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.SendMessageRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/sessions/{sessionId}/complete": {
+      "post": {
+        "tags": [
+          "Dialog"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/evaluate": {
+      "post": {
+        "tags": [
+          "Evaluation"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Evaluation.Models.EvaluateExerciseRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Evaluation.Models.EvaluateExerciseRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Evaluation.Models.EvaluateExerciseRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/chat": {
+      "post": {
+        "tags": [
+          "InternalChat"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/chat/stream": {
+      "post": {
+        "tags": [
+          "InternalChat"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/tts": {
+      "post": {
+        "tags": [
+          "InternalChat"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalSynthesisRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalSynthesisRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalSynthesisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/companies/parse-log": {
+      "post": {
+        "tags": [
+          "ParseLog"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.ParseCallLogRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.ParseCallLogRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.ParseCallLogRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/companies/persona": {
+      "post": {
+        "tags": [
+          "Persona"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GeneratePersonaRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GeneratePersonaRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GeneratePersonaRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ai/companies/readiness": {
+      "post": {
+        "tags": [
+          "Readiness"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GenerateReadinessRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GenerateReadinessRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.GenerateReadinessRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/transcription/transcribe": {
+      "post": {
+        "tags": [
+          "Transcription"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Transcription.TranscriptionResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Transcription.TranscriptionResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Transcription.TranscriptionResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialog/voice/config": {
+      "get": {
+        "tags": [
+          "VoiceConfig"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.VoiceConfigDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.VoiceConfigDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.VoiceConfigDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialog/voice/usage": {
+      "get": {
+        "tags": [
+          "VoiceDialog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/dialog/sessions/{sessionId}/voice/stream": {
+      "post": {
+        "tags": [
+          "VoiceDialog"
+        ],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.VoiceMessageRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.VoiceMessageRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.VoiceMessageRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Sellevate.Ai.Features.Companies.Models.BriefingCallLogDto": {
+        "type": "object",
+        "properties": {
+          "contactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "outcome": {
+            "type": "string",
+            "nullable": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Companies.Models.GenerateBriefingRequestDto": {
+        "type": "object",
+        "properties": {
+          "companyDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "goal": {
+            "type": "string",
+            "nullable": true
+          },
+          "recentCalls": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.BriefingCallLogDto"
+            },
+            "nullable": true
+          },
+          "feedbackSummaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Companies.Models.GeneratePersonaRequestDto": {
+        "type": "object",
+        "properties": {
+          "companyDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contactPosition": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.Companies.Models.PersonaDifficulty"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Companies.Models.GenerateReadinessRequestDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "goal": {
+            "type": "string",
+            "nullable": true
+          },
+          "sessionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Companies.Models.ParseCallLogRequestDto": {
+        "type": "object",
+        "properties": {
+          "rawText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Companies.Models.PersonaDifficulty": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "Sellevate.Ai.Features.ContentAdaptation.Models.AdaptExerciseRequestDto": {
+        "type": "object",
+        "properties": {
+          "exerciseType": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": { },
+          "profile": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.ExtractedContentStructureDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.ContentGeneration.Models.ExtractedContentStructureDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "nullable": true
+          },
+          "icp": {
+            "type": "string",
+            "nullable": true
+          },
+          "tone": {
+            "type": "string",
+            "nullable": true
+          },
+          "objections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.ExtractedObjectionDto"
+            },
+            "nullable": true
+          },
+          "scriptStages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "glossary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "bannedClaims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.ContentGeneration.Models.ExtractedObjectionDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "bestResponse": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.ContentGeneration.Models.GenerateExercisesRequestDto": {
+        "type": "object",
+        "properties": {
+          "structure": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.ExtractedContentStructureDto"
+          },
+          "focus": {
+            "type": "string",
+            "nullable": true
+          },
+          "maximumExerciseCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.ContentGeneration.Models.StructureMaterialRequestDto": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "type": "string",
+            "nullable": true
+          },
+          "knownStructure": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.ContentGeneration.Models.ExtractedContentStructureDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.InternalChatCompletionRequest": {
+        "type": "object",
+        "properties": {
+          "systemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.InternalChatMessage"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.InternalChatMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.InternalSynthesisRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "voiceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.AdminDialogModeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bundleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "voiceEnabled": {
+            "type": "boolean"
+          },
+          "chatSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedbackSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "voiceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.AdminDialogSessionSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bundleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modeKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "modeTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "messageCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "feedbackSummary": {
+            "type": "string",
+            "nullable": true
+          },
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.AdminDialogTranscriptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bundleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modeKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "modeTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogFeedbackDto"
+          },
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.AdminDialogTranscriptMessageDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.AdminDialogTranscriptMessageDto": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.CompanyCallContextDto": {
+        "required": [
+          "companyDescription",
+          "companyName"
+        ],
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "companyDescription": {
+            "maxLength": 8000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "callGoal": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "personaName": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "personaPosition": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "personaPersonality": {
+            "maxLength": 4000,
+            "type": "string",
+            "nullable": true
+          },
+          "personaDifficulty": {
+            "maxLength": 16,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.CreateBundleRequestDto": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconEmoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.CreateModeRequestDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "chatSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedbackSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "voiceEnabled": {
+            "type": "boolean"
+          },
+          "voiceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.DialogBundleExportDto": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconEmoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "modes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogModeExportDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.DialogExportDto": {
+        "type": "object",
+        "properties": {
+          "bundles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.DialogBundleExportDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.DialogFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.DialogImportResultDto": {
+        "type": "object",
+        "properties": {
+          "bundlesCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bundlesUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "modesCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "modesUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.DialogModeExportDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "chatSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedbackSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "voiceEnabled": {
+            "type": "boolean"
+          },
+          "voiceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.SendMessageRequestDto": {
+        "required": [
+          "content"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.StartSessionRequestDto": {
+        "type": "object",
+        "properties": {
+          "bundleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "companyContext": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Models.CompanyCallContextDto"
+          },
+          "customScenario": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.UpdateBundleRequestDto": {
+        "type": "object",
+        "properties": {
+          "skillId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconEmoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isHidden": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.UpdateModeRequestDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "chatSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedbackSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "voiceEnabled": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "voiceId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Models.ValidateScenarioRequestDto": {
+        "type": "object",
+        "properties": {
+          "scenario": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto": {
+        "type": "object",
+        "properties": {
+          "overrideId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseModeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bundleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "isStale": {
+            "type": "boolean"
+          },
+          "forkedFromHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseCurrentHash": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideReviewDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/Sellevate.Ai.Features.Dialog.Overrides.DialogModeOverrideDto"
+          },
+          "overrideChatSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "overrideFeedbackSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseChatSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseFeedbackSystemPrompt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Evaluation.Models.EvaluateExerciseRequestDto": {
+        "type": "object",
+        "properties": {
+          "exerciseType": {
+            "type": "string",
+            "nullable": true
+          },
+          "systemPrompt": {
+            "type": "string",
+            "nullable": true
+          },
+          "exerciseContent": { },
+          "userAnswer": { }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Quotas.AiQuotaPreflightResult": {
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Quotas.Models.AiQuotaSettingsDto": {
+        "type": "object",
+        "properties": {
+          "voiceDailyLimitMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "voiceMonthlyLimitMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "llmMonthlyTokenLimit": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "batchReservePercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "isOrganizationSpecific": {
+            "type": "boolean"
+          },
+          "effectiveVoiceDailyLimitMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "effectiveVoiceMonthlyLimitMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "effectiveLlmMonthlyTokenLimit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "effectiveBatchReservePercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Quotas.Models.AiQuotaWriteModel": {
+        "type": "object",
+        "properties": {
+          "voiceDailyLimitMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "voiceMonthlyLimitMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "llmMonthlyTokenLimit": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "batchReservePercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Quotas.Models.AiSpendModelLineDto": {
+        "required": [
+          "kind",
+          "model"
+        ],
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "type": "string",
+            "nullable": true
+          },
+          "promptTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completionTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "callCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "speechCharacters": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "estimatedCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Quotas.Models.AiSpendReportDto": {
+        "required": [
+          "currency",
+          "periodKey",
+          "quotaState"
+        ],
+        "type": "object",
+        "properties": {
+          "periodKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "quotaState": {
+            "type": "string",
+            "nullable": true
+          },
+          "llmPromptTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "llmCompletionTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "llmTotalTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "llmMonthlyTokenLimit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "llmCallCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "llmEstimatedCallCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "speechCharacters": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "voiceUsedMinutesToday": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "voiceDailyLimitMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "voiceUsedMinutesThisMonth": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "voiceMonthlyLimitMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "estimatedCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "hasUnpricedModels": {
+            "type": "boolean"
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Quotas.Models.AiSpendModelLineDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Transcription.TranscriptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Voice.Models.AdminVoiceUsageDto": {
+        "type": "object",
+        "properties": {
+          "dailyLimitSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monthlyLimitSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "organizationDailyLimitSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "organizationMonthlyLimitSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "organizationUsedSecondsToday": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "organizationUsedSecondsThisMonth": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sellevate.Ai.Features.Voice.Models.AdminVoiceUsageEntryDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Voice.Models.AdminVoiceUsageEntryDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "dailyUsedSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monthlyUsedSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastCallAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Voice.Models.VoiceConfigDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "vadSilenceMs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxRecordingSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dailyLimitMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monthlyLimitMinutes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Sellevate.Ai.Features.Voice.Models.VoiceMessageRequestDto": {
+        "required": [
+          "transcript"
+        ],
+        "type": "object",
+        "properties": {
+          "transcript": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

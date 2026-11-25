@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Run the frontend (Next.js) LOCALLY on the host in dev mode (hot reload),
-# pointed at the locally-run backend. Reads src/frontend/.env.local.
+# pointed at the locally-run backend. Reads frontend/.env.local.
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-local-env.sh"
 
-cd "$REPO_ROOT/src/frontend"
+cd "$REPO_ROOT/frontend"
 
 if [[ ! -f .env.local ]]; then
   echo "==> .env.local not found; generating it from the root .env..."

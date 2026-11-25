@@ -19,5 +19,5 @@ export Kafka__BootstrapServers="localhost:${LOCAL_KAFKA_PORT}"
 export Jwt__Key="${JWT_KEY}"
 
 echo "==> Notifications service -> http://localhost:${LOCAL_NOTIFICATION_PORT} (ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT)"
-cd "$REPO_ROOT/src/backend/notification-service/Notification"
+cd "$REPO_ROOT/backend/notification-service/Notification"
 exec "$DOTNET_BIN" run --project Sellevate.Notification.csproj --no-launch-profile "$@"

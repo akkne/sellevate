@@ -4,7 +4,7 @@
 Phase 40.33 makes ai-service the single point per-organization spend is enforced at. That claim is
 only worth something if it stays true, and the way it stopped being true last time was quiet: the
 monolith split left learning-service holding its own copy of `OpenAiChatService` and its own copy of
-`YandexTtsService`, nobody noticed for six blocks, and `docs/DONT_FORGET.md` had to carry the item
+`YandexTtsService`, nobody noticed for six blocks, and `docs/roadmap.md` had to carry the item
 from 40.27 until this block removed them.
 
 So the invariant is checked rather than remembered. Two rules:
@@ -20,7 +20,7 @@ So the invariant is checked rather than remembered. Two rules:
 Both lists are allow-lists on purpose. Adding to either is a decision about money, not a formality —
 the same posture ``tenancy-boundary-lint.py`` takes about its two request DTOs.
 
-Usage:  python3 scripts/ai-provider-lint.py [path ...]      (default: src/backend)
+Usage:  python3 scripts/ai-provider-lint.py [path ...]      (default: backend)
 Exit:   0 clean, 1 violations found.
 """
 
@@ -43,14 +43,14 @@ PROVIDER_HOST_PATTERN = re.compile(
 # The only files in the whole backend allowed to reach a provider. Every one of them holds an
 # IAiSpendMeter and gates or charges the call.
 METERED_PROVIDER_CALLERS = {
-    "src/backend/ai-service/Ai/Features/Dialog/Services/Implementation/OpenAiChatService.cs",
-    "src/backend/ai-service/Ai/Features/Evaluation/Services/Implementation/AiEvaluationStrategyBase.cs",
-    "src/backend/ai-service/Ai/Features/Transcription/Services/Implementation/WhisperTranscriptionService.cs",
-    "src/backend/ai-service/Ai/Features/Voice/Services/Implementation/YandexTtsService.cs",
+    "backend/ai-service/Ai/Features/Dialog/Services/Implementation/OpenAiChatService.cs",
+    "backend/ai-service/Ai/Features/Evaluation/Services/Implementation/AiEvaluationStrategyBase.cs",
+    "backend/ai-service/Ai/Features/Transcription/Services/Implementation/WhisperTranscriptionService.cs",
+    "backend/ai-service/Ai/Features/Voice/Services/Implementation/YandexTtsService.cs",
     # Registers the named clients and their Polly stacks; makes no call of its own.
-    "src/backend/ai-service/Ai/Program.cs",
+    "backend/ai-service/Ai/Program.cs",
     # Warms the TCP+TLS handshake with a HEAD ping. No completion, no tokens, no charge.
-    "src/backend/ai-service/Ai/Infrastructure/Http/UpstreamConnectionWarmupService.cs",
+    "backend/ai-service/Ai/Infrastructure/Http/UpstreamConnectionWarmupService.cs",
 }
 
 SKIPPED_PATH_PARTS = ("/obj/", "/bin/", "/Migrations/")
@@ -89,7 +89,7 @@ def scan(paths: list[Path]) -> list[str]:
             # Inside ai-service a provider host in a configuration default is expected — that is
             # where the keys and base URLs belong. What must not appear outside the allow-list is a
             # *call*: a named provider HttpClient. Outside ai-service, either is a finding.
-            inside_ai_service = relative.startswith("src/backend/ai-service/")
+            inside_ai_service = relative.startswith("backend/ai-service/")
 
             for number, line in enumerate(lines, start=1):
                 reaches_provider = PROVIDER_CLIENT_PATTERN.search(line) or (
@@ -116,7 +116,7 @@ def scan(paths: list[Path]) -> list[str]:
 
 def main() -> int:
     arguments = sys.argv[1:]
-    roots = [Path(argument).resolve() for argument in arguments] or [REPOSITORY_ROOT / "src" / "backend"]
+    roots = [Path(argument).resolve() for argument in arguments] or [REPOSITORY_ROOT / "backend"]
 
     violations = scan(roots)
     if not violations:

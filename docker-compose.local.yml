@@ -1,15 +1,15 @@
 # Local full-Docker overrides.
 #
 # Usage:
-#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+#   docker compose -f compose.yaml -f docker-compose.local.yml up -d --build
 #   (or: scripts/docker-local-up.sh, which wraps exactly that)
 #
-# docker-compose.yml alone is the *deploy* shape and does not come up on a dev
+# compose.yaml alone is the *deploy* shape and does not come up on a dev
 # machine. This overlay changes three things and nothing else:
 #   1. gateway host port  — macOS holds :5000 for AirPlay Receiver
 #   2. frontend API URL   — the deploy image is baked against the production API
 #   3. NuGet package cache — see below
-# Everything else (services, volumes, ports) comes from docker-compose.yml.
+# Everything else (services, volumes, ports) comes from compose.yaml.
 #
 # --- On the NuGet cache ---
 # A cold .NET build downloads hundreds of MB from nuget.org per service. On a slow
@@ -30,7 +30,7 @@ x-nuget-cache: &nuget-cache
 # TieredCompilation / TieredPGO / UseSharedCompilation fixed it. The Alpine (musl)
 # SDK is unaffected — 4/4 clean runs on the same project.
 # Output is portable IL (published without -r), so the glibc runtime image in
-# docker-compose.yml still runs it; `runtimes/` carries every RID's native assets.
+# compose.yaml still runs it; `runtimes/` carries every RID's native assets.
 x-build-args: &build-args
   SDK_IMAGE: ${SDK_IMAGE:-mcr.microsoft.com/dotnet/sdk:9.0-alpine}
 

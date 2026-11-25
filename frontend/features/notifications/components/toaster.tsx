@@ -1,0 +1,97 @@
+"use client";
+
+import { useHydrated } from "@/shared/hooks/use-hydrated";
+
+import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
+import { Icon, type IconName } from "@/shared/components/icon";
+import { useToastStore, type ToastItem, type ToastVariant } from "@/features/notifications/store/toast-store";
+
+const VARIANT_STYLES: Record<ToastVariant, { bar: string; icon: string; iconName: IconName }> = {
+    success: {
+        bar: "bg-success",
+        icon: "text-success",
+        iconName: "check",
+    },
+    error: {
+        bar: "bg-bad",
+        icon: "text-bad",
+        iconName: "warning",
+    },
+    info: {
+        bar: "bg-primary",
+        icon: "text-primary",
+        iconName: "info",
+    },
+};
+
+function ToastChip({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: string) => void }) {
+    const styles = VARIANT_STYLES[toast.variant];
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: -12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            role={toast.variant === "error" ? "alert" : "status"}
+            aria-live={toast.variant === "error" ? "assertive" : "polite"}
+            aria-atomic="true"
+            style={{ pointerEvents: "auto", width: "100%" }}
+            className="flex items-start gap-3 bg-surface border border-line rounded-[var(--r-md)] shadow-[var(--sh-3)] px-4 py-3"
+        >
+            {/* Accent bar */}
+            <span className={`flex-shrink-0 mt-0.5 w-1 self-stretch rounded-full ${styles.bar}`} aria-hidden />
+
+            {/* Icon */}
+            <span className={`flex-shrink-0 mt-0.5 ${styles.icon}`} aria-hidden>
+                <Icon name={styles.iconName} size="sm" />
+            </span>
+
+            {/* Message */}
+            <span className="flex-1 text-sm text-ink leading-snug">{toast.message}</span>
+
+            {/* Dismiss */}
+            <button
+                type="button"
+                onClick={() => onDismiss(toast.id)}
+                aria-label="Закрыть уведомление"
+                className="flex-shrink-0 mt-0.5 text-ink-4 hover:text-ink-2 transition-colors"
+            >
+                <Icon name="close" size="sm" />
+            </button>
+        </motion.div>
+    );
+}
+
+export function Toaster() {
+    const { toasts, dismiss } = useToastStore();
+    const mounted = useHydrated();
+
+    if (!mounted) return null;
+
+    return createPortal(
+        <div
+            aria-label="Уведомления"
+            style={{
+                position: "fixed",
+                top: "max(1rem, env(safe-area-inset-top, 1rem))",
+                right: "max(1rem, env(safe-area-inset-right, 1rem))",
+                width: "min(384px, calc(100vw - 2rem))",
+                zIndex: 9999,
+                pointerEvents: "none",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+            }}
+        >
+            <AnimatePresence initial={false} mode="sync">
+                {toasts.map((t) => (
+                    <ToastChip key={t.id} toast={t} onDismiss={dismiss} />
+                ))}
+            </AnimatePresence>
+        </div>,
+        document.body
+    );
+}

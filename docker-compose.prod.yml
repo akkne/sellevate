@@ -1,6 +1,6 @@
 # Production overlay: Traefik reverse proxy + automatic Let's Encrypt HTTPS.
 # Use together with the base file:
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+#   docker compose -f compose.yaml -f docker-compose.prod.yml up --build -d
 #
 # Requires in the root .env:
 #   DOMAIN      - base domain (default: sellevate.site). Routes DOMAIN -> frontend,

@@ -10,5 +10,5 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-local-env.sh"
 
 cd "$REPO_ROOT"
 echo "==> Stopping the full Docker stack..."
-"$DOCKER_BIN" compose -f docker-compose.yml -f docker-compose.local.yml down "$@"
+"$DOCKER_BIN" compose -f compose.yaml -f docker-compose.local.yml down "$@"
 echo "==> Stopped. Named volumes were kept."

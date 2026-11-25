@@ -5,13 +5,13 @@
 # Phase 40.12 — roll `organization_id` out across company-db.
 #
 # WHAT IT DOES
-#   backfill : docs/TENANCY/sql/40.12_company_organization_backfill.sql
+#   backfill : infra/tenancy/sql/40.12_company_organization_backfill.sql
 #              gives every pre-existing row in all five tables the default organization. company-db
 #              has no global content library — every row in it is one salesperson's own data — so
 #              there is nothing to leave alone. Run with company-service stopped, right after its EF
 #              migration has applied: until it runs, row-level security hides every company, contact,
 #              persona, practice call and call-log entry from everybody.
-#   indexes  : docs/TENANCY/sql/40.12_company_organization_indexes_concurrently.sql
+#   indexes  : infra/tenancy/sql/40.12_company_organization_indexes_concurrently.sql
 #              rebuilds the indexes with "OrganizationId" first, adds a plain ("CompanyId") index
 #              per child table so the cascade-delete FK stays indexed, checks pg_index.indisvalid,
 #              and only then drops the superseded ones. Safe to run
@@ -35,7 +35,7 @@
 #   - The backfill SQL is idempotent, contains no DELETE / DROP / TRUNCATE, and refuses to re-point
 #     a database that was already backfilled at a different organization.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/DONT_FORGET.md.
+#     docs/roadmap.md.
 #
 # USAGE
 #     ./scripts/tenancy-company-organization-rollout.sh                  # plan only
@@ -52,7 +52,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
 
 ORGANIZATION_ID="${ORGANIZATION_ID:-00000000-0000-4000-8000-000000000001}"
 COMPANY_DB="${COMPANY_DB:-company}"
@@ -77,7 +77,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 MODE="dry-run"

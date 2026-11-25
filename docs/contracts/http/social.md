@@ -1,0 +1,46 @@
+# HTTP Sellevate.Social
+
+| Метод | Маршрут | Доступ и политики |
+| --- | --- | --- |
+| DELETE | `/admin/discuss/replies/{replyId}` | RequirePlatformAdmin, Контекст организации |
+| GET | `/admin/discuss/tags` | RequirePlatformAdmin, Контекст организации |
+| POST | `/admin/discuss/tags` | RequirePlatformAdmin, Контекст организации |
+| DELETE | `/admin/discuss/tags/{tagId}` | RequirePlatformAdmin, Контекст организации |
+| PUT | `/admin/discuss/tags/{tagId}` | RequirePlatformAdmin, Контекст организации |
+| GET | `/admin/discuss/threads` | RequirePlatformAdmin, Контекст организации |
+| DELETE | `/admin/discuss/threads/{threadId}` | RequirePlatformAdmin, Контекст организации |
+| POST | `/admin/discuss/threads/{threadId}/hot` | RequirePlatformAdmin, Контекст организации |
+| POST | `/admin/discuss/threads/{threadId}/pin` | RequirePlatformAdmin, Контекст организации |
+| GET | `/chat/conversations` | JWT, Контекст организации |
+| POST | `/chat/conversations` | JWT, Контекст организации |
+| GET | `/chat/conversations/{conversationId}/messages` | JWT, Контекст организации |
+| POST | `/chat/conversations/{conversationId}/messages` | JWT, Контекст организации |
+| POST | `/chat/conversations/{conversationId}/read` | JWT, Контекст организации |
+| DELETE | `/discuss/photos/{photoId}` | JWT, Контекст организации |
+| GET | `/discuss/photos/{photoId}/content` | Публичный, Контекст организации |
+| POST | `/discuss/replies/{replyId}/photos` | JWT, Контекст организации |
+| DELETE | `/discuss/replies/{replyId}/upvote` | JWT, Контекст организации |
+| POST | `/discuss/replies/{replyId}/upvote` | JWT, Контекст организации |
+| GET | `/discuss/stats` | JWT, Контекст организации |
+| GET | `/discuss/tags` | JWT, Контекст организации |
+| GET | `/discuss/tags/popular` | JWT, Контекст организации |
+| GET | `/discuss/threads` | JWT, Контекст организации |
+| POST | `/discuss/threads` | JWT, Контекст организации |
+| GET | `/discuss/threads/{threadId}` | JWT, Контекст организации |
+| DELETE | `/discuss/threads/{threadId}/accepted-reply` | JWT, Контекст организации |
+| POST | `/discuss/threads/{threadId}/accepted-reply` | JWT, Контекст организации |
+| POST | `/discuss/threads/{threadId}/photos` | JWT, Контекст организации |
+| POST | `/discuss/threads/{threadId}/replies` | JWT, Контекст организации |
+| DELETE | `/discuss/threads/{threadId}/upvote` | JWT, Контекст организации |
+| POST | `/discuss/threads/{threadId}/upvote` | JWT, Контекст организации |
+| GET | `/friends` | JWT, Контекст организации |
+| GET | `/friends/activity` | JWT, Контекст организации |
+| GET | `/friends/leaderboard` | JWT, Контекст организации |
+| GET | `/friends/profile/{targetUserId}` | JWT, Контекст организации |
+| GET | `/friends/requests` | JWT, Контекст организации |
+| POST | `/friends/requests` | JWT, Контекст организации |
+| DELETE | `/friends/requests/{friendshipId}` | JWT, Контекст организации |
+| PUT | `/friends/requests/{friendshipId}/accept` | JWT, Контекст организации |
+| PUT | `/friends/requests/{friendshipId}/decline` | JWT, Контекст организации |
+| GET | `/friends/search` | JWT, Контекст организации |
+| DELETE | `/friends/{friendUserId}` | JWT, Контекст организации |

@@ -5,18 +5,18 @@
 # Phase 40.13 — roll `organization_id` out across social-service's two stores.
 #
 # WHAT IT DOES
-#   backfill : docs/TENANCY/sql/40.13_social_organization_backfill.sql
+#   backfill : infra/tenancy/sql/40.13_social_organization_backfill.sql
 #              moves every pre-existing friendship, thread, reply, vote, thread-tag link and photo
 #              off the all-zeros placeholder and into the default organization, and moves
 #              user-typed DiscussTags there too while leaving the curated vocabulary global.
 #              Until it runs, RLS hides those rows from everybody — fail-closed as designed, but
 #              indistinguishable from "the forum and my friends are gone" to a user.
-#   mongo    : docs/TENANCY/mongo/40.13_chat_conversations_organization_backfill.js
+#   mongo    : infra/tenancy/mongo/40.13_chat_conversations_organization_backfill.js
 #              stamps every chat_conversations document with the organization and builds the three
 #              compound indexes that lead with it. Mongo has no RLS, so the same fail-closed shape
 #              comes from ChatConversationRepository's filter: an unstamped conversation is
 #              invisible, not leaked — and the chat list stays empty until this runs.
-#   indexes  : docs/TENANCY/sql/40.13_social_organization_indexes_concurrently.sql
+#   indexes  : infra/tenancy/sql/40.13_social_organization_indexes_concurrently.sql
 #              rebuilds social-db's read indexes with "OrganizationId" first using
 #              CREATE INDEX CONCURRENTLY, checks pg_index.indisvalid before AND after dropping the
 #              superseded ones, and keeps every cascade-delete FK indexed. Safe with the service up;
@@ -48,7 +48,7 @@
 #   - Every step is idempotent; re-running after a partial failure finishes the job rather than
 #     re-pointing anything that already has an owner.
 #   - Never point this at production before running it against a restored copy. See
-#     docs/DONT_FORGET.md.
+#     docs/roadmap.md.
 #
 # USAGE
 #     ./scripts/tenancy-social-organization-rollout.sh              # plan only
@@ -68,8 +68,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SQL_DIR="$REPO_ROOT/docs/TENANCY/sql"
-MONGO_DIR="$REPO_ROOT/docs/TENANCY/mongo"
+SQL_DIR="$REPO_ROOT/infra/tenancy/sql"
+MONGO_DIR="$REPO_ROOT/infra/tenancy/mongo"
 
 ORGANIZATION_ID="${ORGANIZATION_ID:-00000000-0000-4000-8000-000000000001}"
 SOCIAL_DB="${SOCIAL_DB:-social}"
@@ -96,7 +96,7 @@ PGHOST="${PGHOST:-127.0.0.1}"
 PGPORT="${PGPORT:-5433}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 PG_INNER_PORT="${PG_INNER_PORT:-5432}"
-COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/docker-compose.yml}"
+COMPOSE_FILE="${COMPOSE_FILE:-$REPO_ROOT/compose.yaml}"
 PG_MODE="${PG_MODE:-auto}"
 
 MODE="dry-run"
