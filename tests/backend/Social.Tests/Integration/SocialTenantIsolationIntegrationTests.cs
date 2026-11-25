@@ -1,6 +1,9 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Npgsql;
 using NUnit.Framework;
@@ -73,6 +76,7 @@ public class SocialTenantIsolationIntegrationTests
     [OneTimeSetUp]
     public async Task OneTimeSetUpAsync()
     {
+        BsonSerializer.TryRegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
         _isPostgresReachable = await LocalSocialStoreTestSettings.IsPostgresReachableAsync();
         _isMongoReachable = await LocalSocialStoreTestSettings.IsMongoReachableAsync();
 
