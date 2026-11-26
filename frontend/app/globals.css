@@ -247,6 +247,7 @@ html[data-theme="dark"] {
 }
 
 @theme inline {
+  --color-path-forest: #10261c;
   --color-background: var(--surface-2);
   --color-foreground: var(--ink);
   --font-sans: var(--font-ui);
@@ -1332,6 +1333,10 @@ a.assignment-item:hover { border-color: var(--primary); background: var(--primar
 .path-bc-meta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-4); white-space: nowrap; }
 
 /* Skill header card */
+.path-cover-progress { appearance: none; }
+.path-cover-progress, .path-cover-progress::-webkit-progress-bar { background: rgb(255 255 255 / 22%); }
+.path-cover-progress::-webkit-progress-value { background: var(--primary); border-radius: 999px; }
+.path-cover-progress::-moz-progress-bar { background: var(--primary); border-radius: 999px; }
 .path-skill-header { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px 22px; box-shadow: var(--sh-1); margin-bottom: 20px; }
 .path-skill-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .path-skill-header-title { font-size: 21px; font-weight: 800; color: var(--ink-heading); letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 6px; }

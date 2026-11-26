@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SkillCover } from "@/features/skills/components/skill-cover";
+import { useHydrated } from "@/shared/hooks/use-hydrated";
 import { useEffect, useRef, useState } from "react";
 import { useSkillTree, useSkills, useSkillStages, type SkillTreeNode } from "@/features/skills/hooks/use-skill-tree";
 import { useLessonsForSkill } from "@/features/exercise/hooks/use-lesson";
@@ -308,6 +310,8 @@ function PathCenterColumn({
     stageLabel: string;
     allSkills: SkillTreeNode[];
 }) {
+    const hydrated = useHydrated();
+    const progressLabel = hydrated && navigator.language.toLowerCase().startsWith("en") ? "Progress" : "Прогресс";
     const { data: lessons, isLoading, isLoadingError, refetch } = useLessonsForSkill(skillSlug);
 
     const sorted = (lessons ?? [])
@@ -400,28 +404,9 @@ function PathCenterColumn({
                 </nav>
 
                 {/* Skill header card */}
-                <div className="path-skill-header">
-                    <div className="path-skill-header-top">
-                        <div style={{ minWidth: 0 }}>
-                            <h1 className="path-skill-header-title">{skillTitle}</h1>
-                            {/* Summary: omitted — backend SkillTreeNode has no description field */}
-                        </div>
-                        <span className={skillStatusClass(skillStatus)}>
-                            {skillStatusLabel(skillStatus)}
-                        </span>
-                    </div>
-
-                    {/* Progress bar */}
-                    <div className="path-prog-row">
-                        <span className="path-prog-pct">{progressPct}%</span>
-                        <div className="path-prog-bar" role="progressbar" aria-valuenow={progressPct} aria-valuemin={0} aria-valuemax={100}>
-                            <div
-                                className={"path-prog-fill" + (progressPct === 100 ? " complete" : "")}
-                                style={{ width: `${progressPct}%` }}
-                            />
-                        </div>
-                    </div>
-
+                <SkillCover slug={skillSlug} title={skillTitle} stage={stageLabel} progress={progressPct} progressLabel={progressLabel} heading="h1" />
+                <div className="path-skill-header mt-3">
+                    <span className={skillStatusClass(skillStatus)}>{skillStatusLabel(skillStatus)}</span>
                     {/* 4-cell stat grid */}
                     <div className="path-stat-grid" role="list">
                         <div className="path-stat-cell" role="listitem">
