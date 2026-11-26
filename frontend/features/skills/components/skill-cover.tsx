@@ -15,9 +15,9 @@ export function SkillCover({ slug, title, stage, progress, progressLabel, headin
     const art = coverArt.get(slug) ?? "bg-[url('/skill-covers/contours.webp')]";
 
     return (
-        <header className="relative isolate overflow-hidden rounded-[24px] bg-path-forest text-white sm:rounded-[30px]">
-            <div aria-hidden="true" className={`pointer-events-none absolute inset-y-0 right-0 -z-1 w-[47%] bg-size-[100%_100%] bg-no-repeat ${art}`} />
-            <div className="relative flex min-h-[212px] flex-col items-start justify-between gap-6 p-6 sm:min-h-[255px] sm:px-9 sm:py-8 xl:min-h-[278px] xl:px-10">
+        <header key={slug} className="relative isolate overflow-hidden rounded-[24px] bg-path-forest text-white sm:rounded-[30px]">
+            <div aria-hidden="true" className={`path-cover-pattern pointer-events-none absolute inset-y-0 right-0 -z-1 w-[47%] bg-size-[100%_100%] bg-no-repeat ${art}`} />
+            <div className="path-cover-copy relative flex min-h-[212px] flex-col items-start justify-between gap-6 p-6 sm:min-h-[255px] sm:px-9 sm:py-8 xl:min-h-[278px] xl:px-10">
                 {stage && <span className="inline-flex max-w-full items-center gap-2 text-xs font-semibold tracking-wide text-white/85">
                     <span className="size-2 shrink-0 rounded-full bg-primary" />{stage}
                 </span>}

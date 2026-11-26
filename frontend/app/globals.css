@@ -1333,6 +1333,29 @@ a.assignment-item:hover { border-color: var(--primary); background: var(--primar
 .path-bc-meta { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--ink-4); white-space: nowrap; }
 
 /* Skill header card */
+/* Entry motion for the learning path. The cover stays anchored as the artwork settles. */
+@keyframes path-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes path-art-in {
+  from { opacity: 0; transform: translateX(14px) scale(1.045); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .path-enter, .path-cover-copy, .path-lessons-enter > :nth-child(-n+4 of :is(li, [role="listitem"])) {
+    animation: path-rise 280ms cubic-bezier(.22, 1, .36, 1) backwards;
+  }
+  .path-cover-copy { animation-delay: 25ms; }
+  .path-cover-pattern {
+    transform-origin: right center;
+    animation: path-art-in 460ms cubic-bezier(.22, 1, .36, 1) backwards;
+  }
+  .path-lessons-enter > :nth-child(2 of :is(li, [role="listitem"])) { animation-delay: 30ms; }
+  .path-lessons-enter > :nth-child(3 of :is(li, [role="listitem"])) { animation-delay: 60ms; }
+  .path-lessons-enter > :nth-child(4 of :is(li, [role="listitem"])) { animation-delay: 90ms; }
+}
+
 .path-cover-progress { appearance: none; }
 .path-cover-progress, .path-cover-progress::-webkit-progress-bar { background: rgb(255 255 255 / 22%); }
 .path-cover-progress::-webkit-progress-value { background: var(--primary); border-radius: 999px; }

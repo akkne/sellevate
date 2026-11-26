@@ -204,7 +204,7 @@ function PathOverallProgress() {
 
 function PathLeftColumn() {
     return (
-        <aside className="path-left">
+        <aside className="path-left path-enter">
             <h2 className="mx-5 mt-7 mb-1 text-[21px] leading-tight font-extrabold tracking-tight text-ink-heading">Путь обучения</h2>
             <PathOverallProgress />
 
@@ -225,7 +225,7 @@ function PathMobilePicker({ activeStageLabel }: { activeStageLabel: string | und
     return (
         <>
             <button
-                className="path-mob-picker"
+                className="path-mob-picker path-enter"
                 onClick={() => setSheetOpen(true)}
                 aria-haspopup="dialog"
                 aria-expanded={isSheetOpen}
@@ -443,7 +443,7 @@ function PathCenterColumn({
                         <p style={{ fontSize: 13, color: "var(--ink-4)" }}>Попроси администратора добавить уроки</p>
                     </div>
                 ) : (
-                    <div className="path-timeline" role="list">
+                    <div key={skillSlug} className="path-timeline path-lessons-enter" role="list">
                         {/* Vertical connector line */}
                         <div className="path-tl-line" aria-hidden="true" />
 
