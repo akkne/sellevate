@@ -1307,59 +1307,22 @@ a.assignment-item:hover { border-color: var(--primary); background: var(--primar
   .assignment-strip { max-height: none; overflow: visible; padding: 12px 16px 0; }
 }
 
-/* 3-column grid: [256px left] [flex center] [300px right] */
-/* Fills .shell-content (which is the dynamic viewport height). The previous
-   `calc(100vh - 52px)` subtracted a header that does not exist at this breakpoint — the
-   mobile topbar is display:none from 768px up — so the columns stopped 52px short and
-   `overflow: hidden` clipped whatever landed in that strip. */
-.path-grid { display: grid; grid-template-columns: 256px minmax(0, 1fr) 300px; height: 100%; overflow: hidden; }
-
-/* ── Left categories column ── */
-.path-left { border-right: 1px solid var(--line-2); display: flex; flex-direction: column; overflow: hidden; }
-.path-left-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 16px 14px; border-bottom: 1px solid var(--line-2); flex: none; }
-.path-left-title { font-size: 15.5px; font-weight: 700; color: var(--ink-heading); letter-spacing: -0.01em; }
-.path-stage-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--surface-3); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 3px 9px; font-size: 11px; font-weight: 600; color: var(--ink-3); }
-.path-stage-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex: none; }
-.path-left-scroll { flex: 1; overflow-y: auto; padding: 8px 10px 24px; }
+.path-grid { display: grid; grid-template-columns: clamp(232px, 23vw, 320px) minmax(0, 1fr); height: 100%; overflow: hidden; }
+.path-left { display: flex; flex-direction: column; overflow: hidden; background: var(--surface); border-right: 1px solid var(--line-2); }
 
 /* Overall path progress (left column head / mobile sheet) */
-.path-overall { padding: 12px 16px 14px; border-bottom: 1px solid var(--line-2); flex: none; }
+.path-overall { padding: 14px 20px 18px; flex: none; }
 .path-overall-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
 .path-overall-label { font-size: 11px; font-weight: 700; letter-spacing: 0.005em; text-transform: uppercase; color: var(--ink-4); }
 .path-overall-count { font-size: 12px; font-weight: 700; color: var(--ink-2); }
-.path-overall-bar { height: 6px; background: #EFEFF2; border-radius: 6px; overflow: hidden; }
+.path-overall-bar { height: 5px; background: var(--surface-3); border-radius: 6px; overflow: hidden; }
 .path-overall-fill { height: 100%; background: var(--grad-bar); border-radius: 6px; transition: width 0.4s ease; }
 .path-overall-fill.complete { background: #16C48A; }
 .path-sheet-scroll .path-overall { border-bottom: none; padding: 8px 8px 12px; }
 
-/* Stage accordion */
-.path-stage { margin-bottom: 2px; }
-.path-stage-head { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; padding: 9px 8px; border-radius: 8px; cursor: pointer; transition: background var(--transition); }
-.path-stage-head:hover { background: var(--surface-3); }
-.path-stage-head:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
-.path-stage-chev { color: var(--ink-4); transition: transform var(--transition); flex: none; display: inline-flex; }
-.path-stage-chev.open { transform: rotate(180deg); }
-.path-stage-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
-.path-stage-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.005em; text-transform: uppercase; color: var(--ink-4); flex: 1; text-align: left; }
-.path-stage-badge { background: var(--bg-2); color: var(--ink-4); font-size: 10.5px; font-weight: 700; border-radius: 5px; padding: 1px 6px; }
-.path-stage-skills { padding: 2px 0 6px 8px; }
-
-/* Skill rows in accordion */
-.path-skill-row { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: 1px solid transparent; padding: 7px 9px; border-radius: 9px; cursor: pointer; text-align: left; transition: background var(--transition), border-color var(--transition), box-shadow var(--transition); }
-.path-skill-row:hover { background: var(--surface-2); }
-.path-skill-row:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
-.path-skill-row.active { background: var(--primary-softer); border-color: var(--primary-tint-border); box-shadow: 0 1px 2px rgba(124,209,0,.18); }
-.path-skill-node { width: 17px; height: 17px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 9px; }
-.path-skill-node.done { background: #16C48A; color: #fff; }
-.path-skill-node.in-progress { background: var(--primary); }
-.path-skill-node.available { background: var(--surface); border: 2px solid #DEDEE4; }
-.path-skill-name { font-size: 13.5px; font-weight: 600; color: var(--ink-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.path-skill-row.active .path-skill-name { color: var(--primary-tint-deep); font-weight: 700; }
-.path-skill-now { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--primary-ink); background: var(--primary-soft); border-radius: 4px; padding: 1px 5px; flex: none; }
-
 /* ── Center column ── */
 .path-center { display: flex; flex-direction: column; background: var(--surface-2); overflow: hidden; position: relative; }
-.path-center-scroll { flex: 1; overflow-y: auto; padding: 22px 24px 96px; }
+.path-center-scroll { flex: 1; overflow-y: auto; padding: 28px max(24px, calc((100% - 1040px) / 2)) 96px; }
 
 /* Breadcrumb */
 .path-breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -1458,10 +1421,9 @@ a.assignment-item:hover { border-color: var(--primary); background: var(--primar
 
 /* ── Path page: phone layout (≤767px) ── */
 @media (max-width: 767.98px) {
-  /* single flowing column: picker bar + lessons; sidebar & overview replaced */
+  /* single flowing column: picker bar + lessons; skill picker replaces the sidebar */
   .path-grid { display: block; height: auto; overflow: visible; }
   .path-left { display: none; }
-  .path-right { display: none; }
   .path-breadcrumb { display: none; }
   .path-center { overflow: visible; }
   .path-center-scroll { overflow: visible; padding: 14px 16px 190px; }
@@ -1503,20 +1465,6 @@ a.assignment-item:hover { border-color: var(--primary); background: var(--primar
     min-width: 0; max-width: none; width: auto; z-index: 40;
   }
 }
-
-/* ── Right overview panel ── */
-.path-right { border-left: 1px solid var(--line-2); display: flex; flex-direction: column; overflow: hidden; }
-.path-right-head { display: flex; align-items: center; gap: 10px; padding: 18px 16px 14px; border-bottom: 1px solid var(--line-2); flex: none; }
-.path-right-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-3); display: grid; place-items: center; color: var(--ink-3); flex: none; }
-.path-right-title { font-size: 15.5px; font-weight: 700; color: var(--ink-heading); letter-spacing: -0.01em; }
-.path-right-scroll { flex: 1; overflow-y: auto; padding: 18px 16px 24px; }
-.path-overview-section { margin-bottom: 22px; }
-.path-overview-label { font-size: 12px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 10px; }
-.path-overview-body { font-size: 13px; color: var(--ink-3); line-height: 1.6; }
-
-/* "Next lesson" quick-start card in the overview panel */
-.path-next-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; box-shadow: var(--sh-1); }
-.path-next-title { font-size: 13.5px; font-weight: 700; color: var(--ink-heading); line-height: 1.35; margin: 0 0 10px; }
 
 /* lesson path serpentine (kept for LessonPath component used in other contexts) */
 .lesson-path { display: flex; flex-direction: column; gap: 8px; position: relative; max-width: 680px; margin: 0 auto; }
@@ -3448,16 +3396,6 @@ html[data-theme="dark"] .stg-logout:hover { background: rgba(217,80,62,.26); }
 
 /* ════════ Responsive ════════ */
 @media (max-width: 1000px) {
-  /* Path V2 3-col → stack */
-  .path-grid { grid-template-columns: 1fr; height: auto; }
-  .path-left { border-right: none; border-bottom: 1px solid var(--line-2); max-height: 280px; }
-  .path-right { border-left: none; border-top: 1px solid var(--line-2); order: 3; }
-  .path-center-scroll { padding-bottom: 120px; }
-  /* Once the grid stacks, .path-center grows to the full height of the lesson timeline.
-     It must stop clipping, and the FAB (absolute, bottom: 20px) must stop anchoring to
-     the bottom of that 2000px-tall box — otherwise the "Начать" CTA sits far below the
-     fold even though it is rendered and marked visible. */
-  .path-center { overflow: visible; }
   /* legacy (kept for safety) */
   .tree-grid-a { grid-template-columns: 1fr; }
   .tree-grid-a aside:last-child { order: 3; }
@@ -3468,17 +3406,6 @@ html[data-theme="dark"] .stg-logout:hover { background: rgba(217,80,62,.26); }
   .chat-wrap { grid-template-columns: 1fr; }
   .chat-list { display: none; }
 }
-/* Tablet band only — deliberately a non-overlapping range, not `max-width: 1000px`, so it
-   cannot override the phone FAB offset (which has to clear the fixed bottom nav) defined
-   earlier in this file. */
-@media (min-width: 768px) and (max-width: 1000px) {
-  .path-fab {
-    position: fixed; left: 16px; right: 16px; transform: none;
-    bottom: 20px;
-    min-width: 0; max-width: none; width: auto; z-index: 40;
-  }
-}
-
 @media (max-width: 560px) {
   .land-features { grid-template-columns: 1fr; }
 }
