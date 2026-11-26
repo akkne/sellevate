@@ -1,7 +1,7 @@
 const coverArt: ReadonlyMap<string, string> = new Map([
     ["sales-basics", "bg-[url('/skill-covers/contours.webp')]"],
     ["customer-questions", "bg-[url('/skill-covers/moire.webp')]"],
-    ["next-step", "bg-[url('/skill-covers/strata.webp')]"],
+    ["next-step", "bg-[url('/skill-covers/strata.svg')]"],
 ]);
 
 export function SkillCover({ slug, title, stage, progress, progressLabel, heading: Heading }: {
