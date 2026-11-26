@@ -35,6 +35,7 @@ public static class UpstreamHttpClientServiceCollectionExtensions
         [
             AiProviderHttpConstants.OpenAiClientName,
             AiProviderHttpConstants.YandexTtsClientName,
+            AiProviderHttpConstants.FishAudioClientName,
         ];
 
         foreach (var upstreamClientName in upstreamClientNames)

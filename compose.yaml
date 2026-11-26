@@ -256,6 +256,7 @@ services:
       - Voice__Enabled=${VOICE_ENABLED:-true}
       - Voice__DailyLimitMinutes=${VOICE_DAILY_LIMIT_MINUTES:-30}
       - Voice__MonthlyLimitMinutes=${VOICE_MONTHLY_LIMIT_MINUTES:-300}
+      - FishAudio__ApiKey=${FISH_AUDIO_API_KEY:-}
       - YandexTts__ApiKey=${YANDEX_TTS_API_KEY}
       - YandexTts__Voice=${YANDEX_TTS_VOICE:-marina}
       - YandexTts__Lang=${YANDEX_TTS_LANG:-ru-RU}
