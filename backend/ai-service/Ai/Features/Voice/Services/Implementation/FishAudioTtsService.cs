@@ -16,6 +16,7 @@ internal sealed class FishAudioTtsService(
     IAiSpendMeter spendMeter) : ITtsRouter
 {
     private const string Model = "s2.1-pro-free";
+    private const string DefaultVoiceId = "9cc4883d4bbe4276bb67584db3cd117b";
 
     private const int SampleRate = 44100;
 
@@ -36,7 +37,7 @@ internal sealed class FishAudioTtsService(
             text,
             format = "pcm",
             sample_rate = SampleRate,
-            reference_id = Guid.TryParseExact(modeVoiceId, "N", out var voiceId) ? voiceId.ToString("N") : null,
+            reference_id = Guid.TryParseExact(modeVoiceId, "N", out var voiceId) ? voiceId.ToString("N") : DefaultVoiceId,
         });
 
         var client = httpClientFactory.CreateClient(AiProviderHttpConstants.FishAudioClientName);
