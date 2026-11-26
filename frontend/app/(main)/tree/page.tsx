@@ -6,11 +6,10 @@ import { useSkillTree, useSkills, useSkillStages, type SkillTreeNode } from "@/f
 import { useLessonsForSkill } from "@/features/exercise/hooks/use-lesson";
 import { useSelectedSkillStore } from "@/shared/stores/selected-skill-store";
 import { useOnboardingSkillSelectionStore } from "@/shared/stores/onboarding-skill-selection-store";
-import { Icon } from "@/shared/components/icon";
+import { Icon, type IconName } from "@/shared/components/icon";
 import { ErrorState } from "@/shared/components/error-state";
 import { ActiveAssignmentCard } from "@/features/assignments/components/active-assignment-card";
-import { getStageMeta, type SkillStageMeta } from "@/features/skills/constants/skill-stages";
-import { formatTimeAgo } from "@/features/discuss/lib/format";
+import { getStageMeta } from "@/features/skills/constants/skill-stages";
 import type { LessonSummary } from "@/features/exercise/hooks/use-lesson";
 
 // ─── Chip color map from DESIGN_SPEC §1.1 ───────────────────────────────────
@@ -50,104 +49,14 @@ function Spinner() {
     );
 }
 
-// ─── Status node in left accordion ──────────────────────────────────────────
-function SkillStatusNode({ skill }: { skill: SkillTreeNode }) {
-    const completed = skill.totalLessonCount > 0 && skill.completedLessonCount === skill.totalLessonCount;
-    const inProgress = skill.status === "in_progress";
+const stageIcons: Record<string, IconName> = {
+    preparation: "compass",
+    discovery: "search",
+    engagement: "message",
+    closing: "target",
+    retention: "users",
+};
 
-    if (completed) {
-        return (
-            <span className="path-skill-node done" aria-label="Завершено">
-                ✓
-            </span>
-        );
-    }
-    if (inProgress) {
-        return <span className="path-skill-node in-progress" aria-label="В процессе" />;
-    }
-    return <span className="path-skill-node available" aria-label="Доступно" />;
-}
-
-// ─── Skill row inside accordion ──────────────────────────────────────────────
-function PathSkillRow({
-    skill,
-    selected,
-    onClick,
-}: {
-    skill: SkillTreeNode;
-    selected: boolean;
-    onClick: () => void;
-}) {
-    const isCurrentlyActive = skill.status === "in_progress";
-    return (
-        <button
-            className={"path-skill-row" + (selected ? " active" : "")}
-            onClick={onClick}
-            aria-pressed={selected}
-        >
-            <SkillStatusNode skill={skill} />
-            <span className="path-skill-name">{skill.title}</span>
-            {isCurrentlyActive && !selected && (
-                <span className="path-skill-now">сейчас</span>
-            )}
-        </button>
-    );
-}
-
-// ─── Stage accordion group ───────────────────────────────────────────────────
-interface StageGroupProps {
-    stageKey: string;
-    skills: NonNullable<ReturnType<typeof useSkills>["data"]>;
-    selectedSlug: string | undefined;
-    onSelect: (skill: { slug: string; title: string; iconName: string }) => void;
-    defaultOpen: boolean;
-    stages: readonly SkillStageMeta[];
-}
-
-function PathStageGroup({ stageKey, skills, selectedSlug, onSelect, defaultOpen, stages }: StageGroupProps) {
-    const meta = getStageMeta(stageKey, stages);
-    const [open, setOpen] = useState(defaultOpen);
-
-    const completedCount = skills.filter(
-        (s) => s.totalLessonCount > 0 && s.completedLessonCount === s.totalLessonCount
-    ).length;
-
-    return (
-        <div className="path-stage">
-            <button
-                className="path-stage-head"
-                onClick={() => setOpen((v) => !v)}
-                aria-expanded={open}
-            >
-                <span className={"path-stage-chev" + (open ? " open" : "")}>
-                    <Icon name="chevron-down" size={14} />
-                </span>
-                <span
-                    className="path-stage-dot"
-                    style={{ background: meta.accent }}
-                    aria-hidden="true"
-                />
-                <span className="path-stage-label">{meta.label}</span>
-                <span className="path-stage-badge">{completedCount}/{skills.length}</span>
-            </button>
-
-            {open && (
-                <div className="path-stage-skills">
-                    {skills.map((skill) => (
-                        <PathSkillRow
-                            key={skill.skillId}
-                            skill={skill}
-                            selected={selectedSlug === skill.slug}
-                            onClick={() => onSelect({ slug: skill.slug, title: skill.title, iconName: skill.iconName })}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ─── Skill accordion list (shared: desktop sidebar + mobile bottom sheet) ───
 function PathSkillList({ onSelected }: { onSelected?: () => void }) {
     const { data: allSkills, isLoading, isLoadingError, refetch } = useSkills();
     const { stages } = useSkillStages();
@@ -166,19 +75,6 @@ function PathSkillList({ onSelected }: { onSelected?: () => void }) {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [allSkills]);
-
-    const byStage = new Map<string, typeof enrolledSkills>();
-    for (const skill of enrolledSkills) {
-        const key = skill.stage || "general";
-        const bucket = byStage.get(key) ?? [];
-        bucket.push(skill);
-        byStage.set(key, bucket);
-    }
-    const knownOrder = stages.map((s) => s.key);
-    const orderedStages: string[] = [
-        ...knownOrder.filter((k) => byStage.has(k)),
-        ...Array.from(byStage.keys()).filter((k) => !knownOrder.includes(k)).sort(),
-    ];
 
     if (isLoading) {
         return (
@@ -225,26 +121,40 @@ function PathSkillList({ onSelected }: { onSelected?: () => void }) {
     }
 
     return (
-        <>
-            {orderedStages.map((stageKey) => {
-                const stageSkills = (byStage.get(stageKey) ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
-                const containsSelected = stageSkills.some((s) => s.slug === selectedSkill?.slug);
+        <ul className="m-0 grid list-none gap-1.5 p-0">
+            {enrolledSkills.map((skill) => {
+                const selected = selectedSkill?.slug === skill.slug;
+                const stage = getStageMeta(skill.stage, stages);
+                const icon = skill.status === "completed" ? "check" : stageIcons[stage.key] ?? "book";
+
                 return (
-                    <PathStageGroup
-                        key={stageKey + (containsSelected ? ":open" : "")}
-                        stageKey={stageKey}
-                        skills={stageSkills}
-                        selectedSlug={selectedSkill?.slug}
-                        onSelect={(skill) => {
-                            setSelectedSkill(skill);
-                            onSelected?.();
-                        }}
-                        defaultOpen={containsSelected}
-                        stages={stages}
-                    />
+                    <li key={skill.skillId}>
+                        <button
+                            type="button"
+                            aria-pressed={selected}
+                            className="group flex min-h-16 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-ink-heading transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-ink aria-pressed:bg-primary-soft motion-reduce:transition-none"
+                            onClick={() => {
+                                setSelectedSkill({ slug: skill.slug, title: skill.title, iconName: skill.iconName });
+                                onSelected?.();
+                            }}
+                        >
+                            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-3 text-ink-3 group-aria-pressed:bg-primary group-aria-pressed:text-on-primary">
+                                <Icon name={icon} size={18} />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block text-[15px] leading-tight font-bold [overflow-wrap:anywhere]">{skill.title}</span>
+                                {skill.stage && (
+                                    <span className="mt-1 block text-xs leading-snug text-ink-3">{stage.label}</span>
+                                )}
+                            </span>
+                            <span className="shrink-0 text-xs font-semibold text-ink-3 tabular-nums">
+                                {skill.completedLessonCount}/{skill.totalLessonCount}
+                            </span>
+                        </button>
+                    </li>
                 );
             })}
-        </>
+        </ul>
     );
 }
 
@@ -290,27 +200,13 @@ function PathOverallProgress() {
     );
 }
 
-// ─── Left sidebar: funnel-stage accordion (desktop) ─────────────────────────
-function PathLeftColumn({
-    activeStageLabel,
-}: {
-    activeStageLabel: string | undefined;
-}) {
+function PathLeftColumn() {
     return (
         <aside className="path-left">
-            <div className="path-left-head">
-                <span className="path-left-title">Путь обучения</span>
-                {activeStageLabel && (
-                    <span className="path-stage-pill">
-                        <span className="path-stage-pill-dot" aria-hidden="true" />
-                        {activeStageLabel}
-                    </span>
-                )}
-            </div>
-
+            <h2 className="mx-5 mt-7 mb-1 text-[21px] leading-tight font-extrabold tracking-tight text-ink-heading">Путь обучения</h2>
             <PathOverallProgress />
 
-            <div className="path-left-scroll">
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-6">
                 <PathSkillList />
             </div>
         </aside>
@@ -656,107 +552,6 @@ function PathCenterColumn({
     );
 }
 
-// ─── Right overview panel ────────────────────────────────────────────────────
-function PathRightColumn({
-    skillSlug,
-    allSkills,
-}: {
-    skillSlug: string | undefined;
-    allSkills: SkillTreeNode[];
-}) {
-    const skill = allSkills.find((s) => s.slug === skillSlug);
-    const { data: lessons } = useLessonsForSkill(skillSlug);
-    const progressPct = skill && skill.totalLessonCount > 0
-        ? Math.round((skill.completedLessonCount / skill.totalLessonCount) * 100)
-        : 0;
-
-    const nextLesson = (lessons ?? [])
-        .slice()
-        .sort((a, b) => a.topicOrder - b.topicOrder || a.orderInTopic - b.orderInTopic)
-        .find((l) => l.status === "in_progress" || l.status === "available");
-
-    return (
-        <aside className="path-right">
-            <div className="path-right-head">
-                <div className="path-right-icon" aria-hidden="true">
-                    <Icon name="compass" size={16} />
-                </div>
-                <span className="path-right-title">Обзор</span>
-            </div>
-
-            <div className="path-right-scroll">
-                {!skill ? (
-                    <p style={{ fontSize: 13, color: "var(--ink-4)", lineHeight: 1.6 }}>
-                        Выбери навык слева, чтобы увидеть обзор.
-                    </p>
-                ) : (
-                    <>
-                        {/* Next lesson quick-start */}
-                        {nextLesson && (
-                            <div className="path-overview-section">
-                                <div className="path-overview-label">Следующий урок</div>
-                                <div className="path-next-card">
-                                    <p className="path-next-title">{nextLesson.title}</p>
-                                    <Link href={`/session/${nextLesson.lessonId}`}>
-                                        <button className="btn btn-primary path-tl-btn">
-                                            {nextLesson.status === "in_progress" ? "Продолжить" : "Начать"} →
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* About the skill */}
-                        <div className="path-overview-section">
-                            <div className="path-overview-label">О навыке</div>
-                            {/* Skill description not returned by backend SkillTreeNode —
-                                showing progress summary as the "about" content instead */}
-                            <p className="path-overview-body">
-                                <strong>{skill.title}</strong> — завершено {progressPct}%.
-                                Всего {pluralLessons(skill.totalLessonCount)}: {skill.totalLessonCount},
-                                выполнено: {skill.completedLessonCount}.
-                            </p>
-                            {skill.lastActivityAt && (
-                                <p className="path-overview-body" style={{ marginTop: 6 }}>
-                                    Последняя активность: {lastActivityText(skill.lastActivityAt)}.
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Completion indicator */}
-                        {skill.completedLessonCount === skill.totalLessonCount && skill.totalLessonCount > 0 && (
-                            <div style={{
-                                background: "var(--success-soft)",
-                                border: "1px solid #B8EDDD",
-                                borderRadius: 12,
-                                padding: "12px 14px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                            }}>
-                                <span style={{ fontSize: 18 }}>✓</span>
-                                <div>
-                                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--success)" }}>Навык освоен</div>
-                                    <div style={{ fontSize: 12, color: "var(--ink-3)", marginTop: 2 }}>Все уроки завершены</div>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-        </aside>
-    );
-}
-
-function pluralLessons(n: number) {
-    return n === 1 ? "урок" : "уроков";
-}
-
-function lastActivityText(isoDate: string) {
-    const ago = formatTimeAgo(isoDate);
-    return ago === "только что" ? ago : `${ago} назад`;
-}
-
 // ─── Page root ───────────────────────────────────────────────────────────────
 /**
  * Q-6 (`docs/NIGHT_AUDIT_QUESTIONS.md`). Onboarding's `PUT /skills/enrolled` is best-effort, so a
@@ -830,20 +625,8 @@ export default function SkillTreePage() {
 
     const allSkills = allSkillsData ?? skillTreeData.skillNodes ?? [];
 
-    // Determine active stage label for the left header pill
-    let activeStageLabel: string | undefined;
-    if (selectedSkill) {
-        const skillNode = allSkills.find((s) => s.slug === selectedSkill.slug);
-        if (skillNode?.stage) {
-            activeStageLabel = getStageMeta(skillNode.stage, stages).label;
-        }
-    }
-
-    // Stage label for center breadcrumb
-    const selectedSkillNode = selectedSkill ? allSkills.find((s) => s.slug === selectedSkill.slug) : undefined;
-    const centerStageLabel = selectedSkillNode?.stage
-        ? getStageMeta(selectedSkillNode.stage, stages).label
-        : "";
+    const selectedSkillNode = allSkills.find((skill) => skill.slug === selectedSkill?.slug);
+    const stageLabel = selectedSkillNode?.stage ? getStageMeta(selectedSkillNode.stage, stages).label : undefined;
 
     return (
         // Phase 40.23. The assignment strip renders nothing when there is none, so a manager with
@@ -855,17 +638,16 @@ export default function SkillTreePage() {
 
             <div className="path-grid">
             {/* MOBILE: sticky skill picker + bottom sheet (hidden on desktop) */}
-            <PathMobilePicker activeStageLabel={activeStageLabel} />
+            <PathMobilePicker activeStageLabel={stageLabel} />
 
-            {/* LEFT: funnel-stage accordion */}
-            <PathLeftColumn activeStageLabel={activeStageLabel} />
+            <PathLeftColumn />
 
             {/* CENTER: skill detail + timeline */}
             {selectedSkill ? (
                 <PathCenterColumn
                     skillSlug={selectedSkill.slug}
                     skillTitle={selectedSkill.title}
-                    stageLabel={centerStageLabel}
+                    stageLabel={stageLabel ?? ""}
                     allSkills={allSkills}
                 />
             ) : (
@@ -882,11 +664,6 @@ export default function SkillTreePage() {
                 </div>
             )}
 
-            {/* RIGHT: overview panel */}
-            <PathRightColumn
-                skillSlug={selectedSkill?.slug}
-                allSkills={allSkills}
-            />
             </div>
         </div>
     );
