@@ -17,6 +17,8 @@ internal sealed class FishAudioTtsService(
 {
     private const string Model = "s2.1-pro-free";
 
+    private const int SampleRate = 44100;
+
     public bool IsConfigured => AiSecretPlaceholders.IsRealSecret(options.Value.ApiKey);
 
     public async Task<Stream> SynthesizeSpeechAsync(string text, string? modeVoiceId, CancellationToken cancellationToken = default)
@@ -32,20 +34,21 @@ internal sealed class FishAudioTtsService(
         request.Content = JsonContent.Create(new
         {
             text,
-            format = "wav",
+            format = "pcm",
+            sample_rate = SampleRate,
             reference_id = Guid.TryParseExact(modeVoiceId, "N", out var voiceId) ? voiceId.ToString("N") : null,
         });
 
         var client = httpClientFactory.CreateClient(AiProviderHttpConstants.FishAudioClientName);
         using var response = await client.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-        if (bytes.Length < 12 || !bytes.AsSpan(0, 4).SequenceEqual("RIFF"u8) || !bytes.AsSpan(8, 4).SequenceEqual("WAVE"u8))
+        var pcm = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        if (pcm.Length == 0 || pcm.Length % sizeof(short) != 0)
         {
-            throw new InvalidOperationException("Fish Audio returned invalid WAV audio.");
+            throw new InvalidOperationException("Fish Audio returned invalid PCM audio.");
         }
 
         await spendMeter.RecordSpeechUsageAsync(AiUsageKinds.Tts, Model, text.Length, cancellationToken);
-        return new MemoryStream(bytes, writable: false);
+        return new MemoryStream(PcmWave.Encode(pcm, SampleRate), writable: false);
     }
 }

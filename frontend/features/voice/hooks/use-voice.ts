@@ -24,6 +24,7 @@ export function useVoice(options: UseVoiceOptions) {
 
     const speechClientRef = useRef<WebSpeechClient | null>(null);
     const audioPlayerRef = useRef<AudioPlayer | null>(null);
+    const onErrorRef = useRef(onError);
     const endpointerRef = useRef<SpeechEndpointer | null>(null);
     const currentSessionIdRef = useRef<string | null>(sessionId);
     const isProcessingRef = useRef(false);
@@ -46,6 +47,10 @@ export function useVoice(options: UseVoiceOptions) {
     }, [voiceConfig, modeVoiceEnabled]);
 
     useEffect(() => {
+        onErrorRef.current = onError;
+    }, [onError]);
+
+    useEffect(() => {
         audioPlayerRef.current = new AudioPlayer({
             onStateChange: (playerState: AudioPlayerState) => {
                 if (playerState === "playing") {
@@ -58,14 +63,14 @@ export function useVoice(options: UseVoiceOptions) {
                 }
             },
             onError: (error: Error) => {
-                onError?.(error);
+                onErrorRef.current?.(error);
             },
         });
 
         return () => {
             audioPlayerRef.current?.destroy();
         };
-    }, [onError]);
+    }, []);
 
     const processSpeech = useCallback(async (transcript: string) => {
         if (isProcessingRef.current) return;
@@ -170,10 +175,22 @@ export function useVoice(options: UseVoiceOptions) {
         }
     }, [onTranscript, onAiText, onAiResponse, onError]);
 
+    const preparePlayback = useCallback(async () => {
+        try {
+            await audioPlayerRef.current?.preparePlayback();
+            return true;
+        } catch (error) {
+            if (error instanceof Error) onErrorRef.current?.(error);
+            setState("error");
+            return false;
+        }
+    }, []);
+
     const startVoice = useCallback(async () => {
         if (!isVoiceAvailable) return;
 
         setState("initializing");
+        if (!await preparePlayback()) return;
 
         let activeSessionId = currentSessionIdRef.current;
         if (!activeSessionId && bundleId && modeId) {
@@ -250,7 +267,7 @@ export function useVoice(options: UseVoiceOptions) {
             onError?.(error instanceof Error ? error : new Error("Не удалось инициализировать голосовой режим"));
             setState("error");
         }
-    }, [isVoiceAvailable, bundleId, modeId, companyContext, voiceConfig, onSessionReady, onError, processSpeech]);
+    }, [isVoiceAvailable, preparePlayback, bundleId, modeId, companyContext, voiceConfig, onSessionReady, onError, processSpeech]);
 
     const releaseMicrophone = useCallback(() => {
         endpointerRef.current?.reset();
@@ -292,7 +309,7 @@ export function useVoice(options: UseVoiceOptions) {
         return () => {
             endpointerRef.current?.reset();
             speechClientRef.current?.stop();
-            audioPlayerRef.current?.destroy();
+            streamAbortRef.current?.abort();
         };
     }, []);
 
@@ -300,6 +317,7 @@ export function useVoice(options: UseVoiceOptions) {
         state,
         currentTranscript,
         isVoiceAvailable,
+        preparePlayback,
         startVoice,
         stopVoice,
         endSession,

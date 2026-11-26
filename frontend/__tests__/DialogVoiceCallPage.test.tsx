@@ -41,6 +41,7 @@ vi.mock("@/features/voice/hooks/use-voice", () => ({
             state: "idle",
             currentTranscript: "",
             isVoiceAvailable: true,
+            preparePlayback: vi.fn(async () => true),
             startVoice: startVoiceMock,
             stopVoice: stopVoiceMock,
             endSession: endSessionMock,
