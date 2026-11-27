@@ -3,7 +3,7 @@ import { apiClient } from "@/shared/api/api-client";
 import { EnvironmentConfiguration } from "@/config/environment";
 import { WebSpeechClient, isWebSpeechSupported } from "@/features/voice/services/web-speech-client";
 import type { WebSpeechState } from "@/features/voice/services/web-speech-client";
-import { AudioPlayer } from "@/features/voice/services/audio-player";
+import { CallAudioPlayer } from "@/features/voice/services/call-audio-player";
 import type { AudioPlayerState } from "@/features/voice/services/audio-player";
 import { SpeechEndpointer } from "@/features/voice/services/speech-endpointer";
 import { VoiceStreamReader } from "@/features/voice/services/voice-stream-reader";
@@ -23,7 +23,8 @@ export function useVoice(options: UseVoiceOptions) {
     const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
 
     const speechClientRef = useRef<WebSpeechClient | null>(null);
-    const audioPlayerRef = useRef<AudioPlayer | null>(null);
+    const audioPlayerRef = useRef<CallAudioPlayer | null>(null);
+    const onErrorRef = useRef(onError);
     const endpointerRef = useRef<SpeechEndpointer | null>(null);
     const currentSessionIdRef = useRef<string | null>(sessionId);
     const isProcessingRef = useRef(false);
@@ -46,7 +47,11 @@ export function useVoice(options: UseVoiceOptions) {
     }, [voiceConfig, modeVoiceEnabled]);
 
     useEffect(() => {
-        audioPlayerRef.current = new AudioPlayer({
+        onErrorRef.current = onError;
+    }, [onError]);
+
+    useEffect(() => {
+        audioPlayerRef.current = new CallAudioPlayer({
             onStateChange: (playerState: AudioPlayerState) => {
                 if (playerState === "playing") {
                     setState("playing");
@@ -58,14 +63,14 @@ export function useVoice(options: UseVoiceOptions) {
                 }
             },
             onError: (error: Error) => {
-                onError?.(error);
+                onErrorRef.current?.(error);
             },
         });
 
         return () => {
             audioPlayerRef.current?.destroy();
         };
-    }, [onError]);
+    }, []);
 
     const processSpeech = useCallback(async (transcript: string) => {
         if (isProcessingRef.current) return;
@@ -125,6 +130,7 @@ export function useVoice(options: UseVoiceOptions) {
             let stopSignal = false;
 
             let receivedAnyFrame = false;
+            let receivedAudio = false;
             const streamReader = new VoiceStreamReader(response);
             for await (const frame of streamReader.read(controller.signal)) {
                 if (controller.signal.aborted) break;
@@ -135,12 +141,13 @@ export function useVoice(options: UseVoiceOptions) {
                 }
                 if (frame.isStopSignal) stopSignal = true;
                 if (frame.audio.byteLength > 0) {
+                    receivedAudio = true;
                     // Recognition stays paused for the whole AI turn (paused above before the
                     // request, resumed only on AudioPlayer "ended"). We intentionally do NOT
                     // resume the mic while the persona is still speaking: barge-in was firing on
                     // the slightest noise and cutting the AI off mid-sentence. Let the persona
                     // finish, then listen.
-                    await audioPlayerRef.current?.enqueue(frame.audio);
+                    audioPlayerRef.current?.enqueue(frame.audio);
                 }
                 if (frame.isFinal) break;
             }
@@ -154,6 +161,10 @@ export function useVoice(options: UseVoiceOptions) {
                     throw new Error("Собеседник не ответил. Попробуйте сказать ещё раз");
                 }
 
+                if (aggregatedText.length && !receivedAudio) {
+                    const english = navigator.language.toLowerCase().startsWith("en");
+                    onError?.(new Error(english ? "The reply arrived without audio" : "Ответ пришёл без озвучки"));
+                }
                 onAiResponse?.(aggregatedText.join(" "), stopSignal);
             }
         } catch (error) {
@@ -170,10 +181,22 @@ export function useVoice(options: UseVoiceOptions) {
         }
     }, [onTranscript, onAiText, onAiResponse, onError]);
 
+    const preparePlayback = useCallback(async () => {
+        try {
+            await audioPlayerRef.current?.preparePlayback();
+            return true;
+        } catch (error) {
+            if (error instanceof Error) onErrorRef.current?.(error);
+            setState("error");
+            return false;
+        }
+    }, []);
+
     const startVoice = useCallback(async () => {
         if (!isVoiceAvailable) return;
 
         setState("initializing");
+        if (!await preparePlayback()) return;
 
         let activeSessionId = currentSessionIdRef.current;
         if (!activeSessionId && bundleId && modeId) {
@@ -250,7 +273,7 @@ export function useVoice(options: UseVoiceOptions) {
             onError?.(error instanceof Error ? error : new Error("Не удалось инициализировать голосовой режим"));
             setState("error");
         }
-    }, [isVoiceAvailable, bundleId, modeId, companyContext, voiceConfig, onSessionReady, onError, processSpeech]);
+    }, [isVoiceAvailable, preparePlayback, bundleId, modeId, companyContext, voiceConfig, onSessionReady, onError, processSpeech]);
 
     const releaseMicrophone = useCallback(() => {
         endpointerRef.current?.reset();
@@ -292,7 +315,7 @@ export function useVoice(options: UseVoiceOptions) {
         return () => {
             endpointerRef.current?.reset();
             speechClientRef.current?.stop();
-            audioPlayerRef.current?.destroy();
+            streamAbortRef.current?.abort();
         };
     }, []);
 
@@ -300,6 +323,7 @@ export function useVoice(options: UseVoiceOptions) {
         state,
         currentTranscript,
         isVoiceAvailable,
+        preparePlayback,
         startVoice,
         stopVoice,
         endSession,

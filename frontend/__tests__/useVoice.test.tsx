@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 const post = vi.fn();
+const preparePlayback = vi.fn(async () => {});
+const destroy = vi.fn();
 vi.mock("@/shared/api/api-client", () => ({
     apiClient: { post: (...args: unknown[]) => post(...args) },
 }));
@@ -16,13 +18,14 @@ vi.mock("@/features/voice/services/web-speech-client", () => ({
     },
 }));
 
-vi.mock("@/features/voice/services/audio-player", () => ({
-    AudioPlayer: class {
+vi.mock("@/features/voice/services/call-audio-player", () => ({
+    CallAudioPlayer: class {
+        preparePlayback = preparePlayback;
         beginQueue = vi.fn();
         enqueue = vi.fn(async () => {});
         markQueueComplete = vi.fn();
         stop = vi.fn();
-        destroy = vi.fn();
+        destroy = destroy;
     },
 }));
 
@@ -55,10 +58,26 @@ import { useVoice } from "@/features/voice/hooks/use-voice";
 
 describe("useVoice — session lifecycle", () => {
     beforeEach(() => {
+        preparePlayback.mockClear();
+        destroy.mockClear();
         post.mockReset();
         post.mockResolvedValueOnce({ id: "sess-1" }).mockResolvedValueOnce({ id: "sess-2" });
         emitUtterance = null;
         streamedFrames = [];
+    });
+
+    it("unlocks audio during pickup and keeps it across callback changes", async () => {
+        const { result, rerender } = renderHook(() =>
+            useVoice({ sessionId: null, modeVoiceEnabled: true, bundleId: "b1", modeId: "m1", onError: vi.fn() })
+        );
+        await act(async () => {
+            const started = result.current.startVoice();
+            expect(preparePlayback).toHaveBeenCalledOnce();
+            expect(post).not.toHaveBeenCalled();
+            await started;
+        });
+        rerender();
+        expect(destroy).not.toHaveBeenCalled();
     });
 
     it("creates a session on the first call and reports it as ready", async () => {
