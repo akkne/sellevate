@@ -15,7 +15,7 @@ import { CallHaptics } from "@/features/voice/services/call-haptics";
 import { describeCompletionError } from "@/features/dialog/services/completion-error-message";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { Icon } from "@/shared/components/icon";
-import { GeoAvatar } from "@/shared/components/geo-avatar";
+import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 import { toast } from "@/features/notifications/store/toast-store";
 import { ApiError } from "@/shared/api/api-client";
 
@@ -412,7 +412,6 @@ export default function CompanyVoiceCallPage() {
         callStatus,
         describeEndedCall(isCompleting, !!feedback, !!analysisError),
     );
-    const personaSeed = `company-${companyId}`;
     const isCallActive = callStatus === "connected" || callStatus === "dialing";
 
     if (isCompanyLoading || isCallModeLoading || isCompanyNotFound) {
@@ -489,7 +488,7 @@ export default function CompanyVoiceCallPage() {
     }
 
     return (
-        <div className="voice">
+        <div className="voice" data-call-status={callStatus}>
             {/* Top bar */}
             <div className="voice-top">
                 <button className="back-link plain" onClick={handleClose} aria-label="Назад к компании">
@@ -526,23 +525,8 @@ export default function CompanyVoiceCallPage() {
             </div>
 
             {/* Call stage */}
-            <div className="voice-stage">
-                <div
-                    className={"voice-avatar" + (info.pulse ? " pulse" : "")}
-                    style={{ "--ring": info.ringColor } as React.CSSProperties}
-                >
-                    <div className="va-ring" />
-                    <GeoAvatar seed={personaSeed} size={156} style={{ borderRadius: "50%" }} />
-                </div>
-
-                <span className="eyebrow">Тренировочный звонок</span>
-                <h1 className="h1" style={{ margin: "10px 0 6px", fontSize: "clamp(26px, 3.6vw, 42px)" }}>
-                    {company?.name ?? "Компания"}
-                </h1>
-                {goal && (
-                    <p className="lead" style={{ maxWidth: 480 }}>{goal}</p>
-                )}
-
+            <main className="voice-stage">
+                <ConversationCover variant="voice" title={company?.name ?? "Компания"} description={goal} compact={isCallActive} />
                 {(subtitles.length > 0 || (isCallActive && currentTranscript)) && (
                     <div className="transcript" ref={subtitleScrollRef}>
                         {subtitles.map((entry, index) => (
@@ -572,14 +556,7 @@ export default function CompanyVoiceCallPage() {
                     </div>
                 )}
 
-                <div className="state-pill" style={{ marginTop: subtitles.length > 0 ? 0 : 24 }}>
-                    <span
-                        className={"pdot" + (info.pulse ? " live" : "")}
-                        style={{ background: info.ringColor }}
-                    />
-                    {info.label}
-                </div>
-                <p className="voice-hint" style={{ minHeight: 38 }}>{info.hint}</p>
+
 
                 {(error || analysisError) && (
                     <span
@@ -604,10 +581,20 @@ export default function CompanyVoiceCallPage() {
                         Готовим разбор…
                     </div>
                 )}
-            </div>
+            </main>
 
             {/* Call controls footer */}
             <div className="voice-foot">
+                <div className="voice-readout" role="status">
+                    <div className="state-pill">
+                        <span
+                            className={"pdot" + (info.pulse ? " live" : "")}
+                            style={{ background: info.ringColor }}
+                        />
+                        {info.label}
+                    </div>
+                    <p className="voice-hint">{info.hint}</p>
+                </div>
                 {canRetryAnalysis && (
                     <button className="btn btn-dark btn-lg voice-cta" onClick={handleRetryAnalysis}>
                         <Icon name="warning" size="md" />

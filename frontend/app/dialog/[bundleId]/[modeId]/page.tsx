@@ -18,6 +18,7 @@ import { useVoice } from "@/features/voice/hooks/use-voice";
 import { apiClient } from "@/shared/api/api-client";
 import { TimingConstants } from "@/shared/constants/timing-constants";
 import { ChatMessage } from "@/features/dialog/components/chat-message";
+import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 import { ChatInput } from "@/features/dialog/components/chat-input";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { SessionHistorySidebar } from "@/features/dialog/components/session-history-sidebar";
@@ -447,7 +448,7 @@ export default function ChatPage() {
                     <span className="itile primary" style={{ width: 36, height: 36, borderRadius: "50%", flex: "none" }}>
                         <Icon name="sparkle" size={18} />
                     </span>
-                    <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="dc-context min-w-0 flex-1">
                         <div className="dc-head-title">
                             {currentMode?.title || "ИИ-собеседник"}
                         </div>
@@ -456,27 +457,27 @@ export default function ChatPage() {
                         </div>
                     </div>
 
-                    {/* Timer */}
-                    {sessionId && (
-                        <span className="chip num" style={{ flex: "none", fontFamily: "var(--font-mono)", fontSize: 12 }}>
-                            <Icon name="clock" size="sm" />
-                            {formatTime(sessionTimer)}
-                        </span>
-                    )}
+                    <div className="dc-tools">
+                        {/* Timer */}
+                        {sessionId && (
+                            <span className="chip num" style={{ flex: "none", fontFamily: "var(--font-mono)", fontSize: 12 }}>
+                                <Icon name="clock" size="sm" />
+                                {formatTime(sessionTimer)}
+                            </span>
+                        )}
 
-                    {/* End session button */}
-                    {sessionId && !isEnded && !feedback && (
-                        <button
-                            className="btn btn-sm"
-                            onClick={handleEndSession}
-                            style={{ background: "var(--heart-soft)", color: "var(--heart)", flex: "none", borderColor: "transparent" }}
-                        >
-                            <Icon name="close" size="sm" />
-                            Завершить
-                        </button>
-                    )}
-
-                    {/* Close button */}
+                        {/* End session button */}
+                        {sessionId && !isEnded && !feedback && (
+                            <button
+                                className="btn btn-sm"
+                                onClick={handleEndSession}
+                                style={{ background: "var(--heart-soft)", color: "var(--heart)", flex: "none", borderColor: "transparent" }}
+                            >
+                                <Icon name="close" size="sm" />
+                                Завершить
+                            </button>
+                        )}
+                    </div>
                     <button className="icon-btn" onClick={handleClose} aria-label="Закрыть" style={{ flex: "none" }}>
                         <Icon name="close" size="md" />
                     </button>
@@ -507,17 +508,7 @@ export default function ChatPage() {
                 {/* Messages area */}
                 <div className="dc-thread">
                     <div className="dc-thread-inner">
-                        {!sessionId && messages.length === 0 && (
-                            <div className="empty" style={{ padding: "80px 20px" }}>
-                                <div className="ic" style={{ background: "var(--primary-soft)", color: "var(--primary-ink)" }}>
-                                    <Icon name="phone" size="xl" />
-                                </div>
-                                <p className="h4" style={{ marginBottom: 8 }}>Начни разговор</p>
-                                <p className="small" style={{ maxWidth: 320, margin: "0 auto" }}>
-                                    Представься и произнеси вступление — ты звонишь клиенту первым
-                                </p>
-                            </div>
-                        )}
+                        {messages.length === 0 && !isEnded && <ConversationCover variant="chat" description={currentMode?.description} />}
 
                         {messages.map((message, messageIndex) => (
                             <ChatMessage key={messageIndex} message={message} />
@@ -588,7 +579,7 @@ export default function ChatPage() {
                         <ChatInput
                             onSend={handleSendMessage}
                             disabled={isSending || isCompleting || isEnded || !!feedback}
-                            placeholder={isEnded || feedback ? "Диалог завершён" : "Напиши сообщение…"}
+                            ended={isEnded || !!feedback}
                         />
                     )}
                 </div>
