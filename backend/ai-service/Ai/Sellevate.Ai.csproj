@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Features/Dialog/Helpers/local-voice-rules.txt" LogicalName="LocalVoiceRules" />
     <ProjectReference Include="..\..\building-blocks\BuildingBlocks\Sellevate.BuildingBlocks.csproj" />
   </ItemGroup>
 

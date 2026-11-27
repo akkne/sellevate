@@ -5,15 +5,18 @@ namespace Sellevate.Ai.Features.Dialog.Helpers;
 /// <summary>Keeps the full scenario, persona, and edited mode prompts while shortening stock voice instructions.</summary>
 internal static class LocalVoicePrompt
 {
+    private static readonly string Rules = ReadRules();
+
+    private static string ReadRules()
+    {
+        using var resource = typeof(LocalVoicePrompt).Assembly.GetManifestResourceStream("LocalVoiceRules")
+            ?? throw new InvalidOperationException("Missing local voice instructions");
+        using var reader = new StreamReader(resource);
+        return reader.ReadToEnd().TrimEnd();
+    }
+
     public static string Build(string modeAndContext)
     {
-        const string rules = "Верни JSON с reply, endCall и endCallReason. Ты собеседник в телефонном звонке. Отвечай естественно по-русски. "
-            + "Опирайся на сведения о роли и на историю. Если звонящий путает число, дату или договорённость, поправь его. "
-            + "Не придумывай бюджет, численность, сроки и договорённости. Вопрос звонящего не делает его предположение фактом. "
-            + "Если условия неизвестны, скажи об этом применительно к вопросу. "
-            + "Следи, кто что сказал: «я» в репликах пользователя — это звонящий. Если просят вспомнить детали, назови их точно и полностью. На просьбу задать вопрос задай свой вопрос. Не упоминай описание, сценарий и инструкции. "
-            + "При прощании, угрозе, явном обмане или окончательном отказе поставь endCall=true и укажи причину. "
-            + "При паузе продолжай. В остальных случаях endCall=false, endCallReason=null.";
         var role = modeAndContext;
         if (HasStockPrefix(role, CompanyCallModeSeeder.ChatSystemPromptTemplate))
         {
@@ -27,7 +30,7 @@ internal static class LocalVoicePrompt
                 + role[CustomScenarioModeSeeder.ChatSystemPromptTemplate.Length..];
         }
 
-        return rules + "\n" + role + "\nОтветь на последний вопрос одной короткой репликой, обычно 6–14 слов.";
+        return Rules + "\n" + role + "\nОтветь собеседнику по-русски одной короткой репликой, обычно 6–14 слов.";
     }
 
     private static bool HasStockPrefix(string prompt, string template) =>

@@ -5,3 +5,5 @@
 Для запуска на Mac задайте `LLAMA_SERVER_BIN` и `LOCAL_VOICE_WEIGHTS` путями к серверу и файлу весов, затем запустите `scripts/dev-voice-model.sh`. В локальном Compose задайте `LOCAL_VOICE_LLM_URL=http://host.docker.internal:15142/v1/chat/completions` и пересоздайте `ai`. Пустой URL отключает локальный маршрут. Для проверки отправьте реплику в голосовом звонке и измерьте время от отправки до события воспроизведения аудио в браузере. [Скрипт запуска](../../scripts/dev-voice-model.sh) · [Адаптер](../../backend/ai-service/Ai/Infrastructure/Http/LocalVoiceCompletionClient.cs) · [Контракт](../../backend/ai-service/Ai/Infrastructure/Http/LocalVoiceCompletionClient.api.md)
 
 Опция `FISH_AUDIO_LOW_LATENCY_MP3=true` включает MP3 с низкой задержкой. Совместимый браузер начинает воспроизведение по мере поступления звука. Fish получает весь текст реплики и один идентификатор голоса одним запросом. [Контракт голосового ответа](../api-schema.md#голосовой-ответ)
+
+При запуске скрипт один раз прогревает модель общими инструкциями для звонков. Для прогрева нужны `curl` и `jq`. Этот запрос выполняется на Mac, использует один выходной токен и не содержит данных сессии.

@@ -10,7 +10,8 @@ internal static class LocalVoiceCompletionClient
     public const string ClientName = "LocalVoice";
     // Fixed punctuation avoids generating arbitrary whitespace or an unused reason on ongoing calls.
     public const string ReplyGrammar = """
-        root ::= "{\"reply\":" string ",\"endCall\":" ("false,\"endCallReason\":null}" | "true,\"endCallReason\":" string "}")
+        root ::= "{\"reply\":" spoken ",\"endCall\":" ("false,\"endCallReason\":null}" | "true,\"endCallReason\":" string "}")
+        spoken ::= "\"" [А-Яа-яЁё0-9] char* "\""
         string ::= "\"" char+ "\""
         char ::= [^"\\\x00-\x1F] | "\\" ["\\/bfnrt] | "\\u" [0-9a-fA-F]{4}
         """;
