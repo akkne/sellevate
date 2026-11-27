@@ -9,6 +9,7 @@ export interface WebSpeechClientOptions {
     onStateChange?: (state: WebSpeechState) => void;
     onSpeechStart?: () => void;
     onSpeechEnd?: () => void;
+    onRecognitionRestart?: () => void;
 }
 
 interface SpeechRecognitionEvent {
@@ -179,6 +180,7 @@ export class WebSpeechClient {
         };
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
+            if (recognition !== this.recognition) return;
             let interimTranscript = "";
             let finalTranscript = "";
 
@@ -187,15 +189,16 @@ export class WebSpeechClient {
                 const transcript = result[0].transcript;
 
                 if (result.isFinal) {
-                    finalTranscript += transcript;
+                    finalTranscript += " " + transcript.trim();
                 } else {
-                    interimTranscript += transcript;
+                    interimTranscript += " " + transcript.trim();
                 }
             }
 
             if (finalTranscript) {
                 this.options.onResult(finalTranscript.trim(), true);
-            } else if (interimTranscript) {
+            }
+            if (interimTranscript) {
                 this.options.onResult(interimTranscript.trim(), false);
             }
         };
@@ -221,6 +224,7 @@ export class WebSpeechClient {
             // continuous mode. Relaunch a fresh instance (not this ended one) to
             // keep the mic alive between turns.
             if (this.shouldRestartAfterEnd && this.isActive && this.state !== "error") {
+                this.options.onRecognitionRestart?.();
                 this.recognition = null;
                 this.launchRecognition();
             } else if (this.state !== "error") {

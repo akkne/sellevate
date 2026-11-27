@@ -8,6 +8,7 @@ import { useCompany } from "@/features/companies/hooks/use-companies";
 import { useCompanyCallMode } from "@/features/companies/hooks/use-company-call-mode";
 import { useCreatePracticeCall } from "@/features/companies/hooks/use-practice-calls";
 import { completeDialogSession, DialogFeedback } from "@/features/dialog/hooks/use-dialog";
+import { VoiceTurnControls } from "@/features/voice/components/voice-turn-controls";
 import { useVoice, VoicePipelineState } from "@/features/voice/hooks/use-voice";
 import { useVoiceUsage } from "@/features/voice/hooks/use-voice-usage";
 import { TimingConstants } from "@/shared/constants/timing-constants";
@@ -103,7 +104,7 @@ function describePipeline(state: VoicePipelineState, callStatus: CallStatus, end
         case "listening":
             return {
                 label: "На связи · слушаю",
-                hint: "Говорите свободно — отвечу, как только вы сделаете паузу",
+                hint: "Микрофон включён",
                 ringColor: "var(--success)",
                 pulse: false,
             };
@@ -124,7 +125,7 @@ function describePipeline(state: VoicePipelineState, callStatus: CallStatus, end
         case "playing":
             return {
                 label: "Собеседник говорит",
-                hint: "Прервите в любой момент, чтобы ответить",
+                hint: "Микрофон включится после ответа",
                 ringColor: "var(--flame)",
                 pulse: true,
             };
@@ -304,12 +305,14 @@ export default function CompanyVoiceCallPage() {
 
     const {
         state: voiceState,
+        turnMode, changeTurnMode, sendTurn, pauseSeconds,
         currentTranscript,
         isVoiceAvailable,
         startVoice,
         stopVoice,
         endSession,
     } = useVoice({
+        enableTurnControls: true,
         sessionId,
         modeVoiceEnabled: true,
         bundleId: callMode?.bundleId,
@@ -528,6 +531,11 @@ export default function CompanyVoiceCallPage() {
             {/* Call stage */}
             <main className="voice-stage">
                 <ConversationCover variant="voice" title={company?.name ?? "Компания"} description={goal} compact={isCallActive} />
+                {callStatus !== "ended" && (
+                    <VoiceTurnControls mode={turnMode} onChange={changeTurnMode} onSend={sendTurn}
+                        pauseSeconds={pauseSeconds} active={callStatus === "connected"}
+                        canSend={!!currentTranscript.trim() && (voiceState === "speaking" || voiceState === "listening")} />
+                )}
                 {(subtitles.length > 0 || (isCallActive && currentTranscript)) && (
                     <div className="transcript" ref={subtitleScrollRef}>
                         {subtitles.map((entry, index) => (

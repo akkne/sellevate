@@ -10,6 +10,7 @@ import {
     fetchDialogSession,
     DialogFeedback,
 } from "@/features/dialog/hooks/use-dialog";
+import { VoiceTurnControls } from "@/features/voice/components/voice-turn-controls";
 import { useVoice, VoicePipelineState } from "@/features/voice/hooks/use-voice";
 import { useVoiceUsage } from "@/features/voice/hooks/use-voice-usage";
 import { TimingConstants } from "@/shared/constants/timing-constants";
@@ -78,7 +79,7 @@ function describePipeline(state: VoicePipelineState, callStatus: CallStatus, end
         case "listening":
             return {
                 label: "На связи · слушаю",
-                hint: "Говори свободно — отвечу, как только сделаешь паузу",
+                hint: "Микрофон включён",
                 ringColor: "var(--success)",
                 pulse: false,
             };
@@ -99,7 +100,7 @@ function describePipeline(state: VoicePipelineState, callStatus: CallStatus, end
         case "playing":
             return {
                 label: "Собеседник говорит",
-                hint: "Перебей в любой момент, чтобы ответить",
+                hint: "Микрофон включится после ответа",
                 ringColor: "var(--flame)",
                 pulse: true,
             };
@@ -258,12 +259,14 @@ export default function VoiceCallPage() {
 
     const {
         state: voiceState,
+        turnMode, changeTurnMode, sendTurn, pauseSeconds,
         currentTranscript,
         isVoiceAvailable,
         startVoice,
         stopVoice,
         endSession,
     } = useVoice({
+        enableTurnControls: true,
         sessionId,
         modeVoiceEnabled: currentMode?.voiceEnabled ?? false,
         bundleId,
@@ -452,6 +455,11 @@ export default function VoiceCallPage() {
             {/* Call stage */}
             <main className="voice-stage">
                 <ConversationCover variant="voice" title={currentMode?.title ?? "Собеседник"} description={currentMode?.description} compact={isCallActive} />
+                {callStatus !== "ended" && (
+                    <VoiceTurnControls mode={turnMode} onChange={changeTurnMode} onSend={sendTurn}
+                        pauseSeconds={pauseSeconds} active={callStatus === "connected"}
+                        canSend={!!currentTranscript.trim() && (voiceState === "speaking" || voiceState === "listening")} />
+                )}
                 {(subtitles.length > 0 || (isCallActive && currentTranscript)) && (
                     <div className="transcript" ref={subtitleScrollRef}>
                         {subtitles.map((entry, index) => (

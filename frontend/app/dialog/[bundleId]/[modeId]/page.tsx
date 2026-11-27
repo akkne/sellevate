@@ -23,6 +23,7 @@ import { ConversationCover } from "@/features/dialog/components/conversation-cov
 import { ChatInput } from "@/features/dialog/components/chat-input";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { SessionHistorySidebar } from "@/features/dialog/components/session-history-sidebar";
+import { VoiceTurnControls } from "@/features/voice/components/voice-turn-controls";
 import { VoiceMicButton } from "@/features/voice/components/voice-mic-button";
 import { Icon } from "@/shared/components/icon";
 
@@ -340,11 +341,13 @@ export default function ChatPage() {
 
     const {
         state: voiceState,
+        turnMode, changeTurnMode, sendTurn, pauseSeconds,
         currentTranscript,
         isVoiceAvailable,
         startVoice,
         stopVoice,
     } = useVoice({
+        enableTurnControls: chatMode === "voice",
         sessionId,
         modeVoiceEnabled: chatMode === "voice" && (currentMode?.voiceEnabled ?? false),
         bundleId,
@@ -568,6 +571,9 @@ export default function ChatPage() {
                     {/* Voice mode controls */}
                     {isVoiceMode && !isEnded && !feedback ? (
                         <div className="col center gap-4">
+                            <VoiceTurnControls mode={turnMode} onChange={changeTurnMode} onSend={sendTurn}
+                                pauseSeconds={pauseSeconds} active={voiceState !== "idle" && voiceState !== "error"}
+                                canSend={!!currentTranscript.trim() && (voiceState === "speaking" || voiceState === "listening")} />
                             <VoiceMicButton
                                 state={voiceState}
                                 isAvailable={isVoiceAvailable}
