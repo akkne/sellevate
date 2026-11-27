@@ -117,7 +117,8 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         var sentenceChunker = new SentenceChunker();
         var pendingAudio = new Queue<Task<byte[]?>>();
 
-        await foreach (var delta in _openAiService.StreamChatMessageAsync(chatSystemPrompt, session.Messages, cancellationToken, voiceTurn: true))
+        var voiceBrief = session.CompanyCallContext?.CompanyDescription ?? session.CustomScenarioContext?.Scenario;
+        await foreach (var delta in _openAiService.StreamChatMessageAsync(chatSystemPrompt, session.Messages, cancellationToken, voiceTurn: true, voiceBrief: voiceBrief))
         {
             var replyText = replyParser.Push(delta);
             if (replyText.Length == 0)

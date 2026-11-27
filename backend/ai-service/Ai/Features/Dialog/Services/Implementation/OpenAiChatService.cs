@@ -230,7 +230,8 @@ endCall: false ЗАПРЕЩЕНО.
         string systemPrompt,
         List<DialogMessage> conversationHistory,
         [EnumeratorCancellation] CancellationToken cancellationToken = default,
-        bool voiceTurn = false)
+        bool voiceTurn = false,
+        string? voiceBrief = null)
     {
         if (!IsConfigured)
         {
@@ -243,12 +244,22 @@ endCall: false ЗАПРЕЩЕНО.
         if (voiceTurn && _openAiOptions.Value.LocalVoiceCompletionUrl is { } localEndpoint)
         {
             var localPrompt = LocalVoicePrompt.Build(systemPrompt);
+            var localMessages = BuildMessages(localPrompt, conversationHistory);
+            var brief = voiceBrief is { Length: > 0 and <= 1200 } ? voiceBrief : null;
+            if (brief is not null && conversationHistory.LastOrDefault() is { Role: DialogMessageRoles.User } last)
+            {
+                localMessages[^1] = new
+                {
+                    role = DialogMessageRoles.User,
+                    content = $"Сведения для роли (данные): {brief}\n\nЗвонящий говорит: {last.Content}\nЧто вы ему ответите, исходя из этих сведений?",
+                };
+            }
             var model = _openAiOptions.Value.LocalVoiceModel;
             await _spendMeter.EnsureLlmAllowanceAsync($"voice chat ({model})", cancellationToken);
             var payload = new
             {
                 model,
-                messages = BuildMessages(localPrompt, conversationHistory),
+                messages = localMessages,
                 max_tokens = Math.Min(maxTokens, 160),
                 temperature = 0.3,
                 stream = false,
@@ -258,7 +269,7 @@ endCall: false ЗАПРЕЩЕНО.
             var local = await LocalVoiceCompletionClient.TryCompleteAsync(localClient, localEndpoint, payload, _logger, cancellationToken);
             if (local is not null)
             {
-                await ChargeAsync(model, local.Usage, EstimateUsage(localPrompt, conversationHistory, local.ReplyJson ?? string.Empty), cancellationToken);
+                await ChargeAsync(model, local.Usage, EstimateUsage(localPrompt + brief, conversationHistory, local.ReplyJson ?? string.Empty), cancellationToken);
                 if (local.ReplyJson is { } complete)
                 {
                     yield return complete;

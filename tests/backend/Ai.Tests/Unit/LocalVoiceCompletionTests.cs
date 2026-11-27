@@ -65,13 +65,16 @@ public class LocalVoiceCompletionTests
         var meter = Substitute.For<IAiSpendMeter>();
         var chat = new OpenAiChatService(factory, options, meter, NullLogger<OpenAiChatService>.Instance);
         var replies = new List<string>();
-        await foreach (var text in chat.StreamChatMessageAsync("Role", [new DialogMessage { Role = "user", Content = "hello" }], voiceTurn: true))
+        var history = new List<DialogMessage> { new() { Role = "user", Content = "hello" } };
+        await foreach (var text in chat.StreamChatMessageAsync("Role", history, voiceTurn: true, voiceBrief: "Seven managers"))
         {
             replies.Add(text);
         }
         replies.Should().Equal(reply);
         local.Payload.GetProperty("stream").GetBoolean().Should().BeFalse();
         local.Request!.Headers.Authorization.Should().BeNull();
+        local.Payload.GetProperty("messages")[1].GetProperty("content").GetString().Should().Contain("Seven managers").And.Contain("hello");
+        history.Single().Content.Should().Be("hello");
         local.Payload.GetProperty("grammar").GetString().Should().Be(LocalVoiceCompletionClient.ReplyGrammar);
         await meter.Received(1).RecordLlmUsageAsync("local-model", 20, 12, false, Arg.Any<CancellationToken>());
         factory.Received(fallback ? 1 : 0).CreateClient("Codex");

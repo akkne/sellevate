@@ -42,7 +42,8 @@ public interface IOpenAiChatService
         string systemPrompt,
         List<DialogMessage> conversationHistory,
         CancellationToken cancellationToken = default,
-        bool voiceTurn = false);
+        bool voiceTurn = false,
+        string? voiceBrief = null);
 
     /// <summary>
     /// Grades a finished conversation and returns the summary, the detailed breakdown, the clamped
