@@ -78,7 +78,7 @@ export class AudioPlayer {
         try {
             const audioContext = this.getAudioContext();
 
-            if (audioContext.state === "suspended") {
+            if (audioContext.state !== "running") {
                 await audioContext.resume();
             }
 
@@ -113,7 +113,7 @@ export class AudioPlayer {
         if (arrayBuffer.byteLength === 0) return;
         try {
             const audioContext = this.getAudioContext();
-            if (audioContext.state === "suspended") {
+            if (audioContext.state !== "running") {
                 await audioContext.resume();
             }
             const buffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
