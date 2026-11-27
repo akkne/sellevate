@@ -1,3 +1,3 @@
 namespace Sellevate.Ai.Features.Voice.Services.Abstract;
 
-public sealed record VoiceStreamChunk(string Text, byte[] AudioMp3, bool IsStopSignal, bool IsFinal);
+public sealed record VoiceStreamChunk(string Text, byte[] AudioMp3, bool IsStopSignal, bool IsFinal, bool IsMp3Segment = false);

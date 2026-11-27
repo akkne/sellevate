@@ -39,6 +39,7 @@ public sealed class VoiceDialogController : ControllerBase
     private const int FrameLengthPrefixBytes = 4;
     private const uint FinalChunkFlag = 1u;
     private const uint StopSignalChunkFlag = 2u;
+    private const uint ProgressiveMp3ChunkFlag = 4u;
 
     private readonly IVoiceDialogService _voiceDialogService;
     private readonly ITtsRouter _ttsRouter;
@@ -138,9 +139,10 @@ public sealed class VoiceDialogController : ControllerBase
         var upstreamTimedOut = false;
         try
         {
-            await foreach (var chunk in _voiceDialogService.StreamVoiceMessageAsync(sessionId, userId, request.Transcript, recordingCapToken))
+            var progressiveMp3 = Request.Headers.Accept.ToString() == "application/octet-stream; audio=progressive-mp3";
+            await foreach (var chunk in _voiceDialogService.StreamVoiceMessageAsync(sessionId, userId, request.Transcript, recordingCapToken, progressiveMp3))
             {
-                var flags = (chunk.IsFinal ? FinalChunkFlag : 0u) | (chunk.IsStopSignal ? StopSignalChunkFlag : 0u);
+                var flags = (chunk.IsFinal ? FinalChunkFlag : 0u) | (chunk.IsStopSignal ? StopSignalChunkFlag : 0u) | (chunk.IsMp3Segment ? ProgressiveMp3ChunkFlag : 0u);
                 var textBytes = Encoding.UTF8.GetBytes(chunk.Text);
 
                 await WriteUInt32BigEndianAsync(Response.Body, flags, cancellationToken);

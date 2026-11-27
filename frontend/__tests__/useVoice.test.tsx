@@ -20,6 +20,7 @@ vi.mock("@/features/voice/services/web-speech-client", () => ({
 
 vi.mock("@/features/voice/services/call-audio-player", () => ({
     CallAudioPlayer: class {
+        static supportsProgressiveMp3 = () => false;
         preparePlayback = preparePlayback;
         beginQueue = vi.fn();
         enqueue = vi.fn(async () => {});

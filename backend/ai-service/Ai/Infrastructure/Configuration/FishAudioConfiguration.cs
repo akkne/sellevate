@@ -4,5 +4,7 @@ namespace Sellevate.Ai.Infrastructure.Configuration;
 public sealed class FishAudioConfiguration
 {
     public const string SectionName = "FishAudio";
+    public bool LowLatencyMp3 { get; init; }
+
     public string ApiKey { get; init; } = string.Empty;
 }

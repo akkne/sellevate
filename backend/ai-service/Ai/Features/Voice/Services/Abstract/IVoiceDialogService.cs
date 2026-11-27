@@ -20,5 +20,5 @@ public interface IVoiceDialogService
         string sessionId,
         Guid userId,
         string transcript,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default, bool progressiveMp3 = false);
 }

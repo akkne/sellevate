@@ -8,6 +8,14 @@ export class CallAudioPlayer {
     private prepared = false;
     private failed = false;
 
+    private mediaSource: MediaSource | null = null;
+    private sourceBuffer: SourceBuffer | null = null;
+    private readonly segments: ArrayBuffer[] = [];
+
+    static supportsProgressiveMp3(): boolean {
+        return typeof MediaSource !== "undefined" && MediaSource.isTypeSupported("audio/mpeg");
+    }
+
     constructor(private readonly options: AudioPlayerOptions) {}
 
     async preparePlayback(): Promise<void> {
@@ -35,8 +43,43 @@ export class CallAudioPlayer {
         if (!this.currentUrl) this.playNext();
     }
 
+    enqueueMp3Segment(bytes: ArrayBuffer): void {
+        if (this.failed || !bytes.byteLength) return;
+        this.segments.push(bytes);
+        if (!this.mediaSource) {
+            const source = new MediaSource();
+            this.mediaSource = source;
+            source.addEventListener("sourceopen", () => {
+                if (source !== this.mediaSource) return;
+                try {
+                    this.sourceBuffer = source.addSourceBuffer("audio/mpeg");
+                    this.sourceBuffer.onupdateend = () => this.appendNext();
+                    this.sourceBuffer.onerror = () => this.audio.onerror?.(new Event("error"));
+                    this.appendNext();
+                } catch {
+                    this.audio.onerror?.(new Event("error"));
+                }
+            }, { once: true });
+            this.playUrl(URL.createObjectURL(source));
+        } else {
+            this.appendNext();
+        }
+    }
+
+    private appendNext(): void {
+        if (!this.sourceBuffer || this.sourceBuffer.updating || this.mediaSource?.readyState !== "open") return;
+        try {
+            const bytes = this.segments.shift();
+            if (bytes) this.sourceBuffer.appendBuffer(bytes);
+            else if (this.streamComplete) this.mediaSource.endOfStream();
+        } catch {
+            this.audio.onerror?.(new Event("error"));
+        }
+    }
+
     markQueueComplete(): void {
         this.streamComplete = true;
+        if (this.mediaSource) this.appendNext();
         if (!this.currentUrl && !this.failed) this.playNext();
     }
 
@@ -50,7 +93,10 @@ export class CallAudioPlayer {
             return;
         }
 
-        const url = URL.createObjectURL(next);
+        this.playUrl(URL.createObjectURL(next));
+    }
+
+    private playUrl(url: string): void {
         this.currentUrl = url;
         this.audio.src = url;
         this.audio.onplaying = () => {
@@ -74,6 +120,13 @@ export class CallAudioPlayer {
     }
 
     private releaseSource(): void {
+        this.mediaSource = null;
+        if (this.sourceBuffer) {
+            this.sourceBuffer.onupdateend = null;
+            this.sourceBuffer.onerror = null;
+            this.sourceBuffer = null;
+        }
+        this.segments.length = 0;
         this.audio.onplaying = null;
         this.audio.onended = null;
         this.audio.onerror = null;

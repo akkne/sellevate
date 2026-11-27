@@ -101,6 +101,7 @@ export function useVoice(options: UseVoiceOptions) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Accept: CallAudioPlayer.supportsProgressiveMp3() ? "application/octet-stream; audio=progressive-mp3" : "application/octet-stream",
                     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
                 },
                 body: JSON.stringify({ transcript }),
@@ -147,7 +148,8 @@ export function useVoice(options: UseVoiceOptions) {
                     // resume the mic while the persona is still speaking: barge-in was firing on
                     // the slightest noise and cutting the AI off mid-sentence. Let the persona
                     // finish, then listen.
-                    audioPlayerRef.current?.enqueue(frame.audio);
+                    if (frame.isMp3Segment) audioPlayerRef.current?.enqueueMp3Segment(frame.audio);
+                    else audioPlayerRef.current?.enqueue(frame.audio);
                 }
                 if (frame.isFinal) break;
             }

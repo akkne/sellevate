@@ -3,6 +3,7 @@ using Sellevate.Ai.Features.Dialog.Services.Abstract;
 using Sellevate.Ai.Features.Dialog.Services.Implementation;
 using Sellevate.Ai.Features.Organizations;
 using Sellevate.Ai.Infrastructure.Configuration;
+using Sellevate.Ai.Infrastructure.Http;
 using Sellevate.Ai.Infrastructure.Learning;
 
 namespace Sellevate.Ai.Features.Dialog;
@@ -34,7 +35,10 @@ public static class DialogServiceCollectionExtensions
             .Validate(options => Enum.IsDefined(options.Provider), "Unknown OpenAI:Provider")
             .Validate(options => options.Provider != OpenAiProvider.OPENAI_CODEX || !string.IsNullOrWhiteSpace(options.CodexModel),
                 "OpenAI:CodexModel is required for OPENAI_CODEX")
+            .Validate(options => options.HasValidLocalVoiceEndpoint, "Local voice inference requires a loopback endpoint and model")
             .ValidateOnStart();
+        services.AddHttpClient(LocalVoiceCompletionClient.ClientName, client => client.Timeout = TimeSpan.FromSeconds(8))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseProxy = false });
         services.AddScoped<IOpenAiChatService, OpenAiChatService>();
         services.AddScoped<IDialogSessionRepository, DialogSessionRepository>();
         services.AddScoped<IDialogService, DialogService>();

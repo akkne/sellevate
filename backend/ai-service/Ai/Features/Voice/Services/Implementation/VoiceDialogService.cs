@@ -1,11 +1,13 @@
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Sellevate.Ai.Features.Dialog.Constants;
 using Sellevate.Ai.Features.Dialog.Helpers;
 using Sellevate.Ai.Features.Dialog.Models;
 using Sellevate.Ai.Features.Dialog.Services.Abstract;
 using Sellevate.Ai.Features.Dialog.Services.Implementation;
 using Sellevate.Ai.Features.Voice.Services.Abstract;
+using Sellevate.Ai.Infrastructure.Configuration;
 using Sellevate.Ai.Infrastructure.Data;
 
 namespace Sellevate.Ai.Features.Voice.Services.Implementation;
@@ -15,10 +17,11 @@ namespace Sellevate.Ai.Features.Voice.Services.Implementation;
 ///
 /// <para>
 /// <b>Text is yielded before its audio, and synthesis runs ahead of playback.</b> Each extracted
-/// sentence is emitted immediately and its synthesis queued; completed audio is drained whenever the
+/// sentence in sentence mode is emitted immediately and its synthesis queued; completed audio is drained whenever the
 /// head of the queue is ready. That ordering is what makes the character start speaking while the
 /// model is still writing — awaiting each synthesis inline would serialise the two and roughly double
-/// the wait before the first sound.
+/// the wait before the first sound. The local voice route instead synthesizes one complete reply and
+/// can forward its MP3 bytes to a compatible player as they arrive.
 /// </para>
 ///
 /// <para>
@@ -45,6 +48,7 @@ internal sealed class VoiceDialogService : IVoiceDialogService
     private readonly IDialogSessionRepository _sessionRepository;
     private readonly IOpenAiChatService _openAiService;
     private readonly ITtsRouter _ttsRouter;
+    private readonly bool _synthesizeWholeReply;
     private readonly ILogger<VoiceDialogService> _logger;
 
     public VoiceDialogService(
@@ -52,12 +56,14 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         IDialogSessionRepository sessionRepository,
         IOpenAiChatService openAiService,
         ITtsRouter ttsRouter,
+        IOptions<OpenAiConfiguration> chatOptions,
         ILogger<VoiceDialogService> logger)
     {
         _dbContext = dbContext;
         _sessionRepository = sessionRepository;
         _openAiService = openAiService;
         _ttsRouter = ttsRouter;
+        _synthesizeWholeReply = chatOptions.Value.LocalVoiceCompletionUrl is not null;
         _logger = logger;
     }
 
@@ -65,7 +71,7 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         string sessionId,
         Guid userId,
         string transcript,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default, bool progressiveMp3 = false)
     {
         var session = await _sessionRepository.FindForUserAsync(sessionId, userId, cancellationToken);
 
@@ -104,6 +110,7 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         await _sessionRepository.AppendMessagesAsync(sessionId, userId, [userMessage], cancellationToken);
 
         var chatSystemPrompt = CompanyContextPromptBuilder.BuildChatSystemPrompt(mode.ChatSystemPrompt, session.CompanyCallContext);
+        chatSystemPrompt = CustomScenarioPromptBuilder.BuildChatSystemPrompt(chatSystemPrompt, session.CustomScenarioContext);
         chatSystemPrompt = AssignmentPracticePromptBuilder.BuildChatSystemPrompt(chatSystemPrompt, session.AssignmentPracticeContext);
 
         var replyParser = new StreamingChatReplyParser();
@@ -120,7 +127,7 @@ internal sealed class VoiceDialogService : IVoiceDialogService
 
             sentenceChunker.Append(replyText);
 
-            while (sentenceChunker.TryExtractSentence(out var sentence))
+            while (!_synthesizeWholeReply && sentenceChunker.TryExtractSentence(out var sentence))
             {
                 var cleanedSentence = sentence.Trim();
                 if (string.IsNullOrWhiteSpace(cleanedSentence))
@@ -155,7 +162,18 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         if (!string.IsNullOrWhiteSpace(cleanedTail))
         {
             yield return new VoiceStreamChunk(cleanedTail, Array.Empty<byte>(), IsStopSignal: parseResult.EndCall, IsFinal: false);
-            pendingAudio.Enqueue(TrySynthesizeAsync(cleanedTail, mode.VoiceId, sessionId, cancellationToken));
+            if (_synthesizeWholeReply && progressiveMp3 && _ttsRouter is IProgressiveMp3 { SupportsProgressiveMp3: true } mp3)
+            {
+                await using var audio = mp3.StreamMp3Async(cleanedTail, mode.VoiceId, cancellationToken).GetAsyncEnumerator();
+                while (await TryReadAudioAsync(audio, cancellationToken))
+                {
+                    yield return new VoiceStreamChunk(string.Empty, audio.Current, false, false, IsMp3Segment: true);
+                }
+            }
+            else
+            {
+                pendingAudio.Enqueue(TrySynthesizeAsync(cleanedTail, mode.VoiceId, sessionId, cancellationToken));
+            }
         }
 
         while (pendingAudio.Count > 0)
@@ -202,6 +220,19 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         {
             _logger.LogWarning(exception, "TTS synthesis failed for session {SessionId} ({TextLength} chars); reply delivered as text only", sessionId, text.Length);
             return null;
+        }
+    }
+
+    private async ValueTask<bool> TryReadAudioAsync(IAsyncEnumerator<byte[]> audio, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await audio.MoveNextAsync();
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning(exception, "Fish audio stream stopped before completion");
+            return false;
         }
     }
 

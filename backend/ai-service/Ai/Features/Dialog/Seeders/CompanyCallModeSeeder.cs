@@ -29,7 +29,7 @@ public static class CompanyCallModeSeeder
     private const string ModeTitle = "Холодный звонок";
     private const string ModeDescription = "ИИ играет роль сотрудника или лица, принимающего решения, в компании-потенциальном клиенте. Вы практикуете реальный сценарий холодного звонка с учётом конкретной компании и цели.";
 
-    private const string ChatSystemPromptTemplate =
+    internal const string ChatSystemPromptTemplate =
         "Ты — сотрудник или лицо, принимающее решения, в компании-потенциальном клиенте. " +
         "Веди себя как живой человек, а не как робот-охранник: у тебя есть настроение, и оно " +
         "зависит от того, как звонящий ведёт разговор. Реагируй естественно — иногда ты занят " +

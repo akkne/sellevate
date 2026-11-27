@@ -27,7 +27,7 @@ public static class CustomScenarioModeSeeder
     private const string ModeTitle = "Свой сценарий";
     private const string ModeDescription = "ИИ отыгрывает собеседника по сценарию, который вы описали сами: своя ситуация, свой клиент, свой продукт.";
 
-    private const string ChatSystemPromptTemplate =
+    internal const string ChatSystemPromptTemplate =
         "Ты — собеседник в тренировочном разговоре о продажах. Роль, ситуация и предмет разговора " +
         "заданы сценарием пользователя ниже — играй строго по нему. " +
         "Веди себя как живой человек: у тебя есть настроение, интересы и своя выгода. Реагируй на то, " +

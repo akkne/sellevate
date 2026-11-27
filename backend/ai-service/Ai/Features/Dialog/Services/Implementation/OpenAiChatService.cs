@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Sellevate.Ai.Common.Constants;
 using Sellevate.Ai.Common.Implementation;
 using Sellevate.Ai.Features.Dialog.Constants;
+using Sellevate.Ai.Features.Dialog.Helpers;
 using Sellevate.Ai.Features.Dialog.Models;
 using Sellevate.Ai.Features.Dialog.Services.Abstract;
 using Sellevate.Ai.Features.Quotas.Services.Abstract;
@@ -239,10 +240,35 @@ endCall: false ЗАПРЕЩЕНО.
         var chatModel = _openAiOptions.Value.ResolveDialogModel(voiceTurn);
         var maxTokens = _openAiOptions.Value.MaximumDialogTokenCount;
 
+        if (voiceTurn && _openAiOptions.Value.LocalVoiceCompletionUrl is { } localEndpoint)
+        {
+            var localPrompt = LocalVoicePrompt.Build(systemPrompt);
+            var model = _openAiOptions.Value.LocalVoiceModel;
+            await _spendMeter.EnsureLlmAllowanceAsync($"voice chat ({model})", cancellationToken);
+            var payload = new
+            {
+                model,
+                messages = BuildMessages(localPrompt, conversationHistory),
+                max_tokens = Math.Min(maxTokens, 160),
+                temperature = 0.3,
+                stream = false,
+                response_format = BuildChatReplyResponseFormat(standardSchema: true),
+            };
+            using var localClient = _httpClientFactory.CreateClient(LocalVoiceCompletionClient.ClientName);
+            var local = await LocalVoiceCompletionClient.TryCompleteAsync(localClient, localEndpoint, payload, _logger, cancellationToken);
+            if (local is not null)
+            {
+                await ChargeAsync(model, local.Usage, EstimateUsage(localPrompt, conversationHistory, local.ReplyJson ?? string.Empty), cancellationToken);
+                if (local.ReplyJson is { } complete)
+                {
+                    yield return complete;
+                    yield break;
+                }
+            }
+        }
+
         await _spendMeter.EnsureLlmAllowanceAsync($"streaming chat ({chatModel})", cancellationToken);
-
         var (httpClient, apiUrl) = PromptProviderClient.Create(_httpClientFactory, _openAiOptions.Value);
-
         var messages = BuildMessages(systemPrompt + StructuredReplyInstruction, conversationHistory);
         var requestBody = new Dictionary<string, object>
         {
@@ -518,7 +544,7 @@ endCall: false ЗАПРЕЩЕНО.
     /// expects. The two supported providers differ only in the wrapper — a flat object versus a nested
     /// <c>json_schema</c> — and the choice is made from the provider enum, never from the URL.
     /// </summary>
-    private object BuildChatReplyResponseFormat()
+    private object BuildChatReplyResponseFormat(bool standardSchema = false)
     {
         var replySchema = new
         {
@@ -533,7 +559,7 @@ endCall: false ЗАПРЕЩЕНО.
             additionalProperties = false
         };
 
-        if (_openAiOptions.Value.Provider == OpenAiProvider.F5Ai)
+        if (!standardSchema && _openAiOptions.Value.Provider == OpenAiProvider.F5Ai)
         {
             return new { type = "json_schema", name = ChatReplySchemaName, strict = true, schema = replySchema };
         }

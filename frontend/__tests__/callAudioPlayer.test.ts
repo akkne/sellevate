@@ -57,3 +57,38 @@ it("ignores a play rejection from a call that has been stopped", async () => {
     await Promise.resolve();
     expect(error).not.toHaveBeenCalled();
 });
+
+it("plays successive MP3 bytes on one source and closes it after the last append", () => {
+    const complete = vi.fn();
+    const appendBuffer = vi.fn(() => { buffer.updating = true; });
+    const buffer = { updating: false, appendBuffer, onupdateend: () => {} };
+    class FakeSource extends EventTarget {
+        readyState = "open";
+        addSourceBuffer = () => buffer;
+        endOfStream = vi.fn();
+        constructor() { super(); source = this; }
+    }
+    let source!: FakeSource;
+    vi.stubGlobal("MediaSource", FakeSource);
+    const player = new CallAudioPlayer({ onPlaybackEnd: complete });
+    const first = new ArrayBuffer(3);
+    const second = new ArrayBuffer(4);
+    player.beginQueue();
+    player.enqueueMp3Segment(first);
+    source.dispatchEvent(new Event("sourceopen"));
+    player.enqueueMp3Segment(second);
+    player.markQueueComplete();
+    expect(appendBuffer.mock.calls).toHaveLength(1);
+    buffer.updating = false;
+    buffer.onupdateend();
+    expect(appendBuffer.mock.calls).toEqual([[first], [second]]);
+    expect(source.endOfStream).not.toHaveBeenCalled();
+    buffer.updating = false;
+    buffer.onupdateend();
+    expect(source.endOfStream).toHaveBeenCalledOnce();
+    expect(play).toHaveBeenCalledOnce();
+    expect(complete).not.toHaveBeenCalled();
+    media.dispatchEvent(new Event("ended"));
+    expect(complete).toHaveBeenCalledOnce();
+    player.destroy();
+});

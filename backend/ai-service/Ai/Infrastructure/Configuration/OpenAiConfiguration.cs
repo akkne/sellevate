@@ -39,6 +39,15 @@ public sealed class OpenAiConfiguration
 
     public string? CodexVoiceModel { get; init; }
 
+    public string? LocalVoiceUrl { get; init; }
+    public Uri? LocalVoiceCompletionUrl => Uri.TryCreate(LocalVoiceUrl, UriKind.Absolute, out var uri) ? uri : null;
+    public string LocalVoiceModel { get; init; } = string.Empty;
+
+    public bool HasValidLocalVoiceEndpoint => string.IsNullOrWhiteSpace(LocalVoiceUrl) ||
+        (LocalVoiceCompletionUrl is { Scheme: "http" or "https" } endpoint &&
+         (endpoint.IsLoopback || endpoint.Host == "host.docker.internal") &&
+         !string.IsNullOrWhiteSpace(LocalVoiceModel));
+
     public bool CanSendPrompts => Provider == OpenAiProvider.OPENAI_CODEX || AiSecretPlaceholders.IsRealSecret(ApiKey);
 
     public string ResolvePromptModel(string apiModel) => Provider == OpenAiProvider.OPENAI_CODEX ? CodexModel : apiModel;

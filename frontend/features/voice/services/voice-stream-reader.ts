@@ -3,6 +3,7 @@ export interface VoiceStreamFrame {
     audio: ArrayBuffer;
     isFinal: boolean;
     isStopSignal: boolean;
+    isMp3Segment: boolean;
 }
 
 export class VoiceStreamReader {
@@ -71,6 +72,7 @@ export class VoiceStreamReader {
             yield {
                 text: decoder.decode(textBytes),
                 audio,
+                isMp3Segment: (flags & 4) !== 0,
                 isFinal: (flags & 1) !== 0,
                 isStopSignal: (flags & 2) !== 0,
             };

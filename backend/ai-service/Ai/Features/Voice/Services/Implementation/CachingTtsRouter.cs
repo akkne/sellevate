@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Sellevate.Ai.Features.Voice.Services.Abstract;
 
 namespace Sellevate.Ai.Features.Voice.Services.Implementation;
@@ -17,7 +18,7 @@ namespace Sellevate.Ai.Features.Voice.Services.Implementation;
 /// The array itself is shared, so it must never be mutated by a caller.
 /// </para>
 /// </summary>
-internal sealed class CachingTtsRouter : ITtsRouter
+internal sealed class CachingTtsRouter : ITtsRouter, IProgressiveMp3
 {
     private readonly ITtsRouter _inner;
     private readonly TtsAudioCache _audioCache;
@@ -31,6 +32,31 @@ internal sealed class CachingTtsRouter : ITtsRouter
     }
 
     public bool IsConfigured => _inner.IsConfigured;
+
+    public bool SupportsProgressiveMp3 => _inner is IProgressiveMp3 { SupportsProgressiveMp3: true };
+
+    public async IAsyncEnumerable<byte[]> StreamMp3Async(string text, string? voiceId,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var key = $"{voiceId}\n{text}";
+        var cacheable = text.Length <= _maximumCacheableTextLength;
+        if (cacheable && _audioCache.TryGet(key, out var cached))
+        {
+            yield return cached;
+            yield break;
+        }
+
+        using var buffer = cacheable ? new MemoryStream() : null;
+        await foreach (var bytes in ((IProgressiveMp3)_inner).StreamMp3Async(text, voiceId, cancellationToken))
+        {
+            buffer?.Write(bytes);
+            yield return bytes;
+        }
+        if (buffer is { Length: > 0 })
+        {
+            _audioCache.Set(key, buffer.ToArray());
+        }
+    }
 
     public async Task<Stream> SynthesizeSpeechAsync(string text, string? modeVoiceId, CancellationToken cancellationToken = default)
     {

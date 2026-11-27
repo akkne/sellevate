@@ -57,6 +57,10 @@ services:
       args: *build-args
 
   ai:
+    environment:
+      FishAudio__LowLatencyMp3: ${FISH_AUDIO_LOW_LATENCY_MP3:-false}
+      OpenAI__LocalVoiceUrl: ${LOCAL_VOICE_LLM_URL:-}
+      OpenAI__LocalVoiceModel: ${LOCAL_VOICE_LLM_MODEL:-qwen3-4b-instruct-2507}
     build:
       additional_contexts: *nuget-cache
       args: *build-args
