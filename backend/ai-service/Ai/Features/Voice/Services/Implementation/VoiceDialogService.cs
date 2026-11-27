@@ -104,6 +104,7 @@ internal sealed class VoiceDialogService : IVoiceDialogService
         await _sessionRepository.AppendMessagesAsync(sessionId, userId, [userMessage], cancellationToken);
 
         var chatSystemPrompt = CompanyContextPromptBuilder.BuildChatSystemPrompt(mode.ChatSystemPrompt, session.CompanyCallContext);
+        chatSystemPrompt = CustomScenarioPromptBuilder.BuildChatSystemPrompt(chatSystemPrompt, session.CustomScenarioContext);
         chatSystemPrompt = AssignmentPracticePromptBuilder.BuildChatSystemPrompt(chatSystemPrompt, session.AssignmentPracticeContext);
 
         var replyParser = new StreamingChatReplyParser();

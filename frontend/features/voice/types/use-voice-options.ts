@@ -11,6 +11,7 @@ export interface VoiceCompanyContext {
 export interface UseVoiceOptions {
     sessionId: string | null;
     modeVoiceEnabled: boolean;
+    enableTurnControls?: boolean;
     bundleId?: string;
     modeId?: string;
     companyContext?: VoiceCompanyContext;

@@ -26,6 +26,12 @@ export class AudioPlayer {
         return this.audioContext;
     }
 
+    async preparePlayback(): Promise<void> {
+        // Safari requires the first resume to happen inside the user's call gesture.
+        const context = this.getAudioContext();
+        if (context.state !== "running") await context.resume();
+    }
+
     async playStream(audioStream: ReadableStream<Uint8Array>): Promise<void> {
         this.stop();
         this.setState("loading");
@@ -72,7 +78,7 @@ export class AudioPlayer {
         try {
             const audioContext = this.getAudioContext();
 
-            if (audioContext.state === "suspended") {
+            if (audioContext.state !== "running") {
                 await audioContext.resume();
             }
 
@@ -107,7 +113,7 @@ export class AudioPlayer {
         if (arrayBuffer.byteLength === 0) return;
         try {
             const audioContext = this.getAudioContext();
-            if (audioContext.state === "suspended") {
+            if (audioContext.state !== "running") {
                 await audioContext.resume();
             }
             const buffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
@@ -158,6 +164,7 @@ export class AudioPlayer {
 
     stop(): void {
         if (this.sourceNode) {
+            this.sourceNode.onended = null;
             try {
                 this.sourceNode.stop();
             } catch {

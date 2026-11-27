@@ -16,8 +16,7 @@ public sealed class TtsRouterConfiguration
     public const string SectionName = "Voice";
 
     /// <summary>
-    /// Provider the router selects. Note that the router currently resolves the provider from which
-    /// key is configured rather than from this value — see docs/roadmap.md.
+    /// Select fish for Fish Audio, or keep the default Yandex backend.
     /// </summary>
     public string TtsProvider { get; init; } = "yandex";
 

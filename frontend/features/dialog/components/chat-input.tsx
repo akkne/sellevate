@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { Icon } from "@/shared/components/icon";
+import { useHydrated } from "@/shared/hooks/use-hydrated";
 
 interface ChatInputProps {
     // Returns whether the send actually succeeded. The composer clears the draft as soon as
@@ -10,10 +11,13 @@ interface ChatInputProps {
     // rejected send never looks like it went out (docs/AUDIT_SILENT_WRITES.md W-5).
     onSend: (content: string) => Promise<boolean>;
     disabled: boolean;
-    placeholder?: string;
+    ended?: boolean;
 }
 
-export function ChatInput({ onSend, disabled, placeholder = "Напиши сообщение…" }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, ended = false }: ChatInputProps) {
+    const hydrated = useHydrated();
+    const english = hydrated && navigator.language.toLowerCase().startsWith("en");
+    const placeholder = ended ? (english ? "Conversation ended" : "Диалог завершён") : (english ? "Write a message…" : "Напиши сообщение…");
     const [inputValue, setInputValue] = useState("");
 
     const handleSubmit = async (submitEvent: FormEvent) => {
@@ -30,24 +34,23 @@ export function ChatInput({ onSend, disabled, placeholder = "Напиши соо
 
     return (
         <form onSubmit={handleSubmit} className="dc-input-row">
-            <input
-                type="text"
+            <textarea
+                rows={2}
                 value={inputValue}
-                onChange={(changeEvent) => setInputValue(changeEvent.target.value)}
+                onChange={(event) => setInputValue(event.target.value)}
+                onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) {
+                        event.preventDefault();
+                        event.currentTarget.form?.requestSubmit();
+                    }
+                }}
                 disabled={disabled}
                 placeholder={placeholder}
-                className="field"
-                aria-label="Сообщение"
-                style={disabled ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+                className="dc-draft"
+                aria-label={english ? "Message" : "Сообщение"}
             />
-            <button
-                type="submit"
-                disabled={!canSend}
-                aria-label="Отправить"
-                className={"btn " + (canSend ? "btn-primary" : "btn-soft")}
-                style={{ width: 44, height: 44, padding: 0, flex: "none", ...(canSend ? {} : { opacity: 0.45, cursor: "not-allowed", boxShadow: "none" }) }}
-            >
-                <Icon name="send" size="md" />
+            <button type="submit" disabled={!canSend} aria-label={english ? "Send" : "Отправить"} className="dc-send">
+                <Icon name="send" size={22} />
             </button>
         </form>
     );

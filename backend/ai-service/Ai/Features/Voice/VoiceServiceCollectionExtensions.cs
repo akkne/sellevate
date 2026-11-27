@@ -24,11 +24,15 @@ public static class VoiceServiceCollectionExtensions
         services.Configure<TtsRouterConfiguration>(configuration.GetSection(TtsRouterConfiguration.SectionName));
         services.Configure<YandexTtsConfiguration>(configuration.GetSection(YandexTtsConfiguration.SectionName));
         services.Configure<VoiceUsageLimitsConfiguration>(configuration.GetSection(VoiceUsageLimitsConfiguration.SectionName));
+        services.Configure<FishAudioConfiguration>(configuration.GetSection(FishAudioConfiguration.SectionName));
+        services.AddScoped<FishAudioTtsService>();
         services.AddScoped<IYandexTtsService, YandexTtsService>();
         services.AddSingleton<TtsAudioCache>();
         services.AddScoped<TtsRouter>();
         services.AddScoped<ITtsRouter>(provider => new CachingTtsRouter(
-            provider.GetRequiredService<TtsRouter>(),
+            string.Equals(provider.GetRequiredService<IOptions<TtsRouterConfiguration>>().Value.TtsProvider, "fish", StringComparison.OrdinalIgnoreCase)
+                ? provider.GetRequiredService<FishAudioTtsService>()
+                : provider.GetRequiredService<TtsRouter>(),
             provider.GetRequiredService<TtsAudioCache>(),
             provider.GetRequiredService<IOptions<TtsRouterConfiguration>>().Value.MaximumCacheableTextLength));
         services.AddScoped<IVoiceDialogService, VoiceDialogService>();

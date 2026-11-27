@@ -34,10 +34,10 @@ REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 
 # The named HttpClients and provider hosts that mean "this code talks to a paid provider".
 PROVIDER_CLIENT_PATTERN = re.compile(
-    r"""CreateClient\(\s*"(OpenAI|YandexTts|Deepgram|Whisper)"\s*\)"""
+    r"""CreateClient\(\s*"(OpenAI|YandexTts|FishAudio|Deepgram|Whisper)"\s*\)"""
 )
 PROVIDER_HOST_PATTERN = re.compile(
-    r"""(api\.openai\.com|tts\.api\.cloud\.yandex\.net|api\.deepgram\.com|api\.f5ai\.ru)"""
+    r"""(api\.openai\.com|tts\.api\.cloud\.yandex\.net|api\.fish\.audio|api\.deepgram\.com|api\.f5ai\.ru)"""
 )
 
 # The only files in the whole backend allowed to reach a provider. Every one of them holds an
@@ -47,6 +47,7 @@ METERED_PROVIDER_CALLERS = {
     "backend/ai-service/Ai/Features/Evaluation/Services/Implementation/AiEvaluationStrategyBase.cs",
     "backend/ai-service/Ai/Features/Transcription/Services/Implementation/WhisperTranscriptionService.cs",
     "backend/ai-service/Ai/Features/Voice/Services/Implementation/YandexTtsService.cs",
+    "backend/ai-service/Ai/Features/Voice/Services/Implementation/FishAudioTtsService.cs",
     # Registers the named clients and their Polly stacks; makes no call of its own.
     "backend/ai-service/Ai/Program.cs",
     # Warms the TCP+TLS handshake with a HEAD ping. No completion, no tokens, no charge.

@@ -9,6 +9,7 @@ export interface WebSpeechClientOptions {
     onStateChange?: (state: WebSpeechState) => void;
     onSpeechStart?: () => void;
     onSpeechEnd?: () => void;
+    onRecognitionRestart?: () => void;
 }
 
 interface SpeechRecognitionEvent {
@@ -88,15 +89,20 @@ export class WebSpeechClient {
             return;
         }
 
+        this.isActive = true;
         try {
-            await navigator.mediaDevices.getUserMedia({ audio: true });
+            const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // SpeechRecognition owns its capture. Release the probe before switching audio routes.
+            for (const track of permissionStream.getTracks()) track.stop();
         } catch {
+            if (!this.isActive) return;
+            this.isActive = false;
             this.setState("error");
             this.options.onError?.(new Error("Microphone access denied"));
             return;
         }
 
-        this.isActive = true;
+        if (!this.isActive) return;
         this.shouldRestartAfterEnd = true;
         this.launchRecognition();
     }
@@ -154,12 +160,17 @@ export class WebSpeechClient {
 
     private disposeRecognition(): void {
         if (this.recognition) {
-            this.recognition.onend = null;
+            const recognition = this.recognition;
+            this.recognition = null;
+            recognition.onend = null;
+            recognition.onstart = null;
+            recognition.onerror = null;
+            recognition.onspeechstart = null;
+            recognition.onspeechend = null;
             try {
-                this.recognition.stop();
+                recognition.abort();
             } catch {
             }
-            this.recognition = null;
         }
     }
 
@@ -179,6 +190,7 @@ export class WebSpeechClient {
         };
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
+            if (recognition !== this.recognition) return;
             let interimTranscript = "";
             let finalTranscript = "";
 
@@ -187,15 +199,16 @@ export class WebSpeechClient {
                 const transcript = result[0].transcript;
 
                 if (result.isFinal) {
-                    finalTranscript += transcript;
+                    finalTranscript += " " + transcript.trim();
                 } else {
-                    interimTranscript += transcript;
+                    interimTranscript += " " + transcript.trim();
                 }
             }
 
             if (finalTranscript) {
                 this.options.onResult(finalTranscript.trim(), true);
-            } else if (interimTranscript) {
+            }
+            if (interimTranscript) {
                 this.options.onResult(interimTranscript.trim(), false);
             }
         };
@@ -221,6 +234,7 @@ export class WebSpeechClient {
             // continuous mode. Relaunch a fresh instance (not this ended one) to
             // keep the mic alive between turns.
             if (this.shouldRestartAfterEnd && this.isActive && this.state !== "error") {
+                this.options.onRecognitionRestart?.();
                 this.recognition = null;
                 this.launchRecognition();
             } else if (this.state !== "error") {
