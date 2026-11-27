@@ -12,7 +12,7 @@ case "$model" in
   qwen3-4b-instruct-2507) default_weights=.local-run/voice-lab/qwen.gguf ;;
   qwen3.5-9b)
     default_weights=.local-run/voice-lab/qwen3.5-9b.gguf
-    options+=(--chat-template-kwargs '{"enable_thinking":false}' --cache-ram 256 --ubatch-size 128)
+    options+=(--chat-template-kwargs '{"enable_thinking":false}' --cache-ram 256)
     ;;
   *) default_weights=${LOCAL_VOICE_WEIGHTS:?Set LOCAL_VOICE_WEIGHTS for this model} ;;
 esac
