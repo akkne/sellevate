@@ -37,9 +37,16 @@ public sealed class OpenAiConfiguration
     public OpenAiProvider Provider { get; init; } = OpenAiProvider.OPENAI_CODEX;
     public string CodexModel { get; init; } = "gpt-6.2-astra";
 
+    public string? CodexVoiceModel { get; init; }
+
     public bool CanSendPrompts => Provider == OpenAiProvider.OPENAI_CODEX || AiSecretPlaceholders.IsRealSecret(ApiKey);
 
     public string ResolvePromptModel(string apiModel) => Provider == OpenAiProvider.OPENAI_CODEX ? CodexModel : apiModel;
+
+    public string ResolveDialogModel(bool voiceTurn) =>
+        voiceTurn && Provider == OpenAiProvider.OPENAI_CODEX && !string.IsNullOrWhiteSpace(CodexVoiceModel)
+            ? CodexVoiceModel
+            : ResolvePromptModel(DialogModel);
 
     public string OpenQuestionModel { get; init; } = "gpt-4.1";
 

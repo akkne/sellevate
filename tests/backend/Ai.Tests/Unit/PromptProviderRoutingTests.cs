@@ -39,13 +39,14 @@ public class PromptProviderRoutingTests
 
     [TestCase("text")]
     [TestCase("stream")]
+    [TestCase("voice")]
     [TestCase("grading")]
     public async Task CodexUsesWorkerAndMetersConfiguredModel(string operation)
     {
         var handler = new CompletionHandler();
         var factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient("Codex").Returns(_ => new HttpClient(handler) { BaseAddress = new Uri("http://worker/") });
-        var options = Options.Create(new OpenAiConfiguration { CodexModel = "test-codex" });
+        var options = Options.Create(new OpenAiConfiguration { CodexModel = "test-codex", CodexVoiceModel = "test-voice" });
         var meter = Substitute.For<IAiSpendMeter>();
         var chat = new OpenAiChatService(factory, options, meter, NullLogger<OpenAiChatService>.Instance);
         if (operation == "grading")
@@ -55,10 +56,10 @@ public class PromptProviderRoutingTests
                 JsonSerializer.SerializeToElement(new { text = "answer" }), null);
             result.Score.Should().Be(90);
         }
-        else if (operation == "stream")
+        else if (operation is "stream" or "voice")
         {
             var chunks = new List<string>();
-            await foreach (var chunk in chat.StreamChatMessageAsync("system", [new DialogMessage { Role = "user", Content = "answer" }]))
+            await foreach (var chunk in chat.StreamChatMessageAsync("system", [new DialogMessage { Role = "user", Content = "answer" }], voiceTurn: operation == "voice"))
             {
                 chunks.Add(chunk);
             }
@@ -70,10 +71,13 @@ public class PromptProviderRoutingTests
             (await chat.GenerateTextAsync("system", "answer", model: "api-override")).Should().Contain("OK");
         }
 
-        handler.Payload.GetProperty("model").GetString().Should().Be("test-codex");
+        handler.Payload.TryGetProperty("voice_turn", out var voiceFlag).Should().Be(operation == "voice");
+        if (operation == "voice") voiceFlag.GetBoolean().Should().BeTrue();
+        var expectedModel = operation == "voice" ? "test-voice" : "test-codex";
+        handler.Payload.GetProperty("model").GetString().Should().Be(expectedModel);
         handler.Payload.GetProperty("messages")[1].GetProperty("content").GetString().Should().Contain("answer");
         await meter.Received(1).EnsureLlmAllowanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
-        await meter.Received(1).RecordLlmUsageAsync("test-codex", 17, 9, false, Arg.Any<CancellationToken>());
+        await meter.Received(1).RecordLlmUsageAsync(expectedModel, 17, 9, false, Arg.Any<CancellationToken>());
         factory.DidNotReceive().CreateClient("OpenAI");
     }
 
@@ -89,6 +93,7 @@ public class PromptProviderRoutingTests
         url.Should().Be("https://api.example/v1/chat/completions");
         client.DefaultRequestHeaders.GetValues(header).Should().ContainSingle().Which.Should().Be(value);
         settings.ResolvePromptModel("api-model").Should().Be("api-model");
+        settings.ResolveDialogModel(voiceTurn: true).Should().Be(settings.DialogModel);
         factory.DidNotReceive().CreateClient("Codex");
     }
 }

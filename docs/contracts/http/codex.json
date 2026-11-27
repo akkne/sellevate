@@ -99,6 +99,9 @@
           },
           "response_format": {
             "$ref": "#/components/schemas/Sellevate.Codex.Features.Completions.CompletionFormat"
+          },
+          "voice_turn": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

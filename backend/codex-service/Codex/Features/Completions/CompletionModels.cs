@@ -10,7 +10,8 @@ public sealed record CompletionRequest(
     string Model,
     [MinLength(1)] CompletionMessage[] Messages,
     [property: JsonPropertyName("max_tokens")] int MaxTokens,
-    [property: JsonPropertyName("response_format")] CompletionFormat? ResponseFormat);
+    [property: JsonPropertyName("response_format")] CompletionFormat? ResponseFormat,
+    [property: JsonPropertyName("voice_turn")] bool VoiceTurn = false);
 
 public sealed record CompletionFormat([property: JsonPropertyName("json_schema")] NamedSchema JsonSchema);
 public sealed record NamedSchema(JsonElement Schema);
