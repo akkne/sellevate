@@ -3,9 +3,9 @@ import { apiClient } from "@/shared/api/api-client";
 import { EnvironmentConfiguration } from "@/config/environment";
 import { WebSpeechClient, isWebSpeechSupported } from "@/features/voice/services/web-speech-client";
 import type { WebSpeechState } from "@/features/voice/services/web-speech-client";
-import { AudioPlayer } from "@/features/voice/services/audio-player";
+import { CallAudioPlayer } from "@/features/voice/services/call-audio-player";
 import type { AudioPlayerState } from "@/features/voice/services/audio-player";
-import { SpeechEndpointer } from "@/features/voice/services/speech-endpointer";
+import { SpeechEndpointer, type VoiceTurnMode } from "@/features/voice/services/speech-endpointer";
 import { VoiceStreamReader } from "@/features/voice/services/voice-stream-reader";
 import { VoiceApiRoutes } from "@/features/voice/constants/voice-api-routes";
 import { useVoiceConfig } from "@/features/voice/hooks/use-voice-config";
@@ -15,16 +15,46 @@ import type { UseVoiceOptions } from "@/features/voice/types/use-voice-options";
 export type { VoicePipelineState } from "@/features/voice/types/voice-pipeline-state";
 export type { UseVoiceOptions } from "@/features/voice/types/use-voice-options";
 
+const turnModeStorageKey = "sellevate.voice.turnMode";
+const callPauseMs = 3000;
+
 export function useVoice(options: UseVoiceOptions) {
-    const { sessionId, modeVoiceEnabled, bundleId, modeId, companyContext, onSessionReady, onTranscript, onAiText, onAiResponse, onError } = options;
+    const { sessionId, modeVoiceEnabled, enableTurnControls = false, bundleId, modeId, companyContext, onSessionReady, onTranscript, onAiText, onAiResponse, onError } = options;
 
     const [state, setState] = useState<VoicePipelineState>("idle");
     const [currentTranscript, setCurrentTranscript] = useState("");
     const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
 
     const speechClientRef = useRef<WebSpeechClient | null>(null);
-    const audioPlayerRef = useRef<AudioPlayer | null>(null);
+    const audioPlayerRef = useRef<CallAudioPlayer | null>(null);
+    const onErrorRef = useRef(onError);
     const endpointerRef = useRef<SpeechEndpointer | null>(null);
+    const [turnMode, setTurnMode] = useState<VoiceTurnMode>(enableTurnControls ? "manual" : "pause");
+    const turnModeRef = useRef(turnMode);
+    const applyTurnMode = useCallback((mode: VoiceTurnMode) => {
+        turnModeRef.current = mode;
+        endpointerRef.current?.setMode(mode);
+        setTurnMode(mode);
+    }, []);
+
+    useEffect(() => {
+        if (!enableTurnControls) return;
+        try {
+            applyTurnMode(localStorage.getItem(turnModeStorageKey) === "pause" ? "pause" : "manual");
+        } catch { /* Browser storage is optional. */ }
+    }, [enableTurnControls, applyTurnMode]);
+
+    const changeTurnMode = (mode: VoiceTurnMode) => {
+        applyTurnMode(mode);
+        try {
+            localStorage.setItem(turnModeStorageKey, mode);
+        } catch { /* The choice still applies to this call. */ }
+    };
+
+    const sendTurn = () => {
+        if (turnModeRef.current === "manual" && !isProcessingRef.current) endpointerRef.current?.commit();
+    };
+
     const currentSessionIdRef = useRef<string | null>(sessionId);
     const isProcessingRef = useRef(false);
     const stateRef = useRef<VoicePipelineState>("idle");
@@ -39,6 +69,7 @@ export function useVoice(options: UseVoiceOptions) {
     }, [state]);
 
     const { data: voiceConfig } = useVoiceConfig();
+    const silenceMs = Math.max(enableTurnControls ? callPauseMs : 0, voiceConfig?.vadSilenceMs ?? 1200);
 
     useEffect(() => {
         const available = !!(voiceConfig?.enabled && modeVoiceEnabled && isWebSpeechSupported());
@@ -46,7 +77,11 @@ export function useVoice(options: UseVoiceOptions) {
     }, [voiceConfig, modeVoiceEnabled]);
 
     useEffect(() => {
-        audioPlayerRef.current = new AudioPlayer({
+        onErrorRef.current = onError;
+    }, [onError]);
+
+    useEffect(() => {
+        audioPlayerRef.current = new CallAudioPlayer({
             onStateChange: (playerState: AudioPlayerState) => {
                 if (playerState === "playing") {
                     setState("playing");
@@ -58,14 +93,14 @@ export function useVoice(options: UseVoiceOptions) {
                 }
             },
             onError: (error: Error) => {
-                onError?.(error);
+                onErrorRef.current?.(error);
             },
         });
 
         return () => {
             audioPlayerRef.current?.destroy();
         };
-    }, [onError]);
+    }, []);
 
     const processSpeech = useCallback(async (transcript: string) => {
         if (isProcessingRef.current) return;
@@ -125,6 +160,7 @@ export function useVoice(options: UseVoiceOptions) {
             let stopSignal = false;
 
             let receivedAnyFrame = false;
+            let receivedAudio = false;
             const streamReader = new VoiceStreamReader(response);
             for await (const frame of streamReader.read(controller.signal)) {
                 if (controller.signal.aborted) break;
@@ -135,12 +171,13 @@ export function useVoice(options: UseVoiceOptions) {
                 }
                 if (frame.isStopSignal) stopSignal = true;
                 if (frame.audio.byteLength > 0) {
+                    receivedAudio = true;
                     // Recognition stays paused for the whole AI turn (paused above before the
                     // request, resumed only on AudioPlayer "ended"). We intentionally do NOT
                     // resume the mic while the persona is still speaking: barge-in was firing on
                     // the slightest noise and cutting the AI off mid-sentence. Let the persona
                     // finish, then listen.
-                    await audioPlayerRef.current?.enqueue(frame.audio);
+                    audioPlayerRef.current?.enqueue(frame.audio);
                 }
                 if (frame.isFinal) break;
             }
@@ -154,6 +191,10 @@ export function useVoice(options: UseVoiceOptions) {
                     throw new Error("Собеседник не ответил. Попробуйте сказать ещё раз");
                 }
 
+                if (aggregatedText.length && !receivedAudio) {
+                    const english = navigator.language.toLowerCase().startsWith("en");
+                    onError?.(new Error(english ? "The reply arrived without audio" : "Ответ пришёл без озвучки"));
+                }
                 onAiResponse?.(aggregatedText.join(" "), stopSignal);
             }
         } catch (error) {
@@ -170,10 +211,22 @@ export function useVoice(options: UseVoiceOptions) {
         }
     }, [onTranscript, onAiText, onAiResponse, onError]);
 
+    const preparePlayback = useCallback(async () => {
+        try {
+            await audioPlayerRef.current?.preparePlayback();
+            return true;
+        } catch (error) {
+            if (error instanceof Error) onErrorRef.current?.(error);
+            setState("error");
+            return false;
+        }
+    }, []);
+
     const startVoice = useCallback(async () => {
         if (!isVoiceAvailable) return;
 
         setState("initializing");
+        if (!await preparePlayback()) return;
 
         let activeSessionId = currentSessionIdRef.current;
         if (!activeSessionId && bundleId && modeId) {
@@ -204,7 +257,8 @@ export function useVoice(options: UseVoiceOptions) {
 
         try {
             endpointerRef.current = new SpeechEndpointer({
-                silenceMs: voiceConfig?.vadSilenceMs ?? 1200,
+                silenceMs,
+                mode: turnModeRef.current,
                 onUtterance: (utterance: string) => {
                     processSpeech(utterance);
                 },
@@ -214,6 +268,7 @@ export function useVoice(options: UseVoiceOptions) {
                 language: "ru-RU",
                 continuous: true,
                 interimResults: true,
+                onRecognitionRestart: () => endpointerRef.current?.finishRecognitionSegment(),
                 onResult: (transcript: string, isFinal: boolean) => {
                     // The utterance was already committed from an interim result;
                     // drop trailing recognition so it does not duplicate the phrase.
@@ -236,10 +291,12 @@ export function useVoice(options: UseVoiceOptions) {
                     // stop()/onend race still delivers an onset while we are playing or mid-request,
                     // ignore it rather than cutting the persona off.
                     if (stateRef.current === "playing" || stateRef.current === "processing") return;
+                    if (enableTurnControls) endpointerRef.current?.clearTimer();
                     setState("speaking");
                 },
                 onSpeechEnd: () => {
                     if (stateRef.current !== "processing" && stateRef.current !== "playing") {
+                        if (enableTurnControls) endpointerRef.current?.scheduleCommit();
                         setState("listening");
                     }
                 },
@@ -250,7 +307,7 @@ export function useVoice(options: UseVoiceOptions) {
             onError?.(error instanceof Error ? error : new Error("Не удалось инициализировать голосовой режим"));
             setState("error");
         }
-    }, [isVoiceAvailable, bundleId, modeId, companyContext, voiceConfig, onSessionReady, onError, processSpeech]);
+    }, [isVoiceAvailable, preparePlayback, bundleId, modeId, companyContext, enableTurnControls, silenceMs, onSessionReady, onError, processSpeech]);
 
     const releaseMicrophone = useCallback(() => {
         endpointerRef.current?.reset();
@@ -292,14 +349,19 @@ export function useVoice(options: UseVoiceOptions) {
         return () => {
             endpointerRef.current?.reset();
             speechClientRef.current?.stop();
-            audioPlayerRef.current?.destroy();
+            streamAbortRef.current?.abort();
         };
     }, []);
 
     return {
+        turnMode,
+        changeTurnMode,
+        sendTurn,
+        pauseSeconds: silenceMs / 1000,
         state,
         currentTranscript,
         isVoiceAvailable,
+        preparePlayback,
         startVoice,
         stopVoice,
         endSession,

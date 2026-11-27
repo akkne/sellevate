@@ -1,5 +1,5 @@
 import { DialogMessage } from "@/features/dialog/hooks/use-dialog";
-import { Icon } from "@/shared/components/icon";
+import { DialogueMark } from "./conversation-marks";
 
 interface ChatMessageProps {
     message: DialogMessage;
@@ -24,7 +24,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     className="dc-avatar"
                     aria-hidden="true"
                 >
-                    <Icon name="sparkle" size="sm" />
+                    <DialogueMark />
                 </span>
             )}
             <div className="dc-bubble-wrap">

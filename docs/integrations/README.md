@@ -30,3 +30,4 @@
 | [F5 AI gpt-4.1](f5ai-gpt-4.1.md) | Оценка и подготовка через настраиваемый шлюз |
 | [OpenAI whisper-1](openai-whisper-1.md) | Транскрипция аудио |
 | [Yandex SpeechKit marina](yandex-speechkit-marina.md) | Синтез речи, голос marina в API v1 |
+| [Fish Audio S2.1 Pro Free](fish-audio-s2-free.md) | Озвучка реплик звонка |

@@ -1,4 +1,7 @@
+export type VoiceTurnMode = "manual" | "pause";
+
 export interface SpeechEndpointerOptions {
+    mode?: VoiceTurnMode;
     /** Silence window (ms) after a final recognition result before the utterance is committed. */
     silenceMs: number;
     /**
@@ -25,10 +28,12 @@ export class SpeechEndpointer {
     private committedText = "";
     private interimText = "";
     private timer: ReturnType<typeof setTimeout> | null = null;
+    private mode: VoiceTurnMode;
     private readonly endpointerOptions: SpeechEndpointerOptions;
 
     constructor(endpointerOptions: SpeechEndpointerOptions) {
         this.endpointerOptions = endpointerOptions;
+        this.mode = endpointerOptions.mode ?? "pause";
     }
 
     /** Combined text of the utterance accumulated so far (committed finals + latest interim). */
@@ -37,17 +42,31 @@ export class SpeechEndpointer {
     }
 
     handleResult(transcript: string, isFinal: boolean): void {
-        this.clearTimer();
-
         if (isFinal) {
-            this.committedText += (this.committedText ? " " : "") + transcript;
+            this.committedText = [this.committedText, transcript].filter(Boolean).join(" ");
             this.interimText = "";
-            this.armTimer(this.endpointerOptions.silenceMs);
         } else {
             this.interimText = transcript;
-            const graceMilliseconds = this.endpointerOptions.interimGraceMs ?? defaultInterimGraceMilliseconds;
-            this.armTimer(this.endpointerOptions.silenceMs + graceMilliseconds);
         }
+        this.scheduleCommit();
+    }
+
+    setMode(mode: VoiceTurnMode): void {
+        if (mode === this.mode) return;
+        this.mode = mode;
+        this.scheduleCommit();
+    }
+
+    /** A new recognition instance cannot revise the previous instance's last interim result. */
+    finishRecognitionSegment(): void {
+        this.committedText = this.currentText;
+        this.interimText = "";
+    }
+
+    commit(): void {
+        const text = this.currentText.trim();
+        this.reset();
+        if (text) this.endpointerOptions.onUtterance(text);
     }
 
     /** Cancels the pending timer and clears accumulated text (e.g. on stop or barge-in). */
@@ -57,19 +76,15 @@ export class SpeechEndpointer {
         this.interimText = "";
     }
 
-    private armTimer(delayMilliseconds: number): void {
-        this.timer = setTimeout(() => {
-            this.timer = null;
-            const utterance = this.currentText.trim();
-            this.committedText = "";
-            this.interimText = "";
-            if (utterance) {
-                this.endpointerOptions.onUtterance(utterance);
-            }
-        }, delayMilliseconds);
+    scheduleCommit(): void {
+        this.clearTimer();
+        if (this.mode === "manual" || !this.currentText.trim()) return;
+
+        const grace = this.interimText ? this.endpointerOptions.interimGraceMs ?? defaultInterimGraceMilliseconds : 0;
+        this.timer = setTimeout(() => this.commit(), this.endpointerOptions.silenceMs + grace);
     }
 
-    private clearTimer(): void {
+    clearTimer(): void {
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = null;

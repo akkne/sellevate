@@ -15,6 +15,8 @@ import {
     completeDialogSession,
 } from "@/features/dialog/hooks/use-dialog";
 import { ChatMessage } from "@/features/dialog/components/chat-message";
+import { DialogueMark } from "@/features/dialog/components/conversation-marks";
+import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 import { ChatInput } from "@/features/dialog/components/chat-input";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { Icon } from "@/shared/components/icon";
@@ -249,25 +251,26 @@ export default function CompanyChatCallPage() {
         <div className="chat-screen" style={{ gridTemplateColumns: "1fr" }}>
             <main className="dc-main">
                 <div className="dc-head">
-                    <span className="itile primary" style={{ width: 36, height: 36, borderRadius: "50%", flex: "none" }}>
-                        <Icon name="sparkle" size={18} />
+                    <span className="dc-signature" aria-hidden="true">
+                        <DialogueMark />
                     </span>
-                    <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="dc-context min-w-0 flex-1">
                         <div className="dc-head-title">{company?.name ?? "Компания"}</div>
                         <div className="dc-head-sub">{goal || "Тренировочный звонок"} · текст</div>
                     </div>
 
-                    {sessionId && !isEnded && !feedback && (
-                        <button
-                            className="btn btn-sm"
-                            onClick={handleEndSession}
-                            style={{ background: "var(--heart-soft)", color: "var(--heart)", flex: "none", borderColor: "transparent" }}
-                        >
-                            <Icon name="close" size="sm" />
-                            Завершить
-                        </button>
-                    )}
-
+                    <div className="dc-tools">
+                        {sessionId && !isEnded && !feedback && (
+                            <button
+                                className="btn btn-sm"
+                                onClick={handleEndSession}
+                                style={{ background: "var(--heart-soft)", color: "var(--heart)", flex: "none", borderColor: "transparent" }}
+                            >
+                                <Icon name="close" size="sm" />
+                                Завершить
+                            </button>
+                        )}
+                    </div>
                     <button className="icon-btn" onClick={handleClose} aria-label="Закрыть" style={{ flex: "none" }}>
                         <Icon name="close" size="md" />
                     </button>
@@ -282,6 +285,7 @@ export default function CompanyChatCallPage() {
 
                 <div className="dc-thread">
                     <div className="dc-thread-inner">
+                        {messages.length === 0 && !isEnded && <ConversationCover variant="chat" description={goal} />}
                         {messages.map((message, messageIndex) => (
                             <ChatMessage key={messageIndex} message={message} />
                         ))}
@@ -303,7 +307,7 @@ export default function CompanyChatCallPage() {
                     <ChatInput
                         onSend={handleSendMessage}
                         disabled={isSending || isCompleting || isEnded || !!feedback || !sessionId}
-                        placeholder={isEnded || feedback ? "Диалог завершён" : "Введите сообщение…"}
+                        ended={isEnded || !!feedback}
                     />
                 </div>
             </main>
