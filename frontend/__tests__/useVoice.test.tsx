@@ -18,8 +18,8 @@ vi.mock("@/features/voice/services/web-speech-client", () => ({
     },
 }));
 
-vi.mock("@/features/voice/services/audio-player", () => ({
-    AudioPlayer: class {
+vi.mock("@/features/voice/services/call-audio-player", () => ({
+    CallAudioPlayer: class {
         preparePlayback = preparePlayback;
         beginQueue = vi.fn();
         enqueue = vi.fn(async () => {});
