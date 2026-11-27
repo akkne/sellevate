@@ -30,7 +30,7 @@ internal static class LocalVoicePrompt
                 + role[CustomScenarioModeSeeder.ChatSystemPromptTemplate.Length..];
         }
 
-        return Rules + "\n" + role + "\nОтветь собеседнику по-русски одной короткой репликой, обычно 6–14 слов.";
+        return Rules + "\n" + role + "\nГовори кратко. Для составного вопроса можно ответить двумя предложениями.";
     }
 
     private static bool HasStockPrefix(string prompt, string template) =>

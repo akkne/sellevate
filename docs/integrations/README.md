@@ -31,4 +31,4 @@
 | [OpenAI whisper-1](openai-whisper-1.md) | Транскрипция аудио |
 | [Yandex SpeechKit marina](yandex-speechkit-marina.md) | Синтез речи, голос marina в API v1 |
 | [Fish Audio S2.1 Pro Free](fish-audio-s2-free.md) | Озвучка реплик звонка |
-| [Qwen3-4B-Instruct-2507](local-qwen-voice.md) | Полный текст реплики в локальном звонке |
+| [Qwen3-4B-Instruct-2507 и Qwen3.5-9B](local-qwen-voice.md) | Полный текст реплики в локальном звонке |
