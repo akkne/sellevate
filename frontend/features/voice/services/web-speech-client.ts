@@ -88,15 +88,20 @@ export class WebSpeechClient {
             return;
         }
 
+        this.isActive = true;
         try {
-            await navigator.mediaDevices.getUserMedia({ audio: true });
+            const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // SpeechRecognition owns its capture. Release the probe before switching audio routes.
+            for (const track of permissionStream.getTracks()) track.stop();
         } catch {
+            if (!this.isActive) return;
+            this.isActive = false;
             this.setState("error");
             this.options.onError?.(new Error("Microphone access denied"));
             return;
         }
 
-        this.isActive = true;
+        if (!this.isActive) return;
         this.shouldRestartAfterEnd = true;
         this.launchRecognition();
     }
@@ -154,12 +159,17 @@ export class WebSpeechClient {
 
     private disposeRecognition(): void {
         if (this.recognition) {
-            this.recognition.onend = null;
+            const recognition = this.recognition;
+            this.recognition = null;
+            recognition.onend = null;
+            recognition.onstart = null;
+            recognition.onerror = null;
+            recognition.onspeechstart = null;
+            recognition.onspeechend = null;
             try {
-                this.recognition.stop();
+                recognition.abort();
             } catch {
             }
-            this.recognition = null;
         }
     }
 

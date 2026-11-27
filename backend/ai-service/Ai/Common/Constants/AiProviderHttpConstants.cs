@@ -19,6 +19,7 @@ public static class AiProviderHttpConstants
     public const string OpenAiClientName = "OpenAI";
 
     /// <summary>Named client for Yandex SpeechKit synthesis.</summary>
+    public const string FishAudioClientName = "FishAudio";
     public const string YandexTtsClientName = "YandexTts";
 
     public const string AuthorizationHeaderName = "Authorization";

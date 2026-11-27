@@ -59,7 +59,10 @@ function liveInstances() {
 }
 
 describe("WebSpeechClient (mobile mic lifecycle)", () => {
+    const stopTrack = vi.fn();
+
     beforeEach(() => {
+        stopTrack.mockClear();
         FakeSpeechRecognition.instances = [];
         (window as unknown as { SpeechRecognition: unknown }).SpeechRecognition =
             FakeSpeechRecognition as unknown;
@@ -67,7 +70,7 @@ describe("WebSpeechClient (mobile mic lifecycle)", () => {
             FakeSpeechRecognition as unknown;
         Object.defineProperty(navigator, "mediaDevices", {
             configurable: true,
-            value: { getUserMedia: vi.fn().mockResolvedValue({}) },
+            value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop: stopTrack }] }) },
         });
     });
 
@@ -82,6 +85,7 @@ describe("WebSpeechClient (mobile mic lifecycle)", () => {
 
         expect(FakeSpeechRecognition.instances).toHaveLength(1);
         const first = FakeSpeechRecognition.instances[0];
+        expect(stopTrack).toHaveBeenCalledOnce();
         expect(first.startCount).toBe(1);
 
         // A turn: pause while the AI speaks, then resume when playback ends.
@@ -106,6 +110,20 @@ describe("WebSpeechClient (mobile mic lifecycle)", () => {
 
         expect(FakeSpeechRecognition.instances).toHaveLength(2);
         expect(liveInstances()).toHaveLength(1);
+    });
+
+    it("releases permission granted after hangup without restarting recognition", async () => {
+        let grant!: (stream: MediaStream) => void;
+        vi.mocked(navigator.mediaDevices.getUserMedia).mockImplementationOnce(() =>
+            new Promise<MediaStream>((resolve) => { grant = resolve; }));
+        const client = new WebSpeechClient({ onResult: vi.fn() });
+        const starting = client.start();
+        client.stop();
+        grant({ getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream);
+        await starting;
+
+        expect(stopTrack).toHaveBeenCalledOnce();
+        expect(FakeSpeechRecognition.instances).toHaveLength(0);
     });
 
     it("does not resume after stop()", async () => {

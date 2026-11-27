@@ -259,6 +259,7 @@ export default function VoiceCallPage() {
         state: voiceState,
         currentTranscript,
         isVoiceAvailable,
+        preparePlayback,
         startVoice,
         stopVoice,
         endSession,
@@ -306,6 +307,7 @@ export default function VoiceCallPage() {
         // cannot be recreated here, and calling on a finished one used to produce a persona that
         // never said a word (the backend refuses the turn, the stream comes back empty).
         if (preStartedSessionId) {
+            if (!await preparePlayback()) return;
             const preStartedSession = await fetchDialogSession(preStartedSessionId).catch(() => null);
             if (preStartedSession && preStartedSession.status !== "active") {
                 setIsScenarioSpent(true);
@@ -332,7 +334,7 @@ export default function VoiceCallPage() {
         } catch {
             setCallStatus("idle");
         }
-    }, [callStatus, preStartedSessionId, startVoice]);
+    }, [callStatus, preStartedSessionId, preparePlayback, startVoice]);
 
     const handleHangUp = useCallback(() => {
         if (callStatus !== "connected" && callStatus !== "dialing") return;
