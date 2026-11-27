@@ -103,6 +103,41 @@ describe("SpeechEndpointer", () => {
         expect(onUtterance).toHaveBeenLastCalledWith("second phrase");
     });
 
+    it("keeps a manual draft across pauses and browser restarts until a single click", () => {
+        endpointer.setMode("manual");
+        endpointer.handleResult("Добрый день.", false);
+        endpointer.finishRecognitionSegment();
+        vi.advanceTimersByTime(30000);
+        endpointer.handleResult("У меня", false);
+        endpointer.handleResult("У меня вопрос.", true);
+        expect(onUtterance).not.toHaveBeenCalled();
+        endpointer.commit();
+        endpointer.commit();
+        vi.runAllTimers();
+        expect(onUtterance).toHaveBeenCalledExactlyOnceWith("Добрый день. У меня вопрос.");
+    });
+
+    it("cancels auto-send when switching to manual and starts a fresh pause when switching back", () => {
+        endpointer.handleResult("first", true);
+        vi.advanceTimersByTime(silenceMs - 1);
+        endpointer.setMode("manual");
+        vi.advanceTimersByTime(5000);
+        endpointer.handleResult("second", false);
+        endpointer.setMode("pause");
+        vi.advanceTimersByTime(silenceMs + interimGraceMs - 1);
+        expect(onUtterance).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(1);
+        expect(onUtterance).toHaveBeenCalledExactlyOnceWith("first second");
+    });
+
+    it("discards an unsent draft on hang-up", () => {
+        endpointer.setMode("manual");
+        endpointer.handleResult("draft", true);
+        endpointer.reset();
+        endpointer.commit();
+        expect(onUtterance).not.toHaveBeenCalled();
+    });
+
     it("uses the default interim grace when none is provided", () => {
         const defaultedCallback = vi.fn();
         const defaulted = new SpeechEndpointer({ silenceMs, onUtterance: defaultedCallback });

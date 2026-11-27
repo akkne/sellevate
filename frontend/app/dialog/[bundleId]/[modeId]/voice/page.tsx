@@ -10,6 +10,7 @@ import {
     fetchDialogSession,
     DialogFeedback,
 } from "@/features/dialog/hooks/use-dialog";
+import { VoiceTurnControls } from "@/features/voice/components/voice-turn-controls";
 import { useVoice, VoicePipelineState } from "@/features/voice/hooks/use-voice";
 import { useVoiceUsage } from "@/features/voice/hooks/use-voice-usage";
 import { TimingConstants } from "@/shared/constants/timing-constants";
@@ -17,7 +18,8 @@ import { CallHaptics } from "@/features/voice/services/call-haptics";
 import { describeCompletionError } from "@/features/dialog/services/completion-error-message";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { Icon } from "@/shared/components/icon";
-import { GeoAvatar } from "@/shared/components/geo-avatar";
+import { VoiceSignal } from "@/features/dialog/components/conversation-marks";
+import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 
 function formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
@@ -77,7 +79,7 @@ function describePipeline(state: VoicePipelineState, callStatus: CallStatus, end
         case "listening":
             return {
                 label: "На связи · слушаю",
-                hint: "Говори свободно — отвечу, как только сделаешь паузу",
+                hint: "Микрофон включён",
                 ringColor: "var(--success)",
                 pulse: false,
             };
@@ -98,7 +100,7 @@ function describePipeline(state: VoicePipelineState, callStatus: CallStatus, end
         case "playing":
             return {
                 label: "Собеседник говорит",
-                hint: "Перебей в любой момент, чтобы ответить",
+                hint: "Микрофон включится после ответа",
                 ringColor: "var(--flame)",
                 pulse: true,
             };
@@ -257,12 +259,14 @@ export default function VoiceCallPage() {
 
     const {
         state: voiceState,
+        turnMode, changeTurnMode, sendTurn, pauseSeconds,
         currentTranscript,
         isVoiceAvailable,
         startVoice,
         stopVoice,
         endSession,
     } = useVoice({
+        enableTurnControls: true,
         sessionId,
         modeVoiceEnabled: currentMode?.voiceEnabled ?? false,
         bundleId,
@@ -385,7 +389,6 @@ export default function VoiceCallPage() {
         callStatus,
         describeEndedCall(isCompleting, !!feedback, !!analysisError),
     );
-    const personaSeed = `${currentMode?.id ?? "persona"}-${currentMode?.title ?? ""}`;
     const isCallActive = callStatus === "connected" || callStatus === "dialing";
 
     if (!isVoiceAvailable && currentMode) {
@@ -411,7 +414,7 @@ export default function VoiceCallPage() {
     }
 
     return (
-        <div className="voice">
+        <div className="voice" data-call-status={callStatus} data-voice-state={voiceState}>
             {/* Top bar */}
             <div className="voice-top">
                 <button className="back-link plain" onClick={handleClose} aria-label="Назад к сценариям">
@@ -450,25 +453,13 @@ export default function VoiceCallPage() {
             </div>
 
             {/* Call stage */}
-            <div className="voice-stage">
-                {/* Avatar + state ring — ring color and pulse driven by describePipeline() */}
-                <div
-                    className={"voice-avatar" + (info.pulse ? " pulse" : "")}
-                    style={{ "--ring": info.ringColor } as React.CSSProperties}
-                >
-                    <div className="va-ring" />
-                    <GeoAvatar seed={personaSeed} size={156} style={{ borderRadius: "50%" }} />
-                </div>
-
-                <span className="eyebrow">{currentBundle?.title ?? "Сценарий"}</span>
-                <h1 className="h1" style={{ margin: "10px 0 6px", fontSize: "clamp(26px, 3.6vw, 42px)" }}>
-                    {currentMode?.title ?? "Собеседник"}
-                </h1>
-                {currentMode?.description && (
-                    <p className="lead" style={{ maxWidth: 480 }}>{currentMode.description}</p>
+            <main className="voice-stage">
+                <ConversationCover variant="voice" title={currentMode?.title ?? "Собеседник"} description={currentMode?.description} compact={isCallActive} />
+                {callStatus !== "ended" && (
+                    <VoiceTurnControls mode={turnMode} onChange={changeTurnMode} onSend={sendTurn}
+                        pauseSeconds={pauseSeconds} active={callStatus === "connected"}
+                        canSend={!!currentTranscript.trim() && (voiceState === "speaking" || voiceState === "listening")} />
                 )}
-
-                {/* Live transcript bubbles */}
                 {(subtitles.length > 0 || (isCallActive && currentTranscript)) && (
                     <div className="transcript" ref={subtitleScrollRef}>
                         {subtitles.map((entry, index) => (
@@ -499,17 +490,6 @@ export default function VoiceCallPage() {
                     </div>
                 )}
 
-                {/* State pill */}
-                <div className="state-pill" style={{ marginTop: subtitles.length > 0 ? 0 : 24 }}>
-                    <span
-                        className={"pdot" + (info.pulse ? " live" : "")}
-                        style={{ background: info.ringColor }}
-                    />
-                    {info.label}
-                </div>
-                <p className="voice-hint" style={{ minHeight: 38 }}>{info.hint}</p>
-
-                {/* Error alert */}
                 {(error || analysisError) && (
                     <span
                         className="badge"
@@ -534,10 +514,20 @@ export default function VoiceCallPage() {
                         Готовим разбор…
                     </div>
                 )}
-            </div>
+            </main>
 
             {/* Call controls footer */}
             <div className="voice-foot">
+                <div className="voice-readout" role="status">
+                    <div className="state-pill">
+                        <span
+                            className={"pdot" + (info.pulse ? " live" : "")}
+                            style={{ background: info.ringColor }}
+                        />
+                        {info.label}
+                    </div>
+                    <p className="voice-hint">{info.hint}</p>
+                </div>
                 {canRetryAnalysis && (
                     <button className="btn btn-dark btn-lg voice-cta" onClick={handleRetryAnalysis}>
                         <Icon name="warning" size="md" />
@@ -564,7 +554,7 @@ export default function VoiceCallPage() {
                         aria-label="Позвонить"
                         style={isCompleting ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
                     >
-                        <Icon name="phone" size="md" />
+                        <VoiceSignal small />
                         {callStatus === "ended" ? "Позвонить снова" : "Позвонить"}
                     </button>
                 )}

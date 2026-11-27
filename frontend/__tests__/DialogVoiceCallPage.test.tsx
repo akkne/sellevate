@@ -40,6 +40,10 @@ vi.mock("@/features/voice/hooks/use-voice", () => ({
         return {
             state: "idle",
             currentTranscript: "",
+            turnMode: "manual",
+            changeTurnMode: vi.fn(),
+            sendTurn: vi.fn(),
+            pauseSeconds: 3,
             isVoiceAvailable: true,
             startVoice: startVoiceMock,
             stopVoice: stopVoiceMock,
