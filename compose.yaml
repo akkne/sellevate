@@ -241,6 +241,7 @@ services:
       - OpenAI__ChatCompletionsPath=${OPENAI_CHAT_COMPLETIONS_PATH:-/v1/chat/completions}
       - OpenAI__Provider=${OPENAI_PROVIDER:-OPENAI_CODEX}
       - OpenAI__CodexModel=${CODEX_MODEL:-gpt-6.2-astra}
+      - OpenAI__CodexVoiceModel=${CODEX_VOICE_MODEL:-}
       - CodexService__BaseUrl=http://codex:8080/
       - CodexService__TimeoutSeconds=${CODEX_TIMEOUT_SECONDS:-180}
       # --- AI tunables (override in .env; defaults are the in-code values) ---

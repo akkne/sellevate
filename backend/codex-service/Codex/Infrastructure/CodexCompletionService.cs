@@ -42,7 +42,7 @@ public sealed class CodexCompletionService(IOptions<CodexConfiguration> options,
             var thread = client.StartThread(new ThreadOptions
             {
                 Model = request.Model,
-                ModelReasoningEffort = settings.ReasoningEffort,
+                ModelReasoningEffort = request.VoiceTurn ? ModelReasoningEffort.Low : settings.ReasoningEffort,
                 WorkingDirectory = directory.FullName,
                 SkipGitRepoCheck = true,
                 ApprovalPolicy = ApprovalMode.Never,

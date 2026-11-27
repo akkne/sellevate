@@ -9,7 +9,7 @@
 | Владелец | Маршруты и доступ | Тела и параметры |
 | --- | --- | --- |
 | Диалоги, оценка, квоты и голос | [ai](contracts/http/ai.md) | [OpenAPI](contracts/http/ai.json) |
-| Исполнение текстовых промптов | [codex](contracts/http/codex.md) | [OpenAPI](contracts/http/codex.json) |
+| Исполнение текстовых промптов, включая реплики звонка с флагом `voice_turn` | [codex](contracts/http/codex.md) | [OpenAPI](contracts/http/codex.json) |
 | События и метрики | [analytics](contracts/http/analytics.md) | [OpenAPI](contracts/http/analytics.json) |
 | Компании и контакты | [company](contracts/http/company.md) | [OpenAPI](contracts/http/company.json) |
 | Достижения и баллы | [gamification](contracts/http/gamification.md) | [OpenAPI](contracts/http/gamification.json) |

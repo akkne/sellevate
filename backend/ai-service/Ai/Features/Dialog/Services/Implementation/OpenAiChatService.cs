@@ -228,14 +228,15 @@ endCall: false ЗАПРЕЩЕНО.
     public async IAsyncEnumerable<string> StreamChatMessageAsync(
         string systemPrompt,
         List<DialogMessage> conversationHistory,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default,
+        bool voiceTurn = false)
     {
         if (!IsConfigured)
         {
             throw new InvalidOperationException("OpenAI API is not configured");
         }
 
-        var chatModel = _openAiOptions.Value.ResolvePromptModel(_openAiOptions.Value.DialogModel);
+        var chatModel = _openAiOptions.Value.ResolveDialogModel(voiceTurn);
         var maxTokens = _openAiOptions.Value.MaximumDialogTokenCount;
 
         await _spendMeter.EnsureLlmAllowanceAsync($"streaming chat ({chatModel})", cancellationToken);
@@ -252,6 +253,11 @@ endCall: false ЗАПРЕЩЕНО.
             ["stream"] = true,
             ["response_format"] = BuildChatReplyResponseFormat()
         };
+
+        if (voiceTurn && _openAiOptions.Value.Provider == OpenAiProvider.OPENAI_CODEX)
+        {
+            requestBody["voice_turn"] = true;
+        }
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
         {

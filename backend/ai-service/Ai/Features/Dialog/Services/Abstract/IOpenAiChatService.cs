@@ -41,7 +41,8 @@ public interface IOpenAiChatService
     IAsyncEnumerable<string> StreamChatMessageAsync(
         string systemPrompt,
         List<DialogMessage> conversationHistory,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool voiceTurn = false);
 
     /// <summary>
     /// Grades a finished conversation and returns the summary, the detailed breakdown, the clamped

@@ -35,13 +35,14 @@ public class CodexCompletionTests
         [new CompletionMessage("system", "Test instructions"), new CompletionMessage("user", "Test input")], 40,
         new CompletionFormat(new NamedSchema(JsonSerializer.SerializeToElement(new { type = "object" }))));
 
-    [Test]
-    public async Task PassesInstructionsInputAndSchemaAndReturnsOnlyFinalMessageAndUsage()
+    [TestCase(false, "high")]
+    [TestCase(true, "low")]
+    public async Task PassesInstructionsInputAndSchemaAndReturnsOnlyFinalMessageAndUsage(bool voiceTurn, string effort)
     {
-        var service = CreateService("""
+        var service = CreateService($$$"""
             test "$1" = exec
             case "$*" in *'--model gpt-6.2-astra'*) ;; *) exit 1;; esac
-            case "$*" in *'model_reasoning_effort="high"'*) ;; *) exit 1;; esac
+            case "$*" in *'model_reasoning_effort="{{{effort}}}"'*) ;; *) exit 1;; esac
             grep -q 'Test instructions' instructions.txt
             grep -q '"role":"user","content":"Test input"'
             while [ "$1" != "--output-schema" ]; do shift; done
@@ -50,7 +51,7 @@ public class CodexCompletionTests
             echo '{"type":"item.completed","item":{"type":"agent_message","id":"2","text":"final"}}'
             echo '{"type":"turn.completed","usage":{"input_tokens":12,"output_tokens":4}}'
             """);
-        var result = await service.CompleteAsync(Request(), CancellationToken.None);
+        var result = await service.CompleteAsync(Request() with { VoiceTurn = voiceTurn }, CancellationToken.None);
         Assert.That(result?.Message.Content, Is.EqualTo("final"));
         Assert.That(result?.Usage, Is.EqualTo(new TokenUsage(12, 4)));
     }
