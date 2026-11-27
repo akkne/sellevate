@@ -72,13 +72,25 @@ public class PromptProviderRoutingTests
         }
 
         handler.Payload.TryGetProperty("voice_turn", out var voiceFlag).Should().Be(operation == "voice");
-        if (operation == "voice") voiceFlag.GetBoolean().Should().BeTrue();
+        if (operation == "voice")
+        {
+            voiceFlag.GetBoolean().Should().BeTrue();
+        }
+
         var expectedModel = operation == "voice" ? "test-voice" : "test-codex";
         handler.Payload.GetProperty("model").GetString().Should().Be(expectedModel);
         handler.Payload.GetProperty("messages")[1].GetProperty("content").GetString().Should().Contain("answer");
         await meter.Received(1).EnsureLlmAllowanceAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         await meter.Received(1).RecordLlmUsageAsync(expectedModel, 17, 9, false, Arg.Any<CancellationToken>());
         factory.DidNotReceive().CreateClient("OpenAI");
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    public void VoiceWithoutAnOverrideUsesTheConfiguredCodexModel(string? voiceModel)
+    {
+        var settings = new OpenAiConfiguration { CodexModel = "test-codex", CodexVoiceModel = voiceModel };
+        settings.ResolveDialogModel(voiceTurn: true).Should().Be("test-codex");
     }
 
     [TestCase(OpenAiProvider.OpenAi, "Authorization", "Bearer test-key")]
