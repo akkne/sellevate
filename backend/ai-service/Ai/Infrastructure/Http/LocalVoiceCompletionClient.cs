@@ -8,7 +8,8 @@ namespace Sellevate.Ai.Infrastructure.Http;
 internal static class LocalVoiceCompletionClient
 {
     public const string ClientName = "LocalVoice";
-    // Fixed punctuation avoids generating arbitrary whitespace or an unused reason on ongoing calls.
+
+    /// <summary>Compact JSON grammar for a Russian voice reply and its hang-up decision.</summary>
     public const string ReplyGrammar = """
         root ::= "{\"reply\":" spoken ",\"endCall\":" ("false,\"endCallReason\":null}" | "true,\"endCallReason\":" string "}")
         spoken ::= "\"" [А-Яа-яЁё0-9] char* "\""
