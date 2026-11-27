@@ -17,6 +17,7 @@ import { CallHaptics } from "@/features/voice/services/call-haptics";
 import { describeCompletionError } from "@/features/dialog/services/completion-error-message";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { Icon } from "@/shared/components/icon";
+import { VoiceSignal } from "@/features/dialog/components/conversation-marks";
 import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 
 function formatTime(seconds: number): string {
@@ -410,7 +411,7 @@ export default function VoiceCallPage() {
     }
 
     return (
-        <div className="voice" data-call-status={callStatus}>
+        <div className="voice" data-call-status={callStatus} data-voice-state={voiceState}>
             {/* Top bar */}
             <div className="voice-top">
                 <button className="back-link plain" onClick={handleClose} aria-label="Назад к сценариям">
@@ -545,7 +546,7 @@ export default function VoiceCallPage() {
                         aria-label="Позвонить"
                         style={isCompleting ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
                     >
-                        <Icon name="phone" size="md" />
+                        <VoiceSignal small />
                         {callStatus === "ended" ? "Позвонить снова" : "Позвонить"}
                     </button>
                 )}

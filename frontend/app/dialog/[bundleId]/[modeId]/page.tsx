@@ -18,6 +18,7 @@ import { useVoice } from "@/features/voice/hooks/use-voice";
 import { apiClient } from "@/shared/api/api-client";
 import { TimingConstants } from "@/shared/constants/timing-constants";
 import { ChatMessage } from "@/features/dialog/components/chat-message";
+import { DialogueMark } from "@/features/dialog/components/conversation-marks";
 import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 import { ChatInput } from "@/features/dialog/components/chat-input";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
@@ -445,8 +446,8 @@ export default function ChatPage() {
                         <Icon name="grid" size="md" />
                     </button>
 
-                    <span className="itile primary" style={{ width: 36, height: 36, borderRadius: "50%", flex: "none" }}>
-                        <Icon name="sparkle" size={18} />
+                    <span className="dc-signature" aria-hidden="true">
+                        <DialogueMark />
                     </span>
                     <div className="dc-context min-w-0 flex-1">
                         <div className="dc-head-title">
@@ -517,7 +518,7 @@ export default function ChatPage() {
                         {isSending && (
                             <div className="dc-msg ai">
                                 <span className="dc-avatar" aria-hidden="true">
-                                    <Icon name="sparkle" size="sm" />
+                                    <DialogueMark />
                                 </span>
                                 <div className="dc-bubble-wrap">
                                     <div className="dc-bubble typing">

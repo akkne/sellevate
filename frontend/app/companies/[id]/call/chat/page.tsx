@@ -15,6 +15,7 @@ import {
     completeDialogSession,
 } from "@/features/dialog/hooks/use-dialog";
 import { ChatMessage } from "@/features/dialog/components/chat-message";
+import { DialogueMark } from "@/features/dialog/components/conversation-marks";
 import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 import { ChatInput } from "@/features/dialog/components/chat-input";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
@@ -250,8 +251,8 @@ export default function CompanyChatCallPage() {
         <div className="chat-screen" style={{ gridTemplateColumns: "1fr" }}>
             <main className="dc-main">
                 <div className="dc-head">
-                    <span className="itile primary" style={{ width: 36, height: 36, borderRadius: "50%", flex: "none" }}>
-                        <Icon name="sparkle" size={18} />
+                    <span className="dc-signature" aria-hidden="true">
+                        <DialogueMark />
                     </span>
                     <div className="dc-context min-w-0 flex-1">
                         <div className="dc-head-title">{company?.name ?? "Компания"}</div>

@@ -15,6 +15,7 @@ import { CallHaptics } from "@/features/voice/services/call-haptics";
 import { describeCompletionError } from "@/features/dialog/services/completion-error-message";
 import { FeedbackModal } from "@/features/dialog/components/feedback-modal";
 import { Icon } from "@/shared/components/icon";
+import { VoiceSignal } from "@/features/dialog/components/conversation-marks";
 import { ConversationCover } from "@/features/dialog/components/conversation-cover";
 import { toast } from "@/features/notifications/store/toast-store";
 import { ApiError } from "@/shared/api/api-client";
@@ -488,7 +489,7 @@ export default function CompanyVoiceCallPage() {
     }
 
     return (
-        <div className="voice" data-call-status={callStatus}>
+        <div className="voice" data-call-status={callStatus} data-voice-state={voiceState}>
             {/* Top bar */}
             <div className="voice-top">
                 <button className="back-link plain" onClick={handleClose} aria-label="Назад к компании">
@@ -610,7 +611,7 @@ export default function CompanyVoiceCallPage() {
                         aria-label="Позвонить"
                         style={isCompleting || !isReadyToCall ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
                     >
-                        <Icon name="phone" size="md" />
+                        <VoiceSignal small />
                         {callStatus === "ended" ? "Позвонить снова" : "Позвонить"}
                     </button>
                 )}
