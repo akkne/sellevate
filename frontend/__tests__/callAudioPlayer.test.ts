@@ -66,10 +66,9 @@ it("plays successive MP3 bytes on one source and closes it after the last append
         readyState = "open";
         addSourceBuffer = () => buffer;
         endOfStream = vi.fn();
-        constructor() { super(); source = this; }
     }
-    let source!: FakeSource;
-    vi.stubGlobal("MediaSource", FakeSource);
+    const source = new FakeSource();
+    vi.stubGlobal("MediaSource", class { constructor() { return source; } });
     const player = new CallAudioPlayer({ onPlaybackEnd: complete });
     const first = new ArrayBuffer(3);
     const second = new ArrayBuffer(4);

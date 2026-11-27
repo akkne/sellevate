@@ -72,7 +72,7 @@ public class LocalVoiceCompletionTests
         replies.Should().Equal(reply);
         local.Payload.GetProperty("stream").GetBoolean().Should().BeFalse();
         local.Request!.Headers.Authorization.Should().BeNull();
-        local.Payload.GetProperty("response_format").GetProperty("json_schema").GetProperty("strict").GetBoolean().Should().BeTrue();
+        local.Payload.GetProperty("grammar").GetString().Should().Be(LocalVoiceCompletionClient.ReplyGrammar);
         await meter.Received(1).RecordLlmUsageAsync("local-model", 20, 12, false, Arg.Any<CancellationToken>());
         factory.Received(fallback ? 1 : 0).CreateClient("Codex");
     }

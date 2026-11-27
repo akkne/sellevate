@@ -252,7 +252,7 @@ endCall: false ЗАПРЕЩЕНО.
                 max_tokens = Math.Min(maxTokens, 160),
                 temperature = 0.3,
                 stream = false,
-                response_format = BuildChatReplyResponseFormat(standardSchema: true),
+                grammar = LocalVoiceCompletionClient.ReplyGrammar,
             };
             using var localClient = _httpClientFactory.CreateClient(LocalVoiceCompletionClient.ClientName);
             var local = await LocalVoiceCompletionClient.TryCompleteAsync(localClient, localEndpoint, payload, _logger, cancellationToken);
@@ -544,7 +544,7 @@ endCall: false ЗАПРЕЩЕНО.
     /// expects. The two supported providers differ only in the wrapper — a flat object versus a nested
     /// <c>json_schema</c> — and the choice is made from the provider enum, never from the URL.
     /// </summary>
-    private object BuildChatReplyResponseFormat(bool standardSchema = false)
+    private object BuildChatReplyResponseFormat()
     {
         var replySchema = new
         {
@@ -559,7 +559,7 @@ endCall: false ЗАПРЕЩЕНО.
             additionalProperties = false
         };
 
-        if (!standardSchema && _openAiOptions.Value.Provider == OpenAiProvider.F5Ai)
+        if (_openAiOptions.Value.Provider == OpenAiProvider.F5Ai)
         {
             return new { type = "json_schema", name = ChatReplySchemaName, strict = true, schema = replySchema };
         }

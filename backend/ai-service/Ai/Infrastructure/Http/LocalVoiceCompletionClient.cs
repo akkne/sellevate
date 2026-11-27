@@ -8,6 +8,13 @@ namespace Sellevate.Ai.Infrastructure.Http;
 internal static class LocalVoiceCompletionClient
 {
     public const string ClientName = "LocalVoice";
+    // Fixed punctuation avoids generating arbitrary whitespace or an unused reason on ongoing calls.
+    public const string ReplyGrammar = """
+        root ::= "{\"reply\":" string ",\"endCall\":" ("false,\"endCallReason\":null}" | "true,\"endCallReason\":" string "}")
+        string ::= "\"" char+ "\""
+        char ::= [^"\\\x00-\x1F] | "\\" ["\\/bfnrt] | "\\u" [0-9a-fA-F]{4}
+        """;
+
     public sealed record Result(string? ReplyJson, AiCompletionUsage? Usage);
 
     public static async Task<Result?> TryCompleteAsync(
